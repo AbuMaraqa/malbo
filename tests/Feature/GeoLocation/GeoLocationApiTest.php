@@ -6,9 +6,9 @@ use Modules\GeoLocation\Entities\City;
 use Modules\GeoLocation\Entities\Country;
 use Modules\GeoLocation\Entities\District;
 use Modules\GeoLocation\Entities\Governorate;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class GeoLocationApiTest extends TenantTestCase
+class GeoLocationApiTest extends DatabaseTestCase
 {
     public function test_the_lists_answer_with_translated_names(): void
     {
@@ -111,6 +111,6 @@ class GeoLocationApiTest extends TenantTestCase
 
     private function apiGet(string $path, string $locale = 'ar'): \Illuminate\Testing\TestResponse
     {
-        return $this->getJson($this->tenantUrl($path), ['Accept-Language' => $locale]);
+        return $this->getJson($this->siteUrl($path), ['Accept-Language' => $locale]);
     }
 }

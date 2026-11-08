@@ -16,7 +16,7 @@ const page = usePage();
 const { open, isMobile, isHovered } = useSidebar();
 
 const entries = computed(() => (page.props.sidebar ?? []) as NavEntry[]);
-const store = computed(() => page.props.store as { id: string; name: string } | null);
+const store = computed(() => page.props.store as { name: string } | null);
 const path = computed(() => page.url.split('?')[0]);
 const showText = computed(() => open.value || isHovered.value || isMobile.value);
 

@@ -7,9 +7,9 @@ use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
 use Modules\Items\Entities\Tag;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class TagPagesTest extends TenantTestCase
+class TagPagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -80,7 +80,7 @@ class TagPagesTest extends TenantTestCase
     public function test_adding_saves_the_translation_colors_and_creator(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/tags'), $this->payload())
+            ->post($this->siteUrl('/ar/admin/tags'), $this->payload())
             ->assertRedirect()
             ->assertSessionHasNoErrors()
             ->assertSessionHas('success');
@@ -96,7 +96,7 @@ class TagPagesTest extends TenantTestCase
     public function test_an_empty_slug_is_made_from_the_name(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/tags'), $this->payload(['name' => 'Best Seller', 'slug' => '']))
+            ->post($this->siteUrl('/ar/admin/tags'), $this->payload(['name' => 'Best Seller', 'slug' => '']))
             ->assertSessionHasNoErrors();
 
         $this->assertNotNull(Tag::query()->where('slug', 'best-seller')->first());
@@ -107,7 +107,7 @@ class TagPagesTest extends TenantTestCase
         Tag::factory()->create(['slug' => 'taken']);
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/tags'), $this->payload(['name' => '', 'slug' => 'taken', 'text_color' => 'red;background:url(x)', 'background_color' => '']))
+            ->post($this->siteUrl('/ar/admin/tags'), $this->payload(['name' => '', 'slug' => 'taken', 'text_color' => 'red;background:url(x)', 'background_color' => '']))
             ->assertSessionHasErrors(['name', 'slug', 'text_color', 'background_color']);
     }
 
@@ -120,7 +120,7 @@ class TagPagesTest extends TenantTestCase
         $creator = $tag->created_by;
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/tags/'.$tag->id), $this->payload(['slug' => 'old-slug', 'name' => 'معدل', 'background_color' => '#111111']))
+            ->put($this->siteUrl('/ar/admin/tags/'.$tag->id), $this->payload(['slug' => 'old-slug', 'name' => 'معدل', 'background_color' => '#111111']))
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
@@ -137,8 +137,8 @@ class TagPagesTest extends TenantTestCase
     {
         $tags = Tag::factory()->count(3)->create();
 
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/tags/'.$tags[0]->id))->assertRedirect();
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/tags'), ['ids' => [$tags[1]->id, $tags[2]->id]])->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/tags/'.$tags[0]->id))->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/tags'), ['ids' => [$tags[1]->id, $tags[2]->id]])->assertRedirect();
 
         $this->assertSame(0, Tag::query()->count());
     }
@@ -155,7 +155,7 @@ class TagPagesTest extends TenantTestCase
         $tag = Tag::factory()->create(['background_color' => '#000000', 'created_by' => $this->staff->id]);
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/tags/'.$tag->id), $this->payload(['slug' => $tag->slug, 'background_color' => '#111111']))
+            ->put($this->siteUrl('/ar/admin/tags/'.$tag->id), $this->payload(['slug' => $tag->slug, 'background_color' => '#111111']))
             ->assertSessionHasNoErrors();
 
         $this->page('/tags/'.$tag->id.'/info')
@@ -169,7 +169,7 @@ class TagPagesTest extends TenantTestCase
     public function test_a_bad_id_is_a_not_found_not_a_server_error(): void
     {
         $this->page('/tags/abc/info')->assertNotFound();
-        $this->actingAs($this->staff)->put($this->tenantUrl('/ar/admin/tags/999999'), $this->payload())->assertNotFound();
+        $this->actingAs($this->staff)->put($this->siteUrl('/ar/admin/tags/999999'), $this->payload())->assertNotFound();
     }
 
     public function test_every_action_needs_its_permission(): void
@@ -182,24 +182,24 @@ class TagPagesTest extends TenantTestCase
 
         $tag = Tag::factory()->create();
 
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/tags'))->assertOk();
-        $this->actingAs($viewer)->post($this->tenantUrl('/ar/admin/tags'), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/tags/'.$tag->id.'/info'))->assertForbidden();
-        $this->actingAs($viewer)->put($this->tenantUrl('/ar/admin/tags/'.$tag->id), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl('/ar/admin/tags/'.$tag->id))->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl('/ar/admin/tags'), ['ids' => [$tag->id]])->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/tags'))->assertOk();
+        $this->actingAs($viewer)->post($this->siteUrl('/ar/admin/tags'), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/tags/'.$tag->id.'/info'))->assertForbidden();
+        $this->actingAs($viewer)->put($this->siteUrl('/ar/admin/tags/'.$tag->id), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl('/ar/admin/tags/'.$tag->id))->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl('/ar/admin/tags'), ['ids' => [$tag->id]])->assertForbidden();
 
         $this->assertNotNull($tag->fresh());
     }
 
     public function test_guests_go_to_the_login_page(): void
     {
-        $this->get($this->tenantUrl('/ar/admin/tags'))->assertRedirect();
+        $this->get($this->siteUrl('/ar/admin/tags'))->assertRedirect();
     }
 
     private function page(string $path)
     {
-        return $this->actingAs($this->staff)->get($this->tenantUrl('/ar/admin'.$path));
+        return $this->actingAs($this->staff)->get($this->siteUrl('/ar/admin'.$path));
     }
 
     /**

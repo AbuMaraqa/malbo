@@ -9,9 +9,9 @@ use Modules\GeoLocation\Entities\City;
 use Modules\GeoLocation\Entities\District;
 use Modules\GeoLocation\Enums\DistrictType;
 use Modules\GeoLocation\Services\DistrictService;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class DistrictPagesTest extends TenantTestCase
+class DistrictPagesTest extends DatabaseTestCase
 {
     private const BASE = '/ar/admin/geolocation/districts';
 
@@ -34,7 +34,7 @@ class DistrictPagesTest extends TenantTestCase
     public function test_the_list_is_shaped_for_the_table(): void
     {
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE))
+            ->get($this->siteUrl(self::BASE))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('GeoLocation/District/Index')
@@ -81,7 +81,7 @@ class DistrictPagesTest extends TenantTestCase
     public function test_bad_filter_values_are_ignored_not_a_server_error(): void
     {
         foreach (['filter[type]=abc', 'filter[city_id]=abc', 'filter[governorate_id]=abc', 'filter[country_id]=abc', 'filter[created_at_from]=nope'] as $query) {
-            $this->actingAs($this->staff)->get($this->tenantUrl(self::BASE.'?'.$query))->assertOk();
+            $this->actingAs($this->staff)->get($this->siteUrl(self::BASE.'?'.$query))->assertOk();
         }
     }
 
@@ -96,7 +96,7 @@ class DistrictPagesTest extends TenantTestCase
     public function test_adding_a_district(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl(self::BASE), $this->payload(['country_id' => 1, 'governorate_id' => 1, 'latitude' => 31.5]))
+            ->post($this->siteUrl(self::BASE), $this->payload(['country_id' => 1, 'governorate_id' => 1, 'latitude' => 31.5]))
             ->assertRedirect(route('districts.index'))
             ->assertSessionHas('success');
 
@@ -111,7 +111,7 @@ class DistrictPagesTest extends TenantTestCase
     public function test_validation_errors(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl(self::BASE), ['name' => '', 'city_id' => 999999, 'type' => 99, 'latitude' => 'x', 'longitude' => 200])
+            ->post($this->siteUrl(self::BASE), ['name' => '', 'city_id' => 999999, 'type' => 99, 'latitude' => 'x', 'longitude' => 200])
             ->assertSessionHasErrors(['name', 'city_id', 'type', 'latitude', 'longitude']);
     }
 
@@ -121,7 +121,7 @@ class DistrictPagesTest extends TenantTestCase
         $count = District::query()->count();
 
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE."/{$district->id}/edit"))
+            ->get($this->siteUrl(self::BASE."/{$district->id}/edit"))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('GeoLocation/District/Edit')
@@ -133,7 +133,7 @@ class DistrictPagesTest extends TenantTestCase
                 ->where('district.type', DistrictType::NEIGHBORHOOD->value));
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl(self::BASE.'/'.$district->id), $this->payload(['name' => 'جديد', 'type' => DistrictType::SUBURB->value]))
+            ->put($this->siteUrl(self::BASE.'/'.$district->id), $this->payload(['name' => 'جديد', 'type' => DistrictType::SUBURB->value]))
             ->assertRedirect(route('districts.index'))
             ->assertSessionHasNoErrors();
 
@@ -148,12 +148,12 @@ class DistrictPagesTest extends TenantTestCase
         $two = $this->district();
 
         $this->actingAs($this->staff)
-            ->delete($this->tenantUrl(self::BASE.'/'.$one->id))
+            ->delete($this->siteUrl(self::BASE.'/'.$one->id))
             ->assertSessionHas('success');
         $this->assertNull($one->fresh());
 
         $this->actingAs($this->staff)
-            ->delete($this->tenantUrl(self::BASE), ['ids' => [$two->id]])
+            ->delete($this->siteUrl(self::BASE), ['ids' => [$two->id]])
             ->assertSessionHas('success');
         $this->assertNull($two->fresh());
     }
@@ -168,18 +168,18 @@ class DistrictPagesTest extends TenantTestCase
 
         $district = District::query()->firstOrFail();
 
-        $this->actingAs($viewer)->get($this->tenantUrl(self::BASE))->assertOk();
-        $this->actingAs($viewer)->get($this->tenantUrl(self::BASE.'/add'))->assertForbidden();
-        $this->actingAs($viewer)->post($this->tenantUrl(self::BASE), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->get($this->tenantUrl(self::BASE."/{$district->id}/edit"))->assertForbidden();
-        $this->actingAs($viewer)->put($this->tenantUrl(self::BASE."/{$district->id}"), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl(self::BASE."/{$district->id}"))->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl(self::BASE), ['ids' => [$district->id]])->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl(self::BASE))->assertOk();
+        $this->actingAs($viewer)->get($this->siteUrl(self::BASE.'/add'))->assertForbidden();
+        $this->actingAs($viewer)->post($this->siteUrl(self::BASE), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl(self::BASE."/{$district->id}/edit"))->assertForbidden();
+        $this->actingAs($viewer)->put($this->siteUrl(self::BASE."/{$district->id}"), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl(self::BASE."/{$district->id}"))->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl(self::BASE), ['ids' => [$district->id]])->assertForbidden();
     }
 
     public function test_a_non_numeric_id_is_a_not_found(): void
     {
-        $this->actingAs($this->staff)->get($this->tenantUrl(self::BASE.'/abc/edit'))->assertNotFound();
+        $this->actingAs($this->staff)->get($this->siteUrl(self::BASE.'/abc/edit'))->assertNotFound();
     }
 
     /**
@@ -196,7 +196,7 @@ class DistrictPagesTest extends TenantTestCase
     private function idsFor(string $query): array
     {
         $response = $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE.'?perPage=100&sort=id&'.$query))
+            ->get($this->siteUrl(self::BASE.'?perPage=100&sort=id&'.$query))
             ->assertOk();
 
         return array_column($response->viewData('page')['props']['table']['data'], 'id');

@@ -7,13 +7,13 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class PasswordResetTest extends TenantTestCase
+class PasswordResetTest extends DatabaseTestCase
 {
     public function test_reset_password_link_screen_can_be_rendered(): void
     {
-        $this->get($this->tenantUrl('/forgot-password'))
+        $this->get($this->siteUrl('/forgot-password'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Auth/ForgotPassword'));
     }
@@ -24,7 +24,7 @@ class PasswordResetTest extends TenantTestCase
 
         $user = $this->makeUser();
 
-        $this->post($this->tenantUrl('/forgot-password'), ['email' => $user->email]);
+        $this->post($this->siteUrl('/forgot-password'), ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class);
     }
@@ -35,10 +35,10 @@ class PasswordResetTest extends TenantTestCase
 
         $user = $this->makeUser();
 
-        $this->post($this->tenantUrl('/forgot-password'), ['email' => $user->email]);
+        $this->post($this->siteUrl('/forgot-password'), ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class, function (object $notification) {
-            $this->get($this->tenantUrl('/reset-password/').$notification->token)
+            $this->get($this->siteUrl('/reset-password/').$notification->token)
                 ->assertOk()
                 ->assertInertia(fn (Assert $page) => $page->component('Auth/ResetPassword')->where('token', $notification->token));
 
@@ -52,10 +52,10 @@ class PasswordResetTest extends TenantTestCase
 
         $user = $this->makeUser();
 
-        $this->post($this->tenantUrl('/forgot-password'), ['email' => $user->email]);
+        $this->post($this->siteUrl('/forgot-password'), ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class, function (object $notification) use ($user) {
-            $this->post($this->tenantUrl('/reset-password'), [
+            $this->post($this->siteUrl('/reset-password'), [
                 'token' => $notification->token,
                 'email' => $user->email,
                 'password' => 'new-password',

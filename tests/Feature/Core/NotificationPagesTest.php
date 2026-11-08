@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class NotificationPagesTest extends TenantTestCase
+class NotificationPagesTest extends DatabaseTestCase
 {
     private User $user;
 
@@ -31,7 +31,7 @@ class NotificationPagesTest extends TenantTestCase
         $this->notification($other, ['title' => 'Theirs', 'message' => 'Secret']);
 
         $this->actingAs($this->user)
-            ->getJson($this->tenantUrl('/ar/admin/notifications'))
+            ->getJson($this->siteUrl('/ar/admin/notifications'))
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.title', 'Mine')
@@ -46,7 +46,7 @@ class NotificationPagesTest extends TenantTestCase
         }
 
         $this->actingAs($this->user)
-            ->getJson($this->tenantUrl('/ar/admin/notifications'))
+            ->getJson($this->siteUrl('/ar/admin/notifications'))
             ->assertJsonPath('data.0.url', null)
             ->assertJsonPath('data.1.url', null)
             ->assertJsonPath('data.2.url', null);
@@ -61,14 +61,14 @@ class NotificationPagesTest extends TenantTestCase
         $this->notification($other, ['message' => 'c']);
 
         $this->actingAs($this->user)
-            ->post($this->tenantUrl('/ar/admin/notifications/read'))
+            ->post($this->siteUrl('/ar/admin/notifications/read'))
             ->assertRedirect();
 
         $this->assertSame(0, $this->user->unreadNotifications()->count());
         $this->assertSame(1, $other->unreadNotifications()->count());
 
         $this->actingAs($this->user)
-            ->get($this->tenantUrl('/ar/admin/profile'))
+            ->get($this->siteUrl('/ar/admin/profile'))
             ->assertInertia(fn (Assert $page) => $page->where('unreadNotifications', 0));
     }
 
@@ -80,13 +80,13 @@ class NotificationPagesTest extends TenantTestCase
         $theirs = $this->notification($other, ['message' => 'b']);
 
         $this->actingAs($this->user)
-            ->post($this->tenantUrl('/ar/admin/notifications/'.$mine->id.'/read'))
+            ->post($this->siteUrl('/ar/admin/notifications/'.$mine->id.'/read'))
             ->assertRedirect();
 
         $this->assertNotNull($mine->fresh()->read_at);
 
         $this->actingAs($this->user)
-            ->post($this->tenantUrl('/ar/admin/notifications/'.$theirs->id.'/read'))
+            ->post($this->siteUrl('/ar/admin/notifications/'.$theirs->id.'/read'))
             ->assertNotFound();
 
         $this->assertNull($theirs->fresh()->read_at);
@@ -94,7 +94,7 @@ class NotificationPagesTest extends TenantTestCase
 
     public function test_guests_cannot_read_notifications(): void
     {
-        $this->getJson($this->tenantUrl('/ar/admin/notifications'))->assertUnauthorized();
+        $this->getJson($this->siteUrl('/ar/admin/notifications'))->assertUnauthorized();
     }
 
     /**

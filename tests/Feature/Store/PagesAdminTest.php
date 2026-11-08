@@ -14,7 +14,7 @@ class PagesAdminTest extends StorefrontTestCase
 
     public function test_index_lists_the_pages(): void
     {
-        $this->actingAs($this->pageStaff())->get($this->tenantUrl(self::URL))
+        $this->actingAs($this->pageStaff())->get($this->siteUrl(self::URL))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Store/Page/Index')
@@ -29,7 +29,7 @@ class PagesAdminTest extends StorefrontTestCase
         $service->create(['slug' => 'size-guide', 'is_published' => false, 'show_in_footer' => false], ['ar' => ['title' => 'Size Guide']]);
         $this->actingAs($this->pageStaff());
 
-        $total = fn (string $query, int $expected) => $this->get($this->tenantUrl(self::URL.'?'.$query))
+        $total = fn (string $query, int $expected) => $this->get($this->siteUrl(self::URL.'?'.$query))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('table.meta.total', $expected));
 
@@ -47,7 +47,7 @@ class PagesAdminTest extends StorefrontTestCase
     {
         $staff = $this->pageStaff();
 
-        $this->actingAs($staff)->post($this->tenantUrl(self::URL), [
+        $this->actingAs($staff)->post($this->siteUrl(self::URL), [
             'title' => 'دليل المقاسات',
             'slug' => 'size-guide',
             'body' => '<p>جدول المقاسات</p>',
@@ -55,7 +55,7 @@ class PagesAdminTest extends StorefrontTestCase
             'is_published' => true,
             'show_in_footer' => true,
             'sort_order' => 100,
-        ])->assertRedirect($this->tenantUrl(self::URL));
+        ])->assertRedirect($this->siteUrl(self::URL));
 
         $page = Page::where('slug', 'size-guide')->firstOrFail();
         $this->assertSame('دليل المقاسات', $page->translate('ar')->title);
@@ -67,7 +67,7 @@ class PagesAdminTest extends StorefrontTestCase
 
     public function test_the_body_is_sanitized_on_save(): void
     {
-        $this->actingAs($this->pageStaff())->post($this->tenantUrl(self::URL), [
+        $this->actingAs($this->pageStaff())->post($this->siteUrl(self::URL), [
             'title' => 'نص',
             'slug' => 'unsafe',
             'body' => '<p>ok</p><script>alert(1)</script>',
@@ -82,11 +82,11 @@ class PagesAdminTest extends StorefrontTestCase
         $this->actingAs($this->pageStaff());
 
         // No English text yet: it starts empty, not in Arabic.
-        $this->get($this->tenantUrl("/en/admin/store/pages/{$page->id}/edit"))
+        $this->get($this->siteUrl("/en/admin/store/pages/{$page->id}/edit"))
             ->assertOk()
             ->assertInertia(fn (Assert $inertia) => $inertia->component('Store/Page/Edit')->where('page.title', ''));
 
-        $this->put($this->tenantUrl("/en/admin/store/pages/{$page->id}"), ['title' => 'Size guide', 'slug' => 'size-guide'])->assertRedirect();
+        $this->put($this->siteUrl("/en/admin/store/pages/{$page->id}"), ['title' => 'Size guide', 'slug' => 'size-guide'])->assertRedirect();
 
         $page->refresh();
         $this->assertSame('Size guide', $page->translate('en')->title);
@@ -95,7 +95,7 @@ class PagesAdminTest extends StorefrontTestCase
 
     public function test_a_title_is_required(): void
     {
-        $this->actingAs($this->pageStaff())->post($this->tenantUrl(self::URL), ['slug' => 'x'])->assertSessionHasErrors('title');
+        $this->actingAs($this->pageStaff())->post($this->siteUrl(self::URL), ['slug' => 'x'])->assertSessionHasErrors('title');
     }
 
     public function test_edit_a_system_page_keeps_its_slug(): void
@@ -103,14 +103,14 @@ class PagesAdminTest extends StorefrontTestCase
         $privacy = app(PageRepositoryInterface::class)->findByKey('privacy');
         $this->actingAs($this->pageStaff());
 
-        $this->get($this->tenantUrl(self::URL."/{$privacy->id}/edit"))
+        $this->get($this->siteUrl(self::URL."/{$privacy->id}/edit"))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('page.title', 'سياسة الخصوصية')
                 ->where('page.slug', 'privacy-policy')
                 ->where('isSystem', true));
 
-        $this->put($this->tenantUrl(self::URL."/{$privacy->id}"), ['title' => 'خصوصيتك', 'slug' => 'changed', 'is_published' => false])
+        $this->put($this->siteUrl(self::URL."/{$privacy->id}"), ['title' => 'خصوصيتك', 'slug' => 'changed', 'is_published' => false])
             ->assertSessionHasNoErrors();
 
         $privacy->refresh();
@@ -137,10 +137,10 @@ class PagesAdminTest extends StorefrontTestCase
         $privacy = app(PageRepositoryInterface::class)->findByKey('privacy');
         $this->actingAs($this->pageStaff());
 
-        $this->delete($this->tenantUrl(self::URL."/{$privacy->id}"))->assertRedirect()->assertSessionHas('error');
+        $this->delete($this->siteUrl(self::URL."/{$privacy->id}"))->assertRedirect()->assertSessionHas('error');
         $this->assertNotNull(Page::find($privacy->id));
 
-        $this->delete($this->tenantUrl(self::URL."/{$custom->id}"))->assertRedirect()->assertSessionHas('success');
+        $this->delete($this->siteUrl(self::URL."/{$custom->id}"))->assertRedirect()->assertSessionHas('success');
         $this->assertNull(Page::find($custom->id));
     }
 
@@ -149,8 +149,8 @@ class PagesAdminTest extends StorefrontTestCase
         $faq = app(PageRepositoryInterface::class)->findByKey('faq');
         $this->actingAs($this->pageStaff());
 
-        $this->put($this->tenantUrl(self::URL."/{$faq->id}/published"), ['value' => false])->assertRedirect();
-        $this->put($this->tenantUrl(self::URL."/{$faq->id}/footer"), ['value' => false])->assertRedirect();
+        $this->put($this->siteUrl(self::URL."/{$faq->id}/published"), ['value' => false])->assertRedirect();
+        $this->put($this->siteUrl(self::URL."/{$faq->id}/footer"), ['value' => false])->assertRedirect();
 
         $this->assertFalse($faq->fresh()->is_published);
         $this->assertFalse($faq->fresh()->show_in_footer);
@@ -161,15 +161,15 @@ class PagesAdminTest extends StorefrontTestCase
         $privacy = app(PageRepositoryInterface::class)->findByKey('privacy');
         $clerk = $this->staff(['Product View List']);
 
-        $this->actingAs($clerk)->get($this->tenantUrl(self::URL))->assertForbidden();
-        $this->actingAs($clerk)->post($this->tenantUrl(self::URL), ['title' => 'x'])->assertForbidden();
-        $this->actingAs($clerk)->put($this->tenantUrl(self::URL."/{$privacy->id}/published"), ['value' => false])->assertForbidden();
-        $this->actingAs($clerk)->delete($this->tenantUrl(self::URL."/{$privacy->id}"))->assertForbidden();
+        $this->actingAs($clerk)->get($this->siteUrl(self::URL))->assertForbidden();
+        $this->actingAs($clerk)->post($this->siteUrl(self::URL), ['title' => 'x'])->assertForbidden();
+        $this->actingAs($clerk)->put($this->siteUrl(self::URL."/{$privacy->id}/published"), ['value' => false])->assertForbidden();
+        $this->actingAs($clerk)->delete($this->siteUrl(self::URL."/{$privacy->id}"))->assertForbidden();
 
         $staff = $this->pageStaff();
-        $this->actingAs($staff)->get($this->tenantUrl(self::URL))->assertOk();
-        $this->actingAs($staff)->get($this->tenantUrl(self::URL.'/add'))->assertOk();
-        $this->actingAs($staff)->get($this->tenantUrl(self::URL."/{$privacy->id}/edit"))->assertOk();
+        $this->actingAs($staff)->get($this->siteUrl(self::URL))->assertOk();
+        $this->actingAs($staff)->get($this->siteUrl(self::URL.'/add'))->assertOk();
+        $this->actingAs($staff)->get($this->siteUrl(self::URL."/{$privacy->id}/edit"))->assertOk();
     }
 
     private function pageStaff(): User

@@ -9,9 +9,9 @@ use Modules\Items\Entities\Category;
 use Modules\Items\Enums\CategoryStatus;
 use Modules\Items\Repositories\Contracts\CategoryRepositoryInterface;
 use Modules\Items\Services\CategoryService;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class CategoryServiceTest extends TenantTestCase
+class CategoryServiceTest extends DatabaseTestCase
 {
     private CategoryService $service;
 

@@ -9,13 +9,13 @@ use Modules\Core\Entities\User;
 use Modules\Core\Settings\GeneralSettings;
 use Modules\Store\Services\StorefrontCatalogCache;
 use Modules\Store\Theme\ThemeService;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
- * Store pages inside store `testing`. A test's database writes roll back but Redis keeps what it
+ * Store pages inside store `testing`. A test's store database writes roll back but the central cache table keeps what it
  * cached, so the catalog and theme caches start empty.
  */
-abstract class StorefrontTestCase extends TenantTestCase
+abstract class StorefrontTestCase extends DatabaseTestCase
 {
     protected function setUp(): void
     {
@@ -36,7 +36,7 @@ abstract class StorefrontTestCase extends TenantTestCase
     {
         $props = [];
 
-        $this->get($this->tenantUrl($path))
+        $this->get($this->siteUrl($path))
             ->assertOk()
             ->assertInertia(function (Assert $page) use ($component, &$props) {
                 $page->component($component);

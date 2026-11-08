@@ -10,9 +10,9 @@ use Modules\Core\Entities\User;
 use Modules\Items\Entities\Addon;
 use Modules\Items\Entities\AddonOption;
 use Modules\Items\Enums\AddonType;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class AddonPagesTest extends TenantTestCase
+class AddonPagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -85,7 +85,7 @@ class AddonPagesTest extends TenantTestCase
         $this->page('/addons/add')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Items/Addon/Add'));
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/addons'), $this->payload())
+            ->post($this->siteUrl('/ar/admin/addons'), $this->payload())
             ->assertRedirect()
             ->assertSessionHasNoErrors()
             ->assertSessionHas('success');
@@ -108,7 +108,7 @@ class AddonPagesTest extends TenantTestCase
     public function test_validation_errors_are_keyed_by_position_in_the_list(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/addons'), $this->payload([
+            ->post($this->siteUrl('/ar/admin/addons'), $this->payload([
                 'name' => '',
                 'type' => 99,
                 'options' => [
@@ -148,7 +148,7 @@ class AddonPagesTest extends TenantTestCase
         $count = Addon::query()->count();
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/addons/'.$addon->id), [...$this->payload(['name' => 'معدل', 'options' => [
+            ->post($this->siteUrl('/ar/admin/addons/'.$addon->id), [...$this->payload(['name' => 'معدل', 'options' => [
                 ['id' => $keep->id, 'name' => 'معدل', 'price' => 9, 'is_default' => '1', 'is_quantifiable' => '1'],
                 $this->option(['name' => 'جديد']),
             ]]), '_method' => 'put'])
@@ -173,7 +173,7 @@ class AddonPagesTest extends TenantTestCase
         $addon = Addon::factory()->create();
         $option = $this->savedOption($addon, 'قديم');
         $old = $option->getFirstMedia('addon_option')->id;
-        $url = $this->tenantUrl('/ar/admin/addons/'.$addon->id);
+        $url = $this->siteUrl('/ar/admin/addons/'.$addon->id);
 
         $this->actingAs($this->staff)
             ->put($url, $this->payload(['options' => [['id' => $option->id, 'name' => 'قديم', 'price' => 1, 'removed_image' => [$old]]]]))
@@ -195,7 +195,7 @@ class AddonPagesTest extends TenantTestCase
         $foreign = $this->savedOption(Addon::factory()->create(), 'غريب');
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/addons/'.$addon->id), $this->payload(['options' => [$this->option(['id' => $foreign->id, 'name' => 'مسروق'])]]))
+            ->put($this->siteUrl('/ar/admin/addons/'.$addon->id), $this->payload(['options' => [$this->option(['id' => $foreign->id, 'name' => 'مسروق'])]]))
             ->assertSessionHasErrors('options.0.id');
 
         $this->assertSame('غريب', $foreign->fresh()->translate('ar')->name);
@@ -207,8 +207,8 @@ class AddonPagesTest extends TenantTestCase
         $two = Addon::factory()->create();
         $three = Addon::factory()->create();
 
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/addons/'.$one->id))->assertRedirect();
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/addons'), ['ids' => [$two->id, $three->id]])->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/addons/'.$one->id))->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/addons'), ['ids' => [$two->id, $three->id]])->assertRedirect();
 
         $this->assertSame(0, Addon::query()->count());
         $this->assertSame(3, Addon::withTrashed()->count());
@@ -236,7 +236,7 @@ class AddonPagesTest extends TenantTestCase
         ])->givePermissionTo('Addon View List');
 
         $addon = Addon::factory()->create();
-        $base = $this->tenantUrl('/ar/admin/addons');
+        $base = $this->siteUrl('/ar/admin/addons');
 
         $this->actingAs($viewer)->get($base)->assertOk();
         $this->actingAs($viewer)->get($base.'/add')->assertForbidden();
@@ -252,12 +252,12 @@ class AddonPagesTest extends TenantTestCase
 
     public function test_guests_go_to_the_login_page(): void
     {
-        $this->get($this->tenantUrl('/ar/admin/addons'))->assertRedirect();
+        $this->get($this->siteUrl('/ar/admin/addons'))->assertRedirect();
     }
 
     private function page(string $path)
     {
-        return $this->actingAs($this->staff)->get($this->tenantUrl('/ar/admin'.$path));
+        return $this->actingAs($this->staff)->get($this->siteUrl('/ar/admin'.$path));
     }
 
     private function savedOption(Addon $addon, string $name): AddonOption

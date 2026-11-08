@@ -6,12 +6,12 @@ use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
 use PragmaRX\Google2FA\Google2FA;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
  * Behaviour of core's TwoFactorAuthenticationSettingsTest on the profile page.
  */
-class TwoFactorAuthenticationSettingsTest extends TenantTestCase
+class TwoFactorAuthenticationSettingsTest extends DatabaseTestCase
 {
     private User $user;
 
@@ -35,7 +35,7 @@ class TwoFactorAuthenticationSettingsTest extends TenantTestCase
         $this->assertFalse($user->hasEnabledTwoFactorAuthentication());
 
         $this->actingAs($this->user)
-            ->get($this->tenantUrl('/ar/admin/profile'))
+            ->get($this->siteUrl('/ar/admin/profile'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('twoFactor.enabled', false)
                 ->whereNot('twoFactor.qrCodeSvg', null)
@@ -55,7 +55,7 @@ class TwoFactorAuthenticationSettingsTest extends TenantTestCase
         $this->confirm()->assertInertia(fn (Assert $page) => $page->has('twoFactor.recoveryCodes', 8)->where('twoFactor.qrCodeSvg', null));
 
         $this->actingAs($this->user)
-            ->get($this->tenantUrl('/ar/admin/profile'))
+            ->get($this->siteUrl('/ar/admin/profile'))
             ->assertInertia(fn (Assert $page) => $page->where('twoFactor.enabled', true)->where('twoFactor.recoveryCodes', null));
     }
 
@@ -65,14 +65,14 @@ class TwoFactorAuthenticationSettingsTest extends TenantTestCase
         session()->forget('auth.password_confirmed_at');
 
         $this->actingAs($this->user)
-            ->get($this->tenantUrl('/ar/admin/profile'))
+            ->get($this->siteUrl('/ar/admin/profile'))
             ->assertInertia(fn (Assert $page) => $page->where('twoFactor.qrCodeSvg', null)->where('twoFactor.secretKey', null));
     }
 
     public function test_enabling_needs_the_right_password(): void
     {
         $this->actingAs($this->user)
-            ->post($this->tenantUrl('/ar/admin/profile/two-factor'), ['password' => 'wrong'])
+            ->post($this->siteUrl('/ar/admin/profile/two-factor'), ['password' => 'wrong'])
             ->assertSessionHasErrors('password');
 
         $this->assertNull($this->user->fresh()->two_factor_secret);
@@ -83,7 +83,7 @@ class TwoFactorAuthenticationSettingsTest extends TenantTestCase
         $this->enable();
 
         $this->actingAs($this->user)
-            ->post($this->tenantUrl('/ar/admin/profile/two-factor/confirm'), ['code' => '000000'])
+            ->post($this->siteUrl('/ar/admin/profile/two-factor/confirm'), ['code' => '000000'])
             ->assertSessionHasErrors('code');
 
         $this->assertFalse($this->user->fresh()->hasEnabledTwoFactorAuthentication());
@@ -97,7 +97,7 @@ class TwoFactorAuthenticationSettingsTest extends TenantTestCase
         $before = $this->user->fresh()->recoveryCodes();
 
         $this->actingAs($this->user)
-            ->post($this->tenantUrl('/ar/admin/profile/two-factor/recovery-codes'), ['password' => 'password'])
+            ->post($this->siteUrl('/ar/admin/profile/two-factor/recovery-codes'), ['password' => 'password'])
             ->assertSessionHasNoErrors();
 
         $after = $this->user->fresh()->recoveryCodes();
@@ -112,7 +112,7 @@ class TwoFactorAuthenticationSettingsTest extends TenantTestCase
         $this->assertNotNull($this->user->fresh()->two_factor_secret);
 
         $this->actingAs($this->user)
-            ->delete($this->tenantUrl('/ar/admin/profile/two-factor'), ['password' => 'password'])
+            ->delete($this->siteUrl('/ar/admin/profile/two-factor'), ['password' => 'password'])
             ->assertSessionHasNoErrors();
 
         $this->assertNull($this->user->fresh()->two_factor_secret);
@@ -125,8 +125,8 @@ class TwoFactorAuthenticationSettingsTest extends TenantTestCase
 
         auth()->guard('web')->logout();
 
-        $this->post($this->tenantUrl('/login'), ['email' => 'staff@example.com', 'password' => 'password'])
-            ->assertRedirect($this->tenantUrl('/two-factor-challenge'));
+        $this->post($this->siteUrl('/login'), ['email' => 'staff@example.com', 'password' => 'password'])
+            ->assertRedirect($this->siteUrl('/two-factor-challenge'));
 
         $this->assertGuest();
     }
@@ -134,7 +134,7 @@ class TwoFactorAuthenticationSettingsTest extends TenantTestCase
     private function enable(): void
     {
         $this->actingAs($this->user)
-            ->post($this->tenantUrl('/ar/admin/profile/two-factor'), ['password' => 'password'])
+            ->post($this->siteUrl('/ar/admin/profile/two-factor'), ['password' => 'password'])
             ->assertSessionHasNoErrors();
     }
 
@@ -143,6 +143,6 @@ class TwoFactorAuthenticationSettingsTest extends TenantTestCase
         $code = (new Google2FA)->getCurrentOtp(decrypt($this->user->fresh()->two_factor_secret));
 
         return $this->actingAs($this->user)
-            ->post($this->tenantUrl('/ar/admin/profile/two-factor/confirm'), ['code' => $code]);
+            ->post($this->siteUrl('/ar/admin/profile/two-factor/confirm'), ['code' => $code]);
     }
 }

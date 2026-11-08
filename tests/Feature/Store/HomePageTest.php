@@ -47,7 +47,7 @@ class HomePageTest extends StorefrontTestCase
         $this->assertNotSame([], $props['store']['branches']);
 
         // The store's color reaches the first paint, in the root view.
-        $this->get($this->tenantUrl('/ar'))->assertSee('--brand:#6B2D5C', false);
+        $this->get($this->siteUrl('/ar'))->assertSee('--brand:#6B2D5C', false);
     }
 
     public function test_english_home_uses_english_texts_with_arabic_fallback(): void
@@ -57,7 +57,7 @@ class HomePageTest extends StorefrontTestCase
             'hero_subtitle' => ['ar' => 'نص عربي فقط', 'en' => ''],
         ], [], []);
 
-        $this->get($this->tenantUrl('/en'))->assertOk()->assertSee('<html lang="en" dir="ltr"', false);
+        $this->get($this->siteUrl('/en'))->assertOk()->assertSee('<html lang="en" dir="ltr"', false);
 
         $props = $this->props('/en', self::HOME);
         $this->assertSame('Everyday elegance', $props['hero']['title']);
@@ -68,12 +68,12 @@ class HomePageTest extends StorefrontTestCase
     {
         $props = $this->props('/ar/shop?q=x', 'Store/Storefront/Shop');
 
-        $this->assertSame($this->tenantUrl('/en/shop?q=x'), $props['store']['other_locale_url']);
+        $this->assertSame($this->siteUrl('/en/shop?q=x'), $props['store']['other_locale_url']);
     }
 
     public function test_arabic_home_is_rtl(): void
     {
-        $this->get($this->tenantUrl('/ar'))->assertOk()->assertSee('<html lang="ar" dir="rtl"', false);
+        $this->get($this->siteUrl('/ar'))->assertOk()->assertSee('<html lang="ar" dir="rtl"', false);
     }
 
     public function test_empty_store_home_renders_without_empty_sections(): void
@@ -145,11 +145,11 @@ class HomePageTest extends StorefrontTestCase
             $queries++;
         });
 
-        $this->get($this->tenantUrl('/ar'))->assertOk();
+        $this->get($this->siteUrl('/ar'))->assertOk();
         $cold = $queries;
 
         $queries = 0;
-        $this->get($this->tenantUrl('/ar'))->assertOk();
+        $this->get($this->siteUrl('/ar'))->assertOk();
         $cached = $queries;
 
         $this->assertLessThan(25, $cached, "A cached home ran {$cached} queries");
@@ -160,7 +160,7 @@ class HomePageTest extends StorefrontTestCase
     {
         Product::factory()->create();
 
-        $html = $this->get($this->tenantUrl('/ar'))->assertOk()->getContent();
+        $html = $this->get($this->siteUrl('/ar'))->assertOk()->getContent();
 
         foreach (['#151716', '#111312', 'bg-black', 'bg-neutral-900'] as $dark) {
             $this->assertStringNotContainsString($dark, $html);

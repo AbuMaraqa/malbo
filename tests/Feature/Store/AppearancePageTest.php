@@ -22,7 +22,7 @@ class AppearancePageTest extends StorefrontTestCase
 
     protected function tearDown(): void
     {
-        if ($this->app && tenancy()->initialized) {
+        if ($this->app) {
             Storage::disk('public')->delete($this->stored);
         }
 
@@ -33,7 +33,7 @@ class AppearancePageTest extends StorefrontTestCase
     {
         app(StoreAppearanceService::class)->save(['hero_title' => ['ar' => 'أهلاً', 'en' => 'Welcome'], 'primary_color' => '#0F766E'], ['whatsapp' => '970599000000'], []);
 
-        $this->actingAs($this->owner())->get($this->tenantUrl(self::URL))
+        $this->actingAs($this->owner())->get($this->siteUrl(self::URL))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Store/Appearance/Index')
@@ -106,8 +106,8 @@ class AppearancePageTest extends StorefrontTestCase
     {
         $user = $this->staff(['Product View List']);
 
-        $this->actingAs($user)->get($this->tenantUrl(self::URL))->assertForbidden();
-        $this->actingAs($user)->put($this->tenantUrl(self::URL), ['primary_color' => '#000000', 'font' => 'cairo'])->assertForbidden();
+        $this->actingAs($user)->get($this->siteUrl(self::URL))->assertForbidden();
+        $this->actingAs($user)->put($this->siteUrl(self::URL), ['primary_color' => '#000000', 'font' => 'cairo'])->assertForbidden();
     }
 
     public function test_a_customer_is_sent_to_the_storefront(): void
@@ -115,7 +115,7 @@ class AppearancePageTest extends StorefrontTestCase
         $customer = User::forceCreate(['name' => 'Buyer', 'email' => 'buyer-'.Str::random(8).'@store.test', 'password' => 'password', 'email_verified_at' => now()])
             ->assignRole(UserRole::CUSTOMER->value);
 
-        $this->actingAs($customer)->get($this->tenantUrl(self::URL))->assertRedirect();
+        $this->actingAs($customer)->get($this->siteUrl(self::URL))->assertRedirect();
     }
 
     public function test_logo_upload_keep_replace_and_clear(): void
@@ -154,7 +154,7 @@ class AppearancePageTest extends StorefrontTestCase
      */
     private function save(array $fields)
     {
-        return $this->actingAs($this->owner())->put($this->tenantUrl(self::URL), [
+        return $this->actingAs($this->owner())->put($this->siteUrl(self::URL), [
             'primary_color' => '#1F6F50',
             'font' => 'tajawal',
             ...$fields,

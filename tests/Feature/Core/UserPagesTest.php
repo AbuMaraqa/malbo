@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
 use Spatie\Permission\Models\Role;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class UserPagesTest extends TenantTestCase
+class UserPagesTest extends DatabaseTestCase
 {
     private User $admin;
 
@@ -26,7 +26,7 @@ class UserPagesTest extends TenantTestCase
     public function test_the_list_shows_users_with_their_roles(): void
     {
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/users?filter[email]=admin@example.com'))
+            ->get($this->siteUrl('/ar/admin/users?filter[email]=admin@example.com'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Core/Users/Index')
@@ -43,7 +43,7 @@ class UserPagesTest extends TenantTestCase
         $this->makeUser('findme@example.com', 'Findable Person');
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/users?filter[search]=FINDABLE'))
+            ->get($this->siteUrl('/ar/admin/users?filter[search]=FINDABLE'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('table.meta.total', 1)
                 ->where('table.data.0.email', 'findme@example.com'));
@@ -61,7 +61,7 @@ class UserPagesTest extends TenantTestCase
             'phone' => '0599',
         ] as $filter => $value) {
             $this->actingAs($this->admin)
-                ->get($this->tenantUrl('/ar/admin/users?filter['.$filter.']='.urlencode($value)))
+                ->get($this->siteUrl('/ar/admin/users?filter['.$filter.']='.urlencode($value)))
                 ->assertOk()
                 ->assertInertia(fn (Assert $page) => $page
                     ->where('table.meta.total', 1)
@@ -73,7 +73,7 @@ class UserPagesTest extends TenantTestCase
     {
         foreach (['filter[created_at_from]=2020-01-01', 'filter[created_at_to]=not-a-date', 'filter[branch]=999999', 'filter[role]=abc'] as $query) {
             $this->actingAs($this->admin)
-                ->get($this->tenantUrl('/ar/admin/users?'.$query))
+                ->get($this->siteUrl('/ar/admin/users?'.$query))
                 ->assertOk();
         }
     }
@@ -81,7 +81,7 @@ class UserPagesTest extends TenantTestCase
     public function test_adding_a_user_saves_roles_and_hashes_the_password(): void
     {
         $this->actingAs($this->admin)
-            ->post($this->tenantUrl('/ar/admin/users'), $this->payload())
+            ->post($this->siteUrl('/ar/admin/users'), $this->payload())
             ->assertRedirect()
             ->assertSessionHas('success');
 
@@ -94,14 +94,14 @@ class UserPagesTest extends TenantTestCase
     public function test_a_mixed_case_email_is_saved_in_lower_case_and_can_log_in(): void
     {
         $this->actingAs($this->admin)
-            ->post($this->tenantUrl('/ar/admin/users'), $this->payload(['email' => 'Mixed.Case@Example.com']))
+            ->post($this->siteUrl('/ar/admin/users'), $this->payload(['email' => 'Mixed.Case@Example.com']))
             ->assertSessionHasNoErrors();
 
         $this->assertTrue(User::query()->where('email', 'mixed.case@example.com')->exists());
 
         auth()->guard('web')->logout();
 
-        $this->post($this->tenantUrl('/login'), ['email' => 'Mixed.Case@Example.com', 'password' => 'secret-password']);
+        $this->post($this->siteUrl('/login'), ['email' => 'Mixed.Case@Example.com', 'password' => 'secret-password']);
 
         $this->assertAuthenticated();
     }
@@ -109,14 +109,14 @@ class UserPagesTest extends TenantTestCase
     public function test_validation_errors_are_returned(): void
     {
         $this->actingAs($this->admin)
-            ->post($this->tenantUrl('/ar/admin/users'), $this->payload(['email' => 'ADMIN@example.com', 'password' => 'short', 'roles' => []]))
+            ->post($this->siteUrl('/ar/admin/users'), $this->payload(['email' => 'ADMIN@example.com', 'password' => 'short', 'roles' => []]))
             ->assertSessionHasErrors(['email', 'password', 'roles']);
     }
 
     public function test_a_bad_role_or_branch_id_is_a_validation_error_not_a_server_error(): void
     {
         $this->actingAs($this->admin)
-            ->post($this->tenantUrl('/ar/admin/users'), $this->payload(['roles' => ['abc'], 'branch_id' => 'abc']))
+            ->post($this->siteUrl('/ar/admin/users'), $this->payload(['roles' => ['abc'], 'branch_id' => 'abc']))
             ->assertSessionHasErrors(['roles.0', 'branch_id']);
     }
 
@@ -125,7 +125,7 @@ class UserPagesTest extends TenantTestCase
         $user = $this->makeUser('edit@example.com')->assignRole('User');
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/users/'.$user->id.'/edit'))
+            ->get($this->siteUrl('/ar/admin/users/'.$user->id.'/edit'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Core/Users/Edit')
@@ -140,7 +140,7 @@ class UserPagesTest extends TenantTestCase
         $count = User::query()->count();
 
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/users/'.$user->id), $this->payload(['name' => 'Edited', 'email' => 'edit@example.com', 'password' => '']))
+            ->put($this->siteUrl('/ar/admin/users/'.$user->id), $this->payload(['name' => 'Edited', 'email' => 'edit@example.com', 'password' => '']))
             ->assertSessionHasNoErrors()
             ->assertRedirect();
 
@@ -154,7 +154,7 @@ class UserPagesTest extends TenantTestCase
         $user = $this->makeUser('gone@example.com');
 
         $this->actingAs($this->admin)
-            ->delete($this->tenantUrl('/ar/admin/users/'.$user->id))
+            ->delete($this->siteUrl('/ar/admin/users/'.$user->id))
             ->assertSessionHas('success');
 
         $this->assertNull($user->fresh());
@@ -163,7 +163,7 @@ class UserPagesTest extends TenantTestCase
     public function test_a_user_cannot_delete_their_own_account(): void
     {
         $this->actingAs($this->admin)
-            ->delete($this->tenantUrl('/ar/admin/users/'.$this->admin->id))
+            ->delete($this->siteUrl('/ar/admin/users/'.$this->admin->id))
             ->assertSessionHas('error');
 
         $this->assertNotNull($this->admin->fresh());
@@ -176,7 +176,7 @@ class UserPagesTest extends TenantTestCase
         }
 
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/users/'.$this->admin->id), $this->payload(['email' => 'admin@example.com', 'password' => '']))
+            ->put($this->siteUrl('/ar/admin/users/'.$this->admin->id), $this->payload(['email' => 'admin@example.com', 'password' => '']))
             ->assertSessionHasErrors('roles');
 
         $this->assertTrue($this->admin->fresh()->hasRole('Super Admin'));
@@ -188,7 +188,7 @@ class UserPagesTest extends TenantTestCase
         $this->makeOrder($user);
 
         $this->actingAs($this->admin)
-            ->delete($this->tenantUrl('/ar/admin/users/'.$user->id))
+            ->delete($this->siteUrl('/ar/admin/users/'.$user->id))
             ->assertSessionHas('error');
 
         $this->assertNotNull($user->fresh());
@@ -200,21 +200,21 @@ class UserPagesTest extends TenantTestCase
         $superAdmin = Role::findByName('Super Admin', 'web');
 
         $this->actingAs($manager)
-            ->get($this->tenantUrl('/ar/admin/users/add'))
+            ->get($this->siteUrl('/ar/admin/users/add'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('roleOptions', fn ($options) => collect($options)->doesntContain('value', $superAdmin->id)));
 
         $this->actingAs($manager)
-            ->post($this->tenantUrl('/ar/admin/users'), $this->payload(['roles' => [$superAdmin->id]]))
+            ->post($this->siteUrl('/ar/admin/users'), $this->payload(['roles' => [$superAdmin->id]]))
             ->assertSessionHasErrors('roles');
 
-        $this->actingAs($manager)->get($this->tenantUrl('/ar/admin/users/'.$this->admin->id.'/edit'))->assertForbidden();
-        $this->actingAs($manager)->delete($this->tenantUrl('/ar/admin/users/'.$this->admin->id))->assertForbidden();
+        $this->actingAs($manager)->get($this->siteUrl('/ar/admin/users/'.$this->admin->id.'/edit'))->assertForbidden();
+        $this->actingAs($manager)->delete($this->siteUrl('/ar/admin/users/'.$this->admin->id))->assertForbidden();
     }
 
     public function test_a_non_numeric_id_is_a_not_found_not_a_server_error(): void
     {
-        $this->actingAs($this->admin)->get($this->tenantUrl('/ar/admin/users/abc/edit'))->assertNotFound();
+        $this->actingAs($this->admin)->get($this->siteUrl('/ar/admin/users/abc/edit'))->assertNotFound();
     }
 
     public function test_each_route_needs_its_permission(): void
@@ -224,17 +224,17 @@ class UserPagesTest extends TenantTestCase
 
         $this->actingAs($viewer);
 
-        $this->get($this->tenantUrl('/ar/admin/users'))->assertForbidden();
-        $this->get($this->tenantUrl('/ar/admin/users/add'))->assertForbidden();
-        $this->post($this->tenantUrl('/ar/admin/users'), $this->payload())->assertForbidden();
-        $this->get($this->tenantUrl('/ar/admin/users/'.$target->id.'/edit'))->assertForbidden();
-        $this->put($this->tenantUrl('/ar/admin/users/'.$target->id), $this->payload())->assertForbidden();
-        $this->delete($this->tenantUrl('/ar/admin/users/'.$target->id))->assertForbidden();
+        $this->get($this->siteUrl('/ar/admin/users'))->assertForbidden();
+        $this->get($this->siteUrl('/ar/admin/users/add'))->assertForbidden();
+        $this->post($this->siteUrl('/ar/admin/users'), $this->payload())->assertForbidden();
+        $this->get($this->siteUrl('/ar/admin/users/'.$target->id.'/edit'))->assertForbidden();
+        $this->put($this->siteUrl('/ar/admin/users/'.$target->id), $this->payload())->assertForbidden();
+        $this->delete($this->siteUrl('/ar/admin/users/'.$target->id))->assertForbidden();
     }
 
     public function test_guests_go_to_the_login_page(): void
     {
-        $this->get($this->tenantUrl('/ar/admin/users'))->assertRedirect();
+        $this->get($this->siteUrl('/ar/admin/users'))->assertRedirect();
     }
 
     private function makeUser(string $email, string $name = 'Someone', ?string $phone = null): User

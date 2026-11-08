@@ -6,9 +6,9 @@ use InvalidArgumentException;
 use Modules\Store\Services\StoreAppearanceService;
 use Modules\Store\Theme\BrandColor;
 use Modules\Store\Theme\ThemeService;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class ThemeServiceTest extends TenantTestCase
+class ThemeServiceTest extends DatabaseTestCase
 {
     public function test_css_has_the_brand_shades_contrast_and_font(): void
     {

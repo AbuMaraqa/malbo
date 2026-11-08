@@ -12,13 +12,13 @@ use Modules\Items\Entities\Category;
 use Modules\Items\Entities\Label;
 use Modules\Items\Entities\Product;
 use Modules\Items\Entities\Tag;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
  * Models never take their translations from the current request (spec §5.3): a console
  * import or a queued job would otherwise store whatever the request holds, or nothing.
  */
-class TranslationsOutsideRequestTest extends TenantTestCase
+class TranslationsOutsideRequestTest extends DatabaseTestCase
 {
     protected function setUp(): void
     {

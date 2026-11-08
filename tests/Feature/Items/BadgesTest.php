@@ -6,9 +6,9 @@ use Modules\Items\Entities\Label;
 use Modules\Items\Entities\Tag;
 use Modules\Items\Support\LabelBadge;
 use Modules\Items\Support\TagBadge;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class BadgesTest extends TenantTestCase
+class BadgesTest extends DatabaseTestCase
 {
     protected function setUp(): void
     {

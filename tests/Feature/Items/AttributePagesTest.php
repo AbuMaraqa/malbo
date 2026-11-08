@@ -10,9 +10,9 @@ use Modules\Items\Entities\Attribute;
 use Modules\Items\Entities\AttributeValue;
 use Modules\Items\Entities\Category;
 use Modules\Items\Enums\AttributeType;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class AttributePagesTest extends TenantTestCase
+class AttributePagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -90,7 +90,7 @@ class AttributePagesTest extends TenantTestCase
             ->where('colorType', AttributeType::COLOR->value));
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/attributes'), $this->payload(['values' => [
+            ->post($this->siteUrl('/ar/admin/attributes'), $this->payload(['values' => [
                 ['name' => 'أحمر', 'description' => 'غامق', 'color_code' => '#ff0000'],
                 ['name' => 'أزرق', 'description' => '', 'color_code' => '#0000ff'],
             ]]))
@@ -116,7 +116,7 @@ class AttributePagesTest extends TenantTestCase
     public function test_only_a_color_attribute_keeps_colors(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/attributes'), $this->payload([
+            ->post($this->siteUrl('/ar/admin/attributes'), $this->payload([
                 'type' => AttributeType::SELECT->value,
                 'values' => [['name' => 'كبير', 'color_code' => '#ff0000']],
             ]))
@@ -130,7 +130,7 @@ class AttributePagesTest extends TenantTestCase
         Attribute::factory()->create(['slug' => 'taken']);
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/attributes'), $this->payload([
+            ->post($this->siteUrl('/ar/admin/attributes'), $this->payload([
                 'name' => '',
                 'slug' => 'taken',
                 'type' => 99,
@@ -148,7 +148,7 @@ class AttributePagesTest extends TenantTestCase
         Category::factory()->create(['slug' => 'color']);
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/attributes'), $this->payload())
+            ->post($this->siteUrl('/ar/admin/attributes'), $this->payload())
             ->assertSessionHasNoErrors();
 
         $this->assertNotNull(Attribute::query()->where('slug', 'color')->first());
@@ -183,7 +183,7 @@ class AttributePagesTest extends TenantTestCase
         $count = Attribute::query()->count();
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/attributes/'.$attribute->id), $this->payload(['values' => [
+            ->put($this->siteUrl('/ar/admin/attributes/'.$attribute->id), $this->payload(['values' => [
                 ['name' => 'جديد', 'color_code' => '#00ff00'],
                 ['id' => $keep->id, 'name' => 'معدل', 'color_code' => '#111111'],
             ]]))
@@ -211,7 +211,7 @@ class AttributePagesTest extends TenantTestCase
         $payload = $this->payload();
         unset($payload['values']);
 
-        $this->actingAs($this->staff)->put($this->tenantUrl('/ar/admin/attributes/'.$attribute->id), $payload)->assertSessionHasNoErrors();
+        $this->actingAs($this->staff)->put($this->siteUrl('/ar/admin/attributes/'.$attribute->id), $payload)->assertSessionHasNoErrors();
 
         $this->assertNotNull(AttributeValue::query()->find($value->id));
     }
@@ -222,7 +222,7 @@ class AttributePagesTest extends TenantTestCase
         $foreign = AttributeValue::factory()->create(['name' => 'غريب']);
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/attributes/'.$attribute->id), $this->payload(['values' => [['id' => $foreign->id, 'name' => 'مسروق']]]))
+            ->put($this->siteUrl('/ar/admin/attributes/'.$attribute->id), $this->payload(['values' => [['id' => $foreign->id, 'name' => 'مسروق']]]))
             ->assertSessionHasErrors('values.0.id');
 
         $this->assertSame('غريب', $foreign->fresh()->translate('ar')->name);
@@ -236,7 +236,7 @@ class AttributePagesTest extends TenantTestCase
         $c = AttributeValue::factory()->create(['attribute_id' => $attribute->id, 'sort_order' => 2]);
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/attributes/'.$attribute->id.'/values/order'), ['ids' => [$c->id, $a->id, $b->id]])
+            ->put($this->siteUrl('/ar/admin/attributes/'.$attribute->id.'/values/order'), ['ids' => [$c->id, $a->id, $b->id]])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
@@ -249,7 +249,7 @@ class AttributePagesTest extends TenantTestCase
         $foreign = AttributeValue::factory()->create(['sort_order' => 7]);
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/attributes/'.$attribute->id.'/values/order'), ['ids' => [$foreign->id]])
+            ->put($this->siteUrl('/ar/admin/attributes/'.$attribute->id.'/values/order'), ['ids' => [$foreign->id]])
             ->assertSessionHasErrors('ids.0');
 
         $this->assertSame(7, (int) $foreign->fresh()->sort_order);
@@ -262,8 +262,8 @@ class AttributePagesTest extends TenantTestCase
         $two = Attribute::factory()->create();
         $three = Attribute::factory()->create();
 
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/attributes/'.$one->id))->assertRedirect();
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/attributes'), ['ids' => [$two->id, $three->id]])->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/attributes/'.$one->id))->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/attributes'), ['ids' => [$two->id, $three->id]])->assertRedirect();
 
         $this->assertSame(0, Attribute::query()->count());
         $this->assertNull(AttributeValue::query()->find($value->id));
@@ -291,7 +291,7 @@ class AttributePagesTest extends TenantTestCase
         ])->givePermissionTo('Attribute View List');
 
         $attribute = Attribute::factory()->create();
-        $base = $this->tenantUrl('/ar/admin/attributes');
+        $base = $this->siteUrl('/ar/admin/attributes');
 
         $this->actingAs($viewer)->get($base)->assertOk();
         $this->actingAs($viewer)->get($base.'/add')->assertForbidden();
@@ -308,12 +308,12 @@ class AttributePagesTest extends TenantTestCase
 
     public function test_guests_go_to_the_login_page(): void
     {
-        $this->get($this->tenantUrl('/ar/admin/attributes'))->assertRedirect();
+        $this->get($this->siteUrl('/ar/admin/attributes'))->assertRedirect();
     }
 
     private function page(string $path)
     {
-        return $this->actingAs($this->staff)->get($this->tenantUrl('/ar/admin'.$path));
+        return $this->actingAs($this->staff)->get($this->siteUrl('/ar/admin'.$path));
     }
 
     /**

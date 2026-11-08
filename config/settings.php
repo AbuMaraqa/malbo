@@ -22,9 +22,10 @@ return [
      * migration created via the make:settings-migration command will be stored in the first path or
      * a custom defined path when running the command.
      */
-    // Empty on purpose: settings migrations (database/settings) run only inside store
-    // databases, through App\Tenancy\TenantMigrationPaths (php artisan tenants:migrate).
-    'migrations_paths' => [],
+    // Settings migrations run with `php artisan migrate`.
+    'migrations_paths' => [
+        database_path('settings'),
+    ],
 
     /*
      * When no repository was set for a settings class the following repository
@@ -41,11 +42,6 @@ return [
             'model' => null,
             'table' => null,
             'connection' => null,
-        ],
-        'redis' => [
-            'type' => Spatie\LaravelSettings\SettingsRepositories\RedisSettingsRepository::class,
-            'connection' => null,
-            'prefix' => null,
         ],
     ],
 

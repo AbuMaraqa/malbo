@@ -210,9 +210,9 @@ class ProductPageTest extends StorefrontTestCase
     {
         Product::factory()->draft()->create(['slug' => 'draft-one']);
 
-        $this->get($this->tenantUrl('/ar/product/draft-one'))->assertNotFound();
-        $this->get($this->tenantUrl('/ar/product/'.$this->redShirt->slug))->assertNotFound();
-        $this->get($this->tenantUrl('/ar/product/nothing-here'))->assertNotFound();
+        $this->get($this->siteUrl('/ar/product/draft-one'))->assertNotFound();
+        $this->get($this->siteUrl('/ar/product/'.$this->redShirt->slug))->assertNotFound();
+        $this->get($this->siteUrl('/ar/product/nothing-here'))->assertNotFound();
     }
 
     public function test_related_products_are_listed(): void
@@ -274,8 +274,8 @@ class ProductPageTest extends StorefrontTestCase
 
     public function test_a_malformed_choice_in_the_url_does_not_break_the_page(): void
     {
-        $this->get($this->tenantUrl('/ar/product/linen-shirt?selected=x&addons=y&quantity[]=z'))->assertOk();
-        $this->get($this->tenantUrl('/ar/product/linen-shirt?selected[abc]=1&selected[1][]=2&addons[1][2][3]=4'))->assertOk();
+        $this->get($this->siteUrl('/ar/product/linen-shirt?selected=x&addons=y&quantity[]=z'))->assertOk();
+        $this->get($this->siteUrl('/ar/product/linen-shirt?selected[abc]=1&selected[1][]=2&addons[1][2][3]=4'))->assertOk();
     }
 
     public function test_an_inactive_value_is_not_offered(): void

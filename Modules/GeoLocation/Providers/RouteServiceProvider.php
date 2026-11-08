@@ -31,20 +31,20 @@ class RouteServiceProvider extends ServiceProvider
     /**
      * Define the "web" routes for the application.
      *
-     * These routes all receive session state, CSRF protection, etc. Store hosts only.
+     * These routes all receive session state, CSRF protection, etc.
      */
     protected function mapWebRoutes(): void
     {
-        Route::middleware(['web', 'tenant'])->group(module_path($this->name, '/routes/web.php'));
+        Route::middleware('web')->group(module_path($this->name, '/routes/web.php'));
     }
 
     /**
      * Define the "api" routes for the application.
      *
-     * These routes are typically stateless. Store hosts only.
+     * These routes are typically stateless.
      */
     protected function mapApiRoutes(): void
     {
-        Route::middleware(['api', 'tenant'])->prefix('api')->name('api.')->group(module_path($this->name, '/routes/api.php'));
+        Route::middleware('api')->prefix('api')->name('api.')->group(module_path($this->name, '/routes/api.php'));
     }
 }

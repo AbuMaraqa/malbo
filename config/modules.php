@@ -202,7 +202,7 @@ return [
         | This option for registration migration automatically.
         |
         */
-        'migrations' => false,
+        'migrations' => true,
 
         /*
         |--------------------------------------------------------------------------

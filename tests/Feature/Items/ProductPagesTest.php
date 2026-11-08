@@ -24,13 +24,13 @@ use Modules\Items\Entities\Product;
 use Modules\Items\Entities\Tag;
 use Modules\Items\Enums\ProductStatus;
 use Modules\Items\Events\ProductUpdated;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
  * Ported from core's ProductAddPageTest, ProductDataFixesTest, ProductPagesCharacterizationTest and
  * ProductStatusTest: Livewire assertions became HTTP + assertInertia.
  */
-class ProductPagesTest extends TenantTestCase
+class ProductPagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -947,6 +947,6 @@ class ProductPagesTest extends TenantTestCase
 
     private function url(string $path): string
     {
-        return $this->tenantUrl('/ar/admin'.$path);
+        return $this->siteUrl('/ar/admin'.$path);
     }
 }

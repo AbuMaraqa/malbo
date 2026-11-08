@@ -8,9 +8,9 @@ use Modules\Core\Entities\User;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class RolePagesTest extends TenantTestCase
+class RolePagesTest extends DatabaseTestCase
 {
     private User $admin;
 
@@ -35,7 +35,7 @@ class RolePagesTest extends TenantTestCase
     public function test_the_list_shows_roles_with_permission_groups_in_arabic(): void
     {
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/roles?filter[search]=super'))
+            ->get($this->siteUrl('/ar/admin/roles?filter[search]=super'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Core/Roles/Index')
@@ -55,19 +55,19 @@ class RolePagesTest extends TenantTestCase
         Role::create(['name' => 'Nothing', 'guard_name' => 'web']);
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/roles?filter[permission]='.$permission->id.'&filter[search]=only'))
+            ->get($this->siteUrl('/ar/admin/roles?filter[permission]='.$permission->id.'&filter[search]=only'))
             ->assertInertia(fn (Assert $page) => $page->where('table.meta.total', 1)->where('table.data.0.name', 'Only Currency'));
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/roles?filter[has_users]=0&filter[search]=nothing'))
+            ->get($this->siteUrl('/ar/admin/roles?filter[has_users]=0&filter[search]=nothing'))
             ->assertInertia(fn (Assert $page) => $page->where('table.meta.total', 1));
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/roles?filter[has_users]=1&filter[search]=nothing'))
+            ->get($this->siteUrl('/ar/admin/roles?filter[has_users]=1&filter[search]=nothing'))
             ->assertInertia(fn (Assert $page) => $page->where('table.meta.total', 0));
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/roles?filter[created_at_from]=2020-01-01&filter[created_at_to]=bad&sort=-users_count'))
+            ->get($this->siteUrl('/ar/admin/roles?filter[created_at_from]=2020-01-01&filter[created_at_to]=bad&sort=-users_count'))
             ->assertOk();
     }
 
@@ -76,7 +76,7 @@ class RolePagesTest extends TenantTestCase
         $permission = Permission::findByName('Currency View List', 'web');
 
         $this->actingAs($this->admin)
-            ->post($this->tenantUrl('/ar/admin/roles'), ['name' => 'Cashier', 'permissions' => [$permission->id]])
+            ->post($this->siteUrl('/ar/admin/roles'), ['name' => 'Cashier', 'permissions' => [$permission->id]])
             ->assertRedirect()
             ->assertSessionHas('success');
 
@@ -85,13 +85,13 @@ class RolePagesTest extends TenantTestCase
 
         $cashier = User::forceCreate(['name' => 'C', 'email' => 'c@example.com', 'password' => 'secret-password'])->assignRole($role);
 
-        $this->actingAs($cashier)->get($this->tenantUrl('/ar/admin/currencies'))->assertOk();
+        $this->actingAs($cashier)->get($this->siteUrl('/ar/admin/currencies'))->assertOk();
     }
 
     public function test_a_duplicate_name_and_a_bad_permission_are_validation_errors(): void
     {
         $this->actingAs($this->admin)
-            ->post($this->tenantUrl('/ar/admin/roles'), ['name' => 'Super Admin', 'permissions' => ['abc', 99999999]])
+            ->post($this->siteUrl('/ar/admin/roles'), ['name' => 'Super Admin', 'permissions' => ['abc', 99999999]])
             ->assertSessionHasErrors(['name', 'permissions.0', 'permissions.1']);
     }
 
@@ -103,13 +103,13 @@ class RolePagesTest extends TenantTestCase
         $count = Role::query()->count();
 
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/roles/'.$role->id), ['name' => 'Seller', 'permissions' => [Permission::findByName('User View List', 'web')->id]])
+            ->put($this->siteUrl('/ar/admin/roles/'.$role->id), ['name' => 'Seller', 'permissions' => [Permission::findByName('User View List', 'web')->id]])
             ->assertSessionHasNoErrors();
 
         $this->assertSame($count, Role::query()->count());
         $this->assertSame('Seller', $role->fresh()->name);
 
-        $this->actingAs($cashier->fresh())->get($this->tenantUrl('/ar/admin/currencies'))->assertForbidden();
+        $this->actingAs($cashier->fresh())->get($this->siteUrl('/ar/admin/currencies'))->assertForbidden();
     }
 
     public function test_system_roles_cannot_be_renamed_or_deleted(): void
@@ -118,17 +118,17 @@ class RolePagesTest extends TenantTestCase
         $superAdmin = Role::findByName('Super Admin', 'web');
 
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/roles/'.$user->id), ['name' => 'Renamed', 'permissions' => []])
+            ->put($this->siteUrl('/ar/admin/roles/'.$user->id), ['name' => 'Renamed', 'permissions' => []])
             ->assertSessionHasErrors('name');
 
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/roles/'.$superAdmin->id), ['name' => 'Super Admin', 'permissions' => []])
+            ->put($this->siteUrl('/ar/admin/roles/'.$superAdmin->id), ['name' => 'Super Admin', 'permissions' => []])
             ->assertSessionHasErrors('permissions');
 
         $this->assertTrue($superAdmin->fresh()->hasPermissionTo('User View List'));
 
         $this->actingAs($this->admin)
-            ->delete($this->tenantUrl('/ar/admin/roles/'.$superAdmin->id))
+            ->delete($this->siteUrl('/ar/admin/roles/'.$superAdmin->id))
             ->assertSessionHas('error');
 
         $this->assertNotNull($superAdmin->fresh());
@@ -140,7 +140,7 @@ class RolePagesTest extends TenantTestCase
         $permission = Permission::findByName('Currency View List', 'web');
 
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/roles/'.$user->id), ['name' => 'User', 'permissions' => [$permission->id]])
+            ->put($this->siteUrl('/ar/admin/roles/'.$user->id), ['name' => 'User', 'permissions' => [$permission->id]])
             ->assertSessionHasNoErrors();
 
         $this->assertTrue($user->fresh()->hasPermissionTo($permission));
@@ -152,16 +152,16 @@ class RolePagesTest extends TenantTestCase
         User::forceCreate(['name' => 'C', 'email' => 'c@example.com', 'password' => 'secret-password'])->assignRole($used);
         $unused = Role::create(['name' => 'Unused', 'guard_name' => 'web']);
 
-        $this->actingAs($this->admin)->delete($this->tenantUrl('/ar/admin/roles/'.$used->id))->assertSessionHas('error');
+        $this->actingAs($this->admin)->delete($this->siteUrl('/ar/admin/roles/'.$used->id))->assertSessionHas('error');
         $this->assertNotNull($used->fresh());
 
-        $this->actingAs($this->admin)->delete($this->tenantUrl('/ar/admin/roles/'.$unused->id))->assertSessionHas('success');
+        $this->actingAs($this->admin)->delete($this->siteUrl('/ar/admin/roles/'.$unused->id))->assertSessionHas('success');
         $this->assertNull($unused->fresh());
     }
 
     public function test_a_non_numeric_id_is_refused_not_a_server_error(): void
     {
-        $this->actingAs($this->admin)->put($this->tenantUrl('/ar/admin/roles/abc'), [])->assertClientError();
+        $this->actingAs($this->admin)->put($this->siteUrl('/ar/admin/roles/abc'), [])->assertClientError();
     }
 
     public function test_each_route_needs_its_permission(): void
@@ -171,9 +171,9 @@ class RolePagesTest extends TenantTestCase
 
         $this->actingAs($viewer);
 
-        $this->get($this->tenantUrl('/ar/admin/roles'))->assertForbidden();
-        $this->post($this->tenantUrl('/ar/admin/roles'), ['name' => 'X'])->assertForbidden();
-        $this->put($this->tenantUrl('/ar/admin/roles/'.$role->id), ['name' => 'X'])->assertForbidden();
-        $this->delete($this->tenantUrl('/ar/admin/roles/'.$role->id))->assertForbidden();
+        $this->get($this->siteUrl('/ar/admin/roles'))->assertForbidden();
+        $this->post($this->siteUrl('/ar/admin/roles'), ['name' => 'X'])->assertForbidden();
+        $this->put($this->siteUrl('/ar/admin/roles/'.$role->id), ['name' => 'X'])->assertForbidden();
+        $this->delete($this->siteUrl('/ar/admin/roles/'.$role->id))->assertForbidden();
     }
 }

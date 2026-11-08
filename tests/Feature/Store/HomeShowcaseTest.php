@@ -82,7 +82,7 @@ class HomeShowcaseTest extends StorefrontTestCase
         app(StoreAppearanceService::class)->save(['membership_enabled' => false], [], []);
         $this->assertFalse(app(StoreAppearanceSettings::class)->membership_enabled);
         $this->assertNull($this->props('/ar', self::HOME)['membership']);
-        $this->get($this->tenantUrl('/ar/join'))->assertNotFound();
+        $this->get($this->siteUrl('/ar/join'))->assertNotFound();
     }
 
     public function test_the_members_form_has_its_own_page_while_members_are_on(): void
@@ -133,7 +133,7 @@ class HomeShowcaseTest extends StorefrontTestCase
         Member::factory()->create(['name' => 'أحمد', 'phone' => '0599000001', 'email' => 'a@example.test', 'locale' => 'ar']);
         $this->actingAs($this->staff(['Member View List', 'Member Delete']));
 
-        $url = $this->tenantUrl('/ar/admin/store/members');
+        $url = $this->siteUrl('/ar/admin/store/members');
 
         $this->get($url)->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Store/Member/Index')
@@ -154,8 +154,8 @@ class HomeShowcaseTest extends StorefrontTestCase
         $member = Member::factory()->create();
         $this->actingAs($this->staff(['Product View List']));
 
-        $this->get($this->tenantUrl('/ar/admin/store/members'))->assertForbidden();
-        $this->delete($this->tenantUrl('/ar/admin/store/members/'.$member->id))->assertForbidden();
+        $this->get($this->siteUrl('/ar/admin/store/members'))->assertForbidden();
+        $this->delete($this->siteUrl('/ar/admin/store/members/'.$member->id))->assertForbidden();
     }
 
     public function test_percent_off(): void
@@ -169,6 +169,6 @@ class HomeShowcaseTest extends StorefrontTestCase
      */
     private function join(array $fields)
     {
-        return $this->post($this->tenantUrl('/ar/join'), $fields);
+        return $this->post($this->siteUrl('/ar/join'), $fields);
     }
 }

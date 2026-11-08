@@ -8,16 +8,16 @@ use Illuminate\Validation\ValidationException;
 use Modules\Store\Services\StoreAppearanceService;
 use Modules\Store\Settings\StoreAppearanceSettings;
 use Modules\Store\Settings\StoreContactSettings;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class StoreAppearanceServiceTest extends TenantTestCase
+class StoreAppearanceServiceTest extends DatabaseTestCase
 {
     /** @var array<int, string> */
     private array $stored = [];
 
     protected function tearDown(): void
     {
-        if ($this->app && tenancy()->initialized) {
+        if ($this->app) {
             Storage::disk('public')->delete($this->stored);
         }
 

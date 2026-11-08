@@ -9,9 +9,9 @@ use Modules\Core\Settings\GeneralSettings;
 use Modules\Core\Support\DashboardTheme;
 use Modules\Store\Settings\StoreAppearanceSettings;
 use Modules\Store\Theme\ThemeService;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class DashboardThemeTest extends TenantTestCase
+class DashboardThemeTest extends DatabaseTestCase
 {
     private User $admin;
 
@@ -44,12 +44,12 @@ class DashboardThemeTest extends TenantTestCase
     public function test_saving_changes_the_color_and_font_of_the_panel(): void
     {
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload())
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload())
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/settings'))
+            ->get($this->siteUrl('/ar/admin/settings'))
             ->assertOk()
             ->assertSee('--color-brand-500:#1F6F50', false)
             ->assertSee('IBM Plex Sans Arabic', false)
@@ -62,21 +62,21 @@ class DashboardThemeTest extends TenantTestCase
     public function test_a_color_too_light_for_white_text_is_refused(): void
     {
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload(['dashboard_color' => '#FFEE88']))
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload(['dashboard_color' => '#FFEE88']))
             ->assertSessionHasErrors('dashboard_color');
     }
 
     public function test_a_value_that_is_not_a_color_is_refused(): void
     {
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload(['dashboard_color' => 'red;}body{display:none']))
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload(['dashboard_color' => 'red;}body{display:none']))
             ->assertSessionHasErrors('dashboard_color');
     }
 
     public function test_only_the_offered_fonts_are_accepted(): void
     {
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload(['dashboard_font' => 'cairo']))
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload(['dashboard_font' => 'cairo']))
             ->assertSessionHasErrors('dashboard_font');
     }
 
@@ -92,7 +92,7 @@ class DashboardThemeTest extends TenantTestCase
     {
         $before = app(StoreAppearanceSettings::class)->primary_color;
 
-        $this->actingAs($this->admin)->put($this->tenantUrl('/ar/admin/settings'), $this->payload(['dashboard_color' => '#6B2D5C']));
+        $this->actingAs($this->admin)->put($this->siteUrl('/ar/admin/settings'), $this->payload(['dashboard_color' => '#6B2D5C']));
 
         $this->assertSame($before, app(StoreAppearanceSettings::class)->primary_color);
         $this->assertStringNotContainsString('#6B2D5C', app(ThemeService::class)->css());

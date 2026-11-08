@@ -9,9 +9,9 @@ use Modules\Items\Enums\CategoryStatus;
 use Modules\Items\Enums\ProductStatus;
 use Modules\Items\Repositories\Contracts\CategoryRepositoryInterface;
 use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class StorefrontReadsTest extends TenantTestCase
+class StorefrontReadsTest extends DatabaseTestCase
 {
     private ProductRepositoryInterface $products;
 

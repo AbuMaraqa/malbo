@@ -14,12 +14,12 @@ use Modules\Items\Entities\Order;
 use Modules\Items\Entities\Product;
 use Modules\Items\Enums\OfferType;
 use Modules\Items\Enums\ProductStatus;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
  * The browser or app says what and how many. Every amount of an order comes from the database.
  */
-class OrderApiTest extends TenantTestCase
+class OrderApiTest extends DatabaseTestCase
 {
     private User $buyer;
 
@@ -200,7 +200,7 @@ class OrderApiTest extends TenantTestCase
      */
     private function place(array $items, array $extra = []): TestResponse
     {
-        return $this->postJson($this->tenantUrl('/api/v1/items/orders'), [
+        return $this->postJson($this->siteUrl('/api/v1/items/orders'), [
             'branch_id' => $this->branch->id,
             'payment_method' => 1,
             'delivery_type' => 1,

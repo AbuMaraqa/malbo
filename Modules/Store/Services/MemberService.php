@@ -24,7 +24,7 @@ class MemberService
      */
     public function allowFrom(?string $ip): bool
     {
-        $key = 'store-members:'.tenant('id').':'.$ip;
+        $key = 'store-members:'.$ip;
 
         if (RateLimiter::tooManyAttempts($key, self::MAX_PER_WINDOW)) {
             return false;

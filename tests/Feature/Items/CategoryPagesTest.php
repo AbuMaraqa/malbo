@@ -9,13 +9,13 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
 use Modules\Items\Entities\Category;
 use Modules\Items\Enums\CategoryStatus;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
  * The category pages, including what core's CategoryStatusTest checks: status and sort order are
  * editable, a new category is active, the table sorts by sort order then id, the status toggle saves.
  */
-class CategoryPagesTest extends TenantTestCase
+class CategoryPagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -131,7 +131,7 @@ class CategoryPagesTest extends TenantTestCase
     public function test_add_saves_status_sort_order_translation_and_image(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/categories'), $this->payload(['status' => false, 'sort_order' => 4]))
+            ->post($this->siteUrl('/ar/admin/categories'), $this->payload(['status' => false, 'sort_order' => 4]))
             ->assertRedirect()
             ->assertSessionHas('success');
 
@@ -149,7 +149,7 @@ class CategoryPagesTest extends TenantTestCase
         $payload = $this->payload();
         unset($payload['status'], $payload['sort_order']);
 
-        $this->actingAs($this->staff)->post($this->tenantUrl('/ar/admin/categories'), $payload)->assertRedirect();
+        $this->actingAs($this->staff)->post($this->siteUrl('/ar/admin/categories'), $payload)->assertRedirect();
 
         $this->assertSame(CategoryStatus::ACTIVE, Category::latest('id')->firstOrFail()->status);
     }
@@ -157,7 +157,7 @@ class CategoryPagesTest extends TenantTestCase
     public function test_an_empty_slug_is_made_from_the_name(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/categories'), $this->payload(['name' => 'Home Tools', 'slug' => '']))
+            ->post($this->siteUrl('/ar/admin/categories'), $this->payload(['name' => 'Home Tools', 'slug' => '']))
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
@@ -169,11 +169,11 @@ class CategoryPagesTest extends TenantTestCase
         $this->category(sortOrder: 1, slug: 'taken');
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/categories'), $this->payload(['name' => '', 'slug' => 'taken', 'image' => null, 'parent_id' => 999999]))
+            ->post($this->siteUrl('/ar/admin/categories'), $this->payload(['name' => '', 'slug' => 'taken', 'image' => null, 'parent_id' => 999999]))
             ->assertSessionHasErrors(['name', 'slug', 'image', 'parent_id']);
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/categories'), $this->payload(['image' => UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf')]))
+            ->post($this->siteUrl('/ar/admin/categories'), $this->payload(['image' => UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf')]))
             ->assertSessionHasErrors('image');
     }
 
@@ -222,7 +222,7 @@ class CategoryPagesTest extends TenantTestCase
         $media = $category->getFirstMedia('category');
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/categories/'.$category->id), $this->payload([
+            ->put($this->siteUrl('/ar/admin/categories/'.$category->id), $this->payload([
                 'slug' => $category->slug,
                 'sort_order' => 9,
                 'status' => false,
@@ -245,7 +245,7 @@ class CategoryPagesTest extends TenantTestCase
         $old = $category->getFirstMedia('category')->id;
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/categories/'.$category->id), $this->payload(['slug' => $category->slug, 'removed_image' => [$old]]))
+            ->put($this->siteUrl('/ar/admin/categories/'.$category->id), $this->payload(['slug' => $category->slug, 'removed_image' => [$old]]))
             ->assertSessionHasNoErrors();
 
         $media = $category->fresh()->getMedia('category');
@@ -259,7 +259,7 @@ class CategoryPagesTest extends TenantTestCase
         $category = $this->category(sortOrder: 1);
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/categories/'.$category->id), $this->payload([
+            ->put($this->siteUrl('/ar/admin/categories/'.$category->id), $this->payload([
                 'slug' => $category->slug,
                 'image' => null,
                 'removed_image' => [$category->getFirstMedia('category')->id],
@@ -274,7 +274,7 @@ class CategoryPagesTest extends TenantTestCase
 
         foreach ([$category->id, $child->id] as $parentId) {
             $this->actingAs($this->staff)
-                ->put($this->tenantUrl('/ar/admin/categories/'.$category->id), $this->payload(['slug' => $category->slug, 'image' => null, 'parent_id' => $parentId]))
+                ->put($this->siteUrl('/ar/admin/categories/'.$category->id), $this->payload(['slug' => $category->slug, 'image' => null, 'parent_id' => $parentId]))
                 ->assertSessionHasErrors('parent_id');
         }
 
@@ -286,13 +286,13 @@ class CategoryPagesTest extends TenantTestCase
         $category = $this->category(sortOrder: 0);
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/categories/'.$category->id.'/status'), ['active' => false])
+            ->put($this->siteUrl('/ar/admin/categories/'.$category->id.'/status'), ['active' => false])
             ->assertRedirect();
 
         $this->assertSame(CategoryStatus::INACTIVE, $category->fresh()->status);
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/categories/'.$category->id.'/status'), ['active' => 'nonsense'])
+            ->put($this->siteUrl('/ar/admin/categories/'.$category->id.'/status'), ['active' => 'nonsense'])
             ->assertSessionHasErrors('active');
     }
 
@@ -302,8 +302,8 @@ class CategoryPagesTest extends TenantTestCase
         $two = $this->category(sortOrder: 2, slug: 'two');
         $three = $this->category(sortOrder: 3, slug: 'three');
 
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/categories/'.$one->id))->assertRedirect();
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/categories'), ['ids' => [$two->id, $three->id]])->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/categories/'.$one->id))->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/categories'), ['ids' => [$two->id, $three->id]])->assertRedirect();
 
         $this->assertSame(0, Category::withTrashed()->whereIn('slug', ['one', 'two', 'three'])->count());
     }
@@ -313,7 +313,7 @@ class CategoryPagesTest extends TenantTestCase
         $parent = $this->category(sortOrder: 1);
         $child = $this->category(sortOrder: 2, parent: $parent);
 
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/categories/'.$parent->id))->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/categories/'.$parent->id))->assertRedirect();
 
         $this->assertNull($child->fresh()->parent_id);
     }
@@ -344,27 +344,27 @@ class CategoryPagesTest extends TenantTestCase
 
         $category = $this->category(sortOrder: 1);
 
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/categories'))->assertOk();
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/categories/add'))->assertForbidden();
-        $this->actingAs($viewer)->post($this->tenantUrl('/ar/admin/categories'), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/categories/'.$category->id.'/edit'))->assertForbidden();
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/categories/'.$category->id.'/info'))->assertForbidden();
-        $this->actingAs($viewer)->put($this->tenantUrl('/ar/admin/categories/'.$category->id), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->put($this->tenantUrl('/ar/admin/categories/'.$category->id.'/status'), ['active' => false])->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl('/ar/admin/categories/'.$category->id))->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl('/ar/admin/categories'), ['ids' => [$category->id]])->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/categories'))->assertOk();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/categories/add'))->assertForbidden();
+        $this->actingAs($viewer)->post($this->siteUrl('/ar/admin/categories'), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/categories/'.$category->id.'/edit'))->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/categories/'.$category->id.'/info'))->assertForbidden();
+        $this->actingAs($viewer)->put($this->siteUrl('/ar/admin/categories/'.$category->id), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->put($this->siteUrl('/ar/admin/categories/'.$category->id.'/status'), ['active' => false])->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl('/ar/admin/categories/'.$category->id))->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl('/ar/admin/categories'), ['ids' => [$category->id]])->assertForbidden();
 
         $this->assertNotNull($category->fresh());
     }
 
     public function test_guests_go_to_the_login_page(): void
     {
-        $this->get($this->tenantUrl('/ar/admin/categories'))->assertRedirect();
+        $this->get($this->siteUrl('/ar/admin/categories'))->assertRedirect();
     }
 
     private function page(string $path)
     {
-        return $this->actingAs($this->staff)->get($this->tenantUrl('/ar/admin'.$path));
+        return $this->actingAs($this->staff)->get($this->siteUrl('/ar/admin'.$path));
     }
 
     /**

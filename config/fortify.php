@@ -103,8 +103,8 @@ return [
     |
     */
 
-    // Store hosts only: staff log in to their store.
-    'middleware' => ['web', 'tenant'],
+    // Staff and customers sign in here.
+    'middleware' => ['web'],
 
     /*
     |--------------------------------------------------------------------------

@@ -9,9 +9,9 @@ use Modules\Core\Entities\User;
 use Modules\Items\Entities\Order;
 use Modules\Items\Enums\OrderStatus;
 use Spatie\Permission\Models\Role;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class DashboardPageTest extends TenantTestCase
+class DashboardPageTest extends DatabaseTestCase
 {
     private User $admin;
 
@@ -31,7 +31,7 @@ class DashboardPageTest extends TenantTestCase
         $this->makeOrder('A-1');
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Core/Home/Index')
@@ -46,7 +46,7 @@ class DashboardPageTest extends TenantTestCase
     public function test_the_metrics_carry_no_invented_trend(): void
     {
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('metrics', fn ($metrics) => collect($metrics)->every(fn ($metric) => array_keys((array) $metric) === ['key', 'title', 'value'])));
     }
@@ -62,7 +62,7 @@ class DashboardPageTest extends TenantTestCase
         $this->makeOrder('DELETED', createdAt: now())->delete();
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertInertia(fn (Assert $page) => $page
                 ->has('ordersPerMonth.categories', 12)
                 ->where('ordersPerMonth.data', [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]));
@@ -77,7 +77,7 @@ class DashboardPageTest extends TenantTestCase
         $role = Role::findByName('Customer', 'web');
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertInertia(function (Assert $page) use ($role) {
                 $chart = $page->toArray()['props']['usersByRole'];
                 $index = array_search(__('Customer'), $chart['labels'], true);
@@ -96,7 +96,7 @@ class DashboardPageTest extends TenantTestCase
         $this->makeOrder('R-3', status: OrderStatus::CANCELLED);
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('ordersByStatus.labels', [OrderStatus::DELIVERED->getLabel(), OrderStatus::CANCELLED->getLabel()])
                 ->where('ordersByStatus.data', [2, 1])
@@ -114,14 +114,14 @@ class DashboardPageTest extends TenantTestCase
         }
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertInertia(fn (Assert $page) => $page->has('recentOrders.rows', 5)->where('recentOrders.rows.0.order_number', 'N-7'));
     }
 
     public function test_without_orders_the_widgets_are_empty_not_invented(): void
     {
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('ordersPerMonth.data', array_fill(0, 12, 0))
                 ->where('ordersByStatus.data', [])
@@ -133,7 +133,7 @@ class DashboardPageTest extends TenantTestCase
         $onlyProducts = $this->makeUser('products@example.com')->givePermissionTo('Product View List');
 
         $this->actingAs($onlyProducts)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('metrics', fn ($metrics) => collect($metrics)->pluck('key')->all() === ['products'])
@@ -147,7 +147,7 @@ class DashboardPageTest extends TenantTestCase
         $onlyOrders = $this->makeUser('orders@example.com')->givePermissionTo('Order View List');
 
         $this->actingAs($onlyOrders)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('metrics', fn ($metrics) => collect($metrics)->pluck('key')->all() === ['orders'])
                 ->has('ordersPerMonth.data', 12)
@@ -156,7 +156,7 @@ class DashboardPageTest extends TenantTestCase
         $onlyUsers = $this->makeUser('users@example.com')->givePermissionTo('User View List');
 
         $this->actingAs($onlyUsers)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('metrics', fn ($metrics) => collect($metrics)->pluck('key')->all() === ['users', 'clients'])
                 ->has('usersByRole.labels')
@@ -169,17 +169,17 @@ class DashboardPageTest extends TenantTestCase
         $user = $this->makeUser('none@example.com')->givePermissionTo('Currency View List');
 
         $this->actingAs($user)
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('metrics', [])->where('quickLinks', []));
     }
 
     public function test_a_customer_is_sent_away_and_a_guest_to_login(): void
     {
-        $this->get($this->tenantUrl('/ar/admin'))->assertRedirect();
+        $this->get($this->siteUrl('/ar/admin'))->assertRedirect();
 
         $this->actingAs($this->makeUser('c@example.com')->assignRole('Customer'))
-            ->get($this->tenantUrl('/ar/admin'))
+            ->get($this->siteUrl('/ar/admin'))
             ->assertRedirect();
     }
 

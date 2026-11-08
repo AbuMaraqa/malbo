@@ -9,9 +9,9 @@ use Modules\GeoLocation\Entities\City;
 use Modules\GeoLocation\Entities\Country;
 use Modules\GeoLocation\Entities\Governorate;
 use Modules\GeoLocation\Services\GovernorateService;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class GovernoratePagesTest extends TenantTestCase
+class GovernoratePagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -32,7 +32,7 @@ class GovernoratePagesTest extends TenantTestCase
     public function test_the_list_is_shaped_for_the_table(): void
     {
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl('/ar/admin/geolocation/governorates'))
+            ->get($this->siteUrl('/ar/admin/geolocation/governorates'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('GeoLocation/Governorate/Index')
@@ -71,14 +71,14 @@ class GovernoratePagesTest extends TenantTestCase
     public function test_bad_filter_values_are_ignored_not_a_server_error(): void
     {
         foreach (['filter[country_id]=abc', 'filter[created_at_to]=nope'] as $query) {
-            $this->actingAs($this->staff)->get($this->tenantUrl('/ar/admin/geolocation/governorates?'.$query))->assertOk();
+            $this->actingAs($this->staff)->get($this->siteUrl('/ar/admin/geolocation/governorates?'.$query))->assertOk();
         }
     }
 
     public function test_adding_a_governorate(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/geolocation/governorates'), $this->payload())
+            ->post($this->siteUrl('/ar/admin/geolocation/governorates'), $this->payload())
             ->assertRedirect(route('governorates.index'))
             ->assertSessionHas('success');
 
@@ -93,11 +93,11 @@ class GovernoratePagesTest extends TenantTestCase
         $taken = Governorate::query()->whereNotNull('code')->value('code');
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/geolocation/governorates'), ['name' => '', 'code' => $taken, 'country_id' => null])
+            ->post($this->siteUrl('/ar/admin/geolocation/governorates'), ['name' => '', 'code' => $taken, 'country_id' => null])
             ->assertSessionHasErrors(['name', 'code', 'country_id']);
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/geolocation/governorates'), $this->payload(['code' => 'MORE-THAN-TEN', 'country_id' => 999999]))
+            ->post($this->siteUrl('/ar/admin/geolocation/governorates'), $this->payload(['code' => 'MORE-THAN-TEN', 'country_id' => 999999]))
             ->assertSessionHasErrors(['code', 'country_id']);
     }
 
@@ -107,7 +107,7 @@ class GovernoratePagesTest extends TenantTestCase
         $count = Governorate::query()->count();
 
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl("/ar/admin/geolocation/governorates/{$governorate->id}/edit"))
+            ->get($this->siteUrl("/ar/admin/geolocation/governorates/{$governorate->id}/edit"))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('GeoLocation/Governorate/Edit')
@@ -117,7 +117,7 @@ class GovernoratePagesTest extends TenantTestCase
                 ->has('countries'));
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl("/ar/admin/geolocation/governorates/{$governorate->id}"), [
+            ->put($this->siteUrl("/ar/admin/geolocation/governorates/{$governorate->id}"), [
                 'name' => 'اسم جديد',
                 'code' => $governorate->code,
                 'country_id' => $governorate->country_id,
@@ -135,19 +135,19 @@ class GovernoratePagesTest extends TenantTestCase
         $used = City::query()->firstOrFail()->governorate;
 
         $this->actingAs($this->staff)
-            ->from($this->tenantUrl('/ar/admin/geolocation/governorates'))
-            ->delete($this->tenantUrl('/ar/admin/geolocation/governorates/'.$used->id))
+            ->from($this->siteUrl('/ar/admin/geolocation/governorates'))
+            ->delete($this->siteUrl('/ar/admin/geolocation/governorates/'.$used->id))
             ->assertSessionHas('error');
         $this->assertNotNull($used->fresh());
 
         $this->actingAs($this->staff)
-            ->from($this->tenantUrl('/ar/admin/geolocation/governorates'))
-            ->delete($this->tenantUrl('/ar/admin/geolocation/governorates'), ['ids' => [$free->id, $used->id]])
+            ->from($this->siteUrl('/ar/admin/geolocation/governorates'))
+            ->delete($this->siteUrl('/ar/admin/geolocation/governorates'), ['ids' => [$free->id, $used->id]])
             ->assertSessionHas('error');
         $this->assertNotNull($free->fresh());
 
         $this->actingAs($this->staff)
-            ->delete($this->tenantUrl('/ar/admin/geolocation/governorates/'.$free->id))
+            ->delete($this->siteUrl('/ar/admin/geolocation/governorates/'.$free->id))
             ->assertSessionHas('success');
         $this->assertNull($free->fresh());
     }
@@ -163,18 +163,18 @@ class GovernoratePagesTest extends TenantTestCase
         $governorate = Governorate::query()->firstOrFail();
         $base = '/ar/admin/geolocation/governorates';
 
-        $this->actingAs($viewer)->get($this->tenantUrl($base))->assertOk();
-        $this->actingAs($viewer)->get($this->tenantUrl($base.'/add'))->assertForbidden();
-        $this->actingAs($viewer)->post($this->tenantUrl($base), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->get($this->tenantUrl("{$base}/{$governorate->id}/edit"))->assertForbidden();
-        $this->actingAs($viewer)->put($this->tenantUrl("{$base}/{$governorate->id}"), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl("{$base}/{$governorate->id}"))->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl($base), ['ids' => [$governorate->id]])->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl($base))->assertOk();
+        $this->actingAs($viewer)->get($this->siteUrl($base.'/add'))->assertForbidden();
+        $this->actingAs($viewer)->post($this->siteUrl($base), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl("{$base}/{$governorate->id}/edit"))->assertForbidden();
+        $this->actingAs($viewer)->put($this->siteUrl("{$base}/{$governorate->id}"), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl("{$base}/{$governorate->id}"))->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl($base), ['ids' => [$governorate->id]])->assertForbidden();
     }
 
     public function test_a_non_numeric_id_is_a_not_found(): void
     {
-        $this->actingAs($this->staff)->get($this->tenantUrl('/ar/admin/geolocation/governorates/abc/edit'))->assertNotFound();
+        $this->actingAs($this->staff)->get($this->siteUrl('/ar/admin/geolocation/governorates/abc/edit'))->assertNotFound();
     }
 
     /**
@@ -183,7 +183,7 @@ class GovernoratePagesTest extends TenantTestCase
     private function idsFor(string $query): array
     {
         $response = $this->actingAs($this->staff)
-            ->get($this->tenantUrl('/ar/admin/geolocation/governorates?perPage=100&sort=id&'.$query))
+            ->get($this->siteUrl('/ar/admin/geolocation/governorates?perPage=100&sort=id&'.$query))
             ->assertOk();
 
         return array_column($response->viewData('page')['props']['table']['data'], 'id');

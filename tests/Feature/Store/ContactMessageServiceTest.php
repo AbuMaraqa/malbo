@@ -5,9 +5,9 @@ namespace Tests\Feature\Store;
 use Modules\Store\Repositories\Contracts\ContactMessageRepositoryInterface;
 use Modules\Store\Repositories\ContactMessageRepository;
 use Modules\Store\Services\ContactMessageService;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class ContactMessageServiceTest extends TenantTestCase
+class ContactMessageServiceTest extends DatabaseTestCase
 {
     public function test_layer_resolves(): void
     {

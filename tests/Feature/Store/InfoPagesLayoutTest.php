@@ -39,7 +39,7 @@ class InfoPagesLayoutTest extends StorefrontTestCase
     {
         $url = fn () => $this->props('/ar', 'Store/Storefront/Home')['store']['about_url'];
 
-        $this->assertSame('http://testing.localhost/ar/page/about-us', $url());
+        $this->assertSame($this->siteUrl('/ar/page/about-us'), $url());
 
         app(PageService::class)->setPublished(app(PageRepositoryInterface::class)->findByKey('about'), false);
         $this->assertNull($url());

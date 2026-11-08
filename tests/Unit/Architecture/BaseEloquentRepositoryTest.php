@@ -9,12 +9,12 @@ use Illuminate\Support\Str;
 use Modules\Core\Repositories\BaseEloquentRepository;
 use Modules\Core\Repositories\Contracts\RepositoryInterface;
 use Modules\Items\Entities\Category;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
  * The shared repository contract, exercised through a Category repository.
  */
-class BaseEloquentRepositoryTest extends TenantTestCase
+class BaseEloquentRepositoryTest extends DatabaseTestCase
 {
     private RepositoryInterface $repository;
 

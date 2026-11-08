@@ -42,7 +42,7 @@ class ContactMessageService
      */
     public function allowFrom(?string $ip): bool
     {
-        $key = 'store-contact:'.tenant('id').':'.$ip;
+        $key = 'store-contact:'.$ip;
 
         if (RateLimiter::tooManyAttempts($key, self::MAX_PER_WINDOW)) {
             return false;

@@ -58,9 +58,8 @@ class ThemeService
         Cache::forget(self::key());
     }
 
-    /** Per store also by key, should the cache store ever be shared between stores. */
     private static function key(): string
     {
-        return self::CACHE_KEY.'.'.(tenant()?->getTenantKey() ?? 'central');
+        return self::CACHE_KEY;
     }
 }

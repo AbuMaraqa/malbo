@@ -5,9 +5,9 @@ namespace Tests\Feature\Branch;
 use Modules\Branch\Entities\Branch;
 use Modules\Branch\Enums\BranchStatus;
 use Modules\Branch\Repositories\Contracts\BranchRepositoryInterface;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class BranchRepositoryTest extends TenantTestCase
+class BranchRepositoryTest extends DatabaseTestCase
 {
     public function test_open_branches_for_the_storefront(): void
     {

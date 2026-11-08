@@ -10,9 +10,9 @@ use Modules\Core\Entities\User;
 use Modules\GeoLocation\Entities\Country;
 use Modules\GeoLocation\Entities\Governorate;
 use Modules\GeoLocation\Services\CountryService;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class CountryPagesTest extends TenantTestCase
+class CountryPagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -33,7 +33,7 @@ class CountryPagesTest extends TenantTestCase
     public function test_the_list_is_shaped_for_the_table(): void
     {
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl('/ar/admin/geolocation/countries'))
+            ->get($this->siteUrl('/ar/admin/geolocation/countries'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('GeoLocation/Country/Index')
@@ -52,7 +52,7 @@ class CountryPagesTest extends TenantTestCase
         app()->setLocale('ar');
 
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl('/ar/admin/geolocation/countries?filter[name]=PALESTINE'))
+            ->get($this->siteUrl('/ar/admin/geolocation/countries?filter[name]=PALESTINE'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('table.meta.total', 1)->where('table.data.0.code', 'PS'));
     }
@@ -84,14 +84,14 @@ class CountryPagesTest extends TenantTestCase
     public function test_bad_filter_values_are_ignored_not_a_server_error(): void
     {
         foreach (['filter[currency_id]=abc', 'filter[created_at_from]=not-a-date'] as $query) {
-            $this->actingAs($this->staff)->get($this->tenantUrl('/ar/admin/geolocation/countries?'.$query))->assertOk();
+            $this->actingAs($this->staff)->get($this->siteUrl('/ar/admin/geolocation/countries?'.$query))->assertOk();
         }
     }
 
     public function test_sorting_by_the_translated_name(): void
     {
         $response = $this->actingAs($this->staff)
-            ->get($this->tenantUrl('/ar/admin/geolocation/countries?sort=name&perPage=100'))
+            ->get($this->siteUrl('/ar/admin/geolocation/countries?sort=name&perPage=100'))
             ->assertOk();
 
         $names = array_column($response->viewData('page')['props']['table']['data'], 'name');
@@ -99,7 +99,7 @@ class CountryPagesTest extends TenantTestCase
         $this->assertCount(Country::query()->count(), $names);
 
         $reversed = $this->actingAs($this->staff)
-            ->get($this->tenantUrl('/ar/admin/geolocation/countries?sort=-name&perPage=100'))
+            ->get($this->siteUrl('/ar/admin/geolocation/countries?sort=-name&perPage=100'))
             ->viewData('page')['props']['table']['data'];
 
         $this->assertSame(array_reverse($names), array_column($reversed, 'name'));
@@ -108,7 +108,7 @@ class CountryPagesTest extends TenantTestCase
     public function test_adding_a_country_stores_the_translation_of_the_current_locale_only(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/geolocation/countries'), $this->payload())
+            ->post($this->siteUrl('/ar/admin/geolocation/countries'), $this->payload())
             ->assertRedirect(route('countries.index'))
             ->assertSessionHas('success');
 
@@ -121,11 +121,11 @@ class CountryPagesTest extends TenantTestCase
     public function test_validation_errors(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/geolocation/countries'), $this->payload(['name' => '', 'code' => 'PS', 'phone_code' => '', 'currency_id' => 999999]))
+            ->post($this->siteUrl('/ar/admin/geolocation/countries'), $this->payload(['name' => '', 'code' => 'PS', 'phone_code' => '', 'currency_id' => 999999]))
             ->assertSessionHasErrors(['name', 'code', 'phone_code', 'currency_id']);
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/geolocation/countries'), $this->payload(['code' => 'TOOLONG']))
+            ->post($this->siteUrl('/ar/admin/geolocation/countries'), $this->payload(['code' => 'TOOLONG']))
             ->assertSessionHasErrors('code');
     }
 
@@ -134,7 +134,7 @@ class CountryPagesTest extends TenantTestCase
         $country = Country::query()->where('code', 'PS')->firstOrFail();
 
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl("/ar/admin/geolocation/countries/{$country->id}/edit"))
+            ->get($this->siteUrl("/ar/admin/geolocation/countries/{$country->id}/edit"))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('GeoLocation/Country/Edit')
@@ -153,7 +153,7 @@ class CountryPagesTest extends TenantTestCase
         $count = Country::query()->count();
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl("/ar/admin/geolocation/countries/{$country->id}"), [
+            ->put($this->siteUrl("/ar/admin/geolocation/countries/{$country->id}"), [
                 'name' => 'اسم جديد',
                 'code' => 'PS',
                 'phone_code' => '+971',
@@ -175,7 +175,7 @@ class CountryPagesTest extends TenantTestCase
         $country = app(CountryService::class)->create($this->payload(), 'ar');
 
         $this->actingAs($this->staff)
-            ->delete($this->tenantUrl('/ar/admin/geolocation/countries/'.$country->id))
+            ->delete($this->siteUrl('/ar/admin/geolocation/countries/'.$country->id))
             ->assertSessionHas('success');
 
         $this->assertNull(Country::query()->find($country->id));
@@ -186,8 +186,8 @@ class CountryPagesTest extends TenantTestCase
         $country = Governorate::query()->firstOrFail()->country;
 
         $this->actingAs($this->staff)
-            ->from($this->tenantUrl('/ar/admin/geolocation/countries'))
-            ->delete($this->tenantUrl('/ar/admin/geolocation/countries/'.$country->id))
+            ->from($this->siteUrl('/ar/admin/geolocation/countries'))
+            ->delete($this->siteUrl('/ar/admin/geolocation/countries/'.$country->id))
             ->assertSessionHas('error');
 
         $this->assertNotNull($country->fresh());
@@ -200,8 +200,8 @@ class CountryPagesTest extends TenantTestCase
         $branch->delete();
 
         $this->actingAs($this->staff)
-            ->from($this->tenantUrl('/ar/admin/geolocation/countries'))
-            ->delete($this->tenantUrl('/ar/admin/geolocation/countries/'.$country->id))
+            ->from($this->siteUrl('/ar/admin/geolocation/countries'))
+            ->delete($this->siteUrl('/ar/admin/geolocation/countries/'.$country->id))
             ->assertSessionHas('error');
 
         $this->assertNotNull($country->fresh());
@@ -214,14 +214,14 @@ class CountryPagesTest extends TenantTestCase
 
         // The rollback of the service must not be mistaken for the test's own transaction.
         $this->actingAs($this->staff)
-            ->from($this->tenantUrl('/ar/admin/geolocation/countries'))
-            ->delete($this->tenantUrl('/ar/admin/geolocation/countries'), ['ids' => [$free->id, $used]])
+            ->from($this->siteUrl('/ar/admin/geolocation/countries'))
+            ->delete($this->siteUrl('/ar/admin/geolocation/countries'), ['ids' => [$free->id, $used]])
             ->assertSessionHas('error');
 
         $this->assertNotNull($free->fresh());
 
         $this->actingAs($this->staff)
-            ->delete($this->tenantUrl('/ar/admin/geolocation/countries'), ['ids' => [$free->id]])
+            ->delete($this->siteUrl('/ar/admin/geolocation/countries'), ['ids' => [$free->id]])
             ->assertSessionHas('success');
 
         $this->assertNull($free->fresh());
@@ -237,20 +237,20 @@ class CountryPagesTest extends TenantTestCase
 
         $country = Country::query()->where('code', 'PS')->firstOrFail();
 
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/geolocation/countries'))->assertOk();
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/geolocation/countries/add'))->assertForbidden();
-        $this->actingAs($viewer)->post($this->tenantUrl('/ar/admin/geolocation/countries'), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->get($this->tenantUrl("/ar/admin/geolocation/countries/{$country->id}/edit"))->assertForbidden();
-        $this->actingAs($viewer)->put($this->tenantUrl("/ar/admin/geolocation/countries/{$country->id}"), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl("/ar/admin/geolocation/countries/{$country->id}"))->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl('/ar/admin/geolocation/countries'), ['ids' => [$country->id]])->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/geolocation/countries'))->assertOk();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/geolocation/countries/add'))->assertForbidden();
+        $this->actingAs($viewer)->post($this->siteUrl('/ar/admin/geolocation/countries'), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl("/ar/admin/geolocation/countries/{$country->id}/edit"))->assertForbidden();
+        $this->actingAs($viewer)->put($this->siteUrl("/ar/admin/geolocation/countries/{$country->id}"), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl("/ar/admin/geolocation/countries/{$country->id}"))->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl('/ar/admin/geolocation/countries'), ['ids' => [$country->id]])->assertForbidden();
 
         $this->assertNotNull($country->fresh());
     }
 
     public function test_a_non_numeric_id_is_a_not_found(): void
     {
-        $this->actingAs($this->staff)->get($this->tenantUrl('/ar/admin/geolocation/countries/abc/edit'))->assertNotFound();
+        $this->actingAs($this->staff)->get($this->siteUrl('/ar/admin/geolocation/countries/abc/edit'))->assertNotFound();
     }
 
     public function test_a_request_field_called_name_no_longer_reaches_a_new_country(): void
@@ -266,7 +266,7 @@ class CountryPagesTest extends TenantTestCase
     private function assertSearchFinds(string $term, ?string $code): void
     {
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl('/ar/admin/geolocation/countries?filter[search]='.$term))
+            ->get($this->siteUrl('/ar/admin/geolocation/countries?filter[search]='.$term))
             ->assertOk()
             ->assertInertia(function (Assert $page) use ($code): void {
                 $page->where('table.meta.total', 1);
@@ -301,7 +301,7 @@ class CountryPagesTest extends TenantTestCase
     private function idsFor(string $query): array
     {
         $response = $this->actingAs($this->staff)
-            ->get($this->tenantUrl('/ar/admin/geolocation/countries?perPage=100&sort=id&'.$query))
+            ->get($this->siteUrl('/ar/admin/geolocation/countries?perPage=100&sort=id&'.$query))
             ->assertOk();
 
         return array_column($response->viewData('page')['props']['table']['data'], 'id');

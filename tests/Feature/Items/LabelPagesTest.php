@@ -7,9 +7,9 @@ use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
 use Modules\Items\Entities\Label;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class LabelPagesTest extends TenantTestCase
+class LabelPagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -80,7 +80,7 @@ class LabelPagesTest extends TenantTestCase
     public function test_adding_saves_the_translation_colors_and_creator(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/labels'), $this->payload())
+            ->post($this->siteUrl('/ar/admin/labels'), $this->payload())
             ->assertRedirect()
             ->assertSessionHasNoErrors()
             ->assertSessionHas('success');
@@ -96,7 +96,7 @@ class LabelPagesTest extends TenantTestCase
     public function test_an_empty_slug_is_made_from_the_name(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/labels'), $this->payload(['name' => 'Best Seller', 'slug' => '']))
+            ->post($this->siteUrl('/ar/admin/labels'), $this->payload(['name' => 'Best Seller', 'slug' => '']))
             ->assertSessionHasNoErrors();
 
         $this->assertNotNull(Label::query()->where('slug', 'best-seller')->first());
@@ -107,7 +107,7 @@ class LabelPagesTest extends TenantTestCase
         Label::factory()->create(['slug' => 'taken']);
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/labels'), $this->payload(['name' => '', 'slug' => 'taken', 'text_color' => 'red;background:url(x)', 'background_color' => '']))
+            ->post($this->siteUrl('/ar/admin/labels'), $this->payload(['name' => '', 'slug' => 'taken', 'text_color' => 'red;background:url(x)', 'background_color' => '']))
             ->assertSessionHasErrors(['name', 'slug', 'text_color', 'background_color']);
     }
 
@@ -120,7 +120,7 @@ class LabelPagesTest extends TenantTestCase
         $creator = $label->created_by;
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/labels/'.$label->id), $this->payload(['slug' => 'old-slug', 'name' => 'معدل', 'background_color' => '#111111']))
+            ->put($this->siteUrl('/ar/admin/labels/'.$label->id), $this->payload(['slug' => 'old-slug', 'name' => 'معدل', 'background_color' => '#111111']))
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
@@ -137,8 +137,8 @@ class LabelPagesTest extends TenantTestCase
     {
         $labels = Label::factory()->count(3)->create();
 
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/labels/'.$labels[0]->id))->assertRedirect();
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/labels'), ['ids' => [$labels[1]->id, $labels[2]->id]])->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/labels/'.$labels[0]->id))->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/labels'), ['ids' => [$labels[1]->id, $labels[2]->id]])->assertRedirect();
 
         $this->assertSame(0, Label::query()->count());
     }
@@ -153,7 +153,7 @@ class LabelPagesTest extends TenantTestCase
     public function test_a_bad_id_is_a_not_found_not_a_server_error(): void
     {
         $this->page('/labels/abc/info')->assertNotFound();
-        $this->actingAs($this->staff)->put($this->tenantUrl('/ar/admin/labels/999999'), $this->payload())->assertNotFound();
+        $this->actingAs($this->staff)->put($this->siteUrl('/ar/admin/labels/999999'), $this->payload())->assertNotFound();
     }
 
     public function test_every_action_needs_its_permission(): void
@@ -166,24 +166,24 @@ class LabelPagesTest extends TenantTestCase
 
         $label = Label::factory()->create();
 
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/labels'))->assertOk();
-        $this->actingAs($viewer)->post($this->tenantUrl('/ar/admin/labels'), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/labels/'.$label->id.'/info'))->assertForbidden();
-        $this->actingAs($viewer)->put($this->tenantUrl('/ar/admin/labels/'.$label->id), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl('/ar/admin/labels/'.$label->id))->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl('/ar/admin/labels'), ['ids' => [$label->id]])->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/labels'))->assertOk();
+        $this->actingAs($viewer)->post($this->siteUrl('/ar/admin/labels'), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/labels/'.$label->id.'/info'))->assertForbidden();
+        $this->actingAs($viewer)->put($this->siteUrl('/ar/admin/labels/'.$label->id), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl('/ar/admin/labels/'.$label->id))->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl('/ar/admin/labels'), ['ids' => [$label->id]])->assertForbidden();
 
         $this->assertNotNull($label->fresh());
     }
 
     public function test_guests_go_to_the_login_page(): void
     {
-        $this->get($this->tenantUrl('/ar/admin/labels'))->assertRedirect();
+        $this->get($this->siteUrl('/ar/admin/labels'))->assertRedirect();
     }
 
     private function page(string $path)
     {
-        return $this->actingAs($this->staff)->get($this->tenantUrl('/ar/admin'.$path));
+        return $this->actingAs($this->staff)->get($this->siteUrl('/ar/admin'.$path));
     }
 
     /**

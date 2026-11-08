@@ -12,9 +12,9 @@ use Modules\Core\Entities\User;
 use Modules\Core\Services\SidebarService;
 use Modules\GeoLocation\Entities\City;
 use Modules\GeoLocation\Entities\Country;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class BranchPagesTest extends TenantTestCase
+class BranchPagesTest extends DatabaseTestCase
 {
     private const BASE = '/ar/admin/branch/appointment';
 
@@ -39,7 +39,7 @@ class BranchPagesTest extends TenantTestCase
         $this->branch();
 
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE))
+            ->get($this->siteUrl(self::BASE))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Branch/Branch/Index')
@@ -86,14 +86,14 @@ class BranchPagesTest extends TenantTestCase
     public function test_bad_filter_values_are_ignored_and_sorts_work(): void
     {
         foreach (['filter[status]=abc', 'filter[country_id]=abc', 'filter[city_id]=abc', 'filter[created_at_from]=nope', 'sort=name', 'sort=-name', 'sort=status', 'sort=opening_time', 'sort=closing_time'] as $query) {
-            $this->actingAs($this->staff)->get($this->tenantUrl(self::BASE.'?'.$query))->assertOk();
+            $this->actingAs($this->staff)->get($this->siteUrl(self::BASE.'?'.$query))->assertOk();
         }
     }
 
     public function test_the_add_page_offers_seven_days(): void
     {
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE.'/add'))
+            ->get($this->siteUrl(self::BASE.'/add'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Branch/Branch/Add')
@@ -105,7 +105,7 @@ class BranchPagesTest extends TenantTestCase
     public function test_adding_a_branch_with_its_hours_and_translation(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl(self::BASE), $this->payload())
+            ->post($this->siteUrl(self::BASE), $this->payload())
             ->assertRedirect(route('branches.index'))
             ->assertSessionHas('success');
 
@@ -145,7 +145,7 @@ class BranchPagesTest extends TenantTestCase
         $hours[1]['end_time'] = '25:99';
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl(self::BASE), $this->payload([
+            ->post($this->siteUrl(self::BASE), $this->payload([
                 'name' => '',
                 'email' => 'not-an-email',
                 'phone' => 'letters',
@@ -162,7 +162,7 @@ class BranchPagesTest extends TenantTestCase
     public function test_a_phone_may_carry_a_plus_sign(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl(self::BASE), $this->payload(['phone' => '+970 599 123456']))
+            ->post($this->siteUrl(self::BASE), $this->payload(['phone' => '+970 599 123456']))
             ->assertSessionHasNoErrors();
     }
 
@@ -171,7 +171,7 @@ class BranchPagesTest extends TenantTestCase
         $otherCountry = Country::query()->whereKeyNot($this->cityWithCountry()->governorate->country_id)->value('id');
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl(self::BASE), $this->payload(['country_id' => $otherCountry]))
+            ->post($this->siteUrl(self::BASE), $this->payload(['country_id' => $otherCountry]))
             ->assertSessionHasErrors('city_id');
     }
 
@@ -185,7 +185,7 @@ class BranchPagesTest extends TenantTestCase
         ]);
 
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE."/{$branch->id}/edit"))
+            ->get($this->siteUrl(self::BASE."/{$branch->id}/edit"))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Branch/Branch/Edit')
@@ -202,7 +202,7 @@ class BranchPagesTest extends TenantTestCase
                 ->missing('branch.created_by'));
 
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE."/{$factoryBranch->id}/edit"))
+            ->get($this->siteUrl(self::BASE."/{$factoryBranch->id}/edit"))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('branch.working_hours.0.start_time', '10:00')
@@ -217,7 +217,7 @@ class BranchPagesTest extends TenantTestCase
         $hours[1] = ['day' => $hours[1]['day'], 'is_closed' => true, 'start_time' => '09:00', 'end_time' => '10:00'];
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl(self::BASE.'/'.$branch->id), $this->payload([
+            ->put($this->siteUrl(self::BASE.'/'.$branch->id), $this->payload([
                 'name' => 'جديد',
                 'status' => BranchStatus::CLOSED->value,
                 'working_hours' => $hours,
@@ -243,7 +243,7 @@ class BranchPagesTest extends TenantTestCase
         $branch = $this->branch();
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/en/admin/branch/appointment/'.$branch->id), $this->payload(['name' => 'English name']))
+            ->put($this->siteUrl('/en/admin/branch/appointment/'.$branch->id), $this->payload(['name' => 'English name']))
             ->assertSessionHasNoErrors();
 
         $fresh = $branch->fresh();
@@ -258,11 +258,11 @@ class BranchPagesTest extends TenantTestCase
         $this->staff->forceFill(['branch_id' => $one->id])->save();
 
         $this->actingAs($this->staff)
-            ->delete($this->tenantUrl(self::BASE.'/'.$one->id))
+            ->delete($this->siteUrl(self::BASE.'/'.$one->id))
             ->assertSessionHas('success');
 
         $this->actingAs($this->staff)
-            ->delete($this->tenantUrl(self::BASE), ['ids' => [$two->id]])
+            ->delete($this->siteUrl(self::BASE), ['ids' => [$two->id]])
             ->assertSessionHas('success');
 
         $this->assertSame(0, Branch::query()->count());
@@ -286,22 +286,22 @@ class BranchPagesTest extends TenantTestCase
             'password' => 'secret-password',
         ])->givePermissionTo('Currency View List');
 
-        $this->actingAs($nobody)->get($this->tenantUrl(self::BASE))->assertForbidden();
+        $this->actingAs($nobody)->get($this->siteUrl(self::BASE))->assertForbidden();
 
-        $this->actingAs($viewer)->get($this->tenantUrl(self::BASE))->assertOk();
-        $this->actingAs($viewer)->get($this->tenantUrl(self::BASE.'/add'))->assertForbidden();
-        $this->actingAs($viewer)->post($this->tenantUrl(self::BASE), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->get($this->tenantUrl(self::BASE."/{$branch->id}/edit"))->assertForbidden();
-        $this->actingAs($viewer)->put($this->tenantUrl(self::BASE."/{$branch->id}"), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl(self::BASE."/{$branch->id}"))->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl(self::BASE), ['ids' => [$branch->id]])->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl(self::BASE))->assertOk();
+        $this->actingAs($viewer)->get($this->siteUrl(self::BASE.'/add'))->assertForbidden();
+        $this->actingAs($viewer)->post($this->siteUrl(self::BASE), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl(self::BASE."/{$branch->id}/edit"))->assertForbidden();
+        $this->actingAs($viewer)->put($this->siteUrl(self::BASE."/{$branch->id}"), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl(self::BASE."/{$branch->id}"))->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl(self::BASE), ['ids' => [$branch->id]])->assertForbidden();
 
         $this->assertNotNull($branch->fresh());
     }
 
     public function test_a_non_numeric_id_is_a_not_found(): void
     {
-        $this->actingAs($this->staff)->get($this->tenantUrl(self::BASE.'/abc/edit'))->assertNotFound();
+        $this->actingAs($this->staff)->get($this->siteUrl(self::BASE.'/abc/edit'))->assertNotFound();
     }
 
     public function test_the_sidebar_lists_branches_with_their_icon_for_those_allowed(): void
@@ -341,7 +341,7 @@ class BranchPagesTest extends TenantTestCase
     private function idsFor(string $query): array
     {
         $response = $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE.'?perPage=100&sort=id&'.$query))
+            ->get($this->siteUrl(self::BASE.'?perPage=100&sort=id&'.$query))
             ->assertOk();
 
         return array_column($response->viewData('page')['props']['table']['data'], 'id');

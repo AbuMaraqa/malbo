@@ -12,9 +12,9 @@ use Modules\GeoLocation\Entities\Governorate;
 use Modules\GeoLocation\Enums\CapitalType;
 use Modules\GeoLocation\Enums\CityType;
 use Modules\GeoLocation\Services\CityService;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class CityPagesTest extends TenantTestCase
+class CityPagesTest extends DatabaseTestCase
 {
     private const BASE = '/ar/admin/geolocation/cities';
 
@@ -37,7 +37,7 @@ class CityPagesTest extends TenantTestCase
     public function test_the_list_is_shaped_for_the_table(): void
     {
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE))
+            ->get($this->siteUrl(self::BASE))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('GeoLocation/City/Index')
@@ -106,21 +106,21 @@ class CityPagesTest extends TenantTestCase
             'filter[population_to]=abc',
             'filter[created_at_from]=nope',
         ] as $query) {
-            $this->actingAs($this->staff)->get($this->tenantUrl(self::BASE.'?'.$query))->assertOk();
+            $this->actingAs($this->staff)->get($this->siteUrl(self::BASE.'?'.$query))->assertOk();
         }
     }
 
     public function test_sorting_by_name_population_and_type(): void
     {
         foreach (['name', '-name', 'population', '-population', 'type'] as $sort) {
-            $this->actingAs($this->staff)->get($this->tenantUrl(self::BASE.'?sort='.$sort))->assertOk();
+            $this->actingAs($this->staff)->get($this->siteUrl(self::BASE.'?sort='.$sort))->assertOk();
         }
     }
 
     public function test_adding_a_city_without_the_optional_fields(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl(self::BASE), [
+            ->post($this->siteUrl(self::BASE), [
                 'name' => 'مدينة',
                 'country_id' => 1, // only narrows the select, never stored
                 'governorate_id' => Governorate::query()->value('id'),
@@ -145,14 +145,14 @@ class CityPagesTest extends TenantTestCase
     public function test_coordinates_may_be_negative(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl(self::BASE), $this->payload(['latitude' => -33.86, 'longitude' => -151.2]))
+            ->post($this->siteUrl(self::BASE), $this->payload(['latitude' => -33.86, 'longitude' => -151.2]))
             ->assertSessionHasNoErrors();
     }
 
     public function test_validation_errors(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl(self::BASE), [
+            ->post($this->siteUrl(self::BASE), [
                 'name' => '',
                 'governorate_id' => 999999,
                 'population' => -1,
@@ -171,7 +171,7 @@ class CityPagesTest extends TenantTestCase
         $this->assertSame(CapitalType::GOVERNORATE, $city->fresh()->capital_type);
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl(self::BASE.'/'.$city->id), $this->payload(['is_capital' => false, 'capital_type' => CapitalType::GOVERNORATE->value]))
+            ->put($this->siteUrl(self::BASE.'/'.$city->id), $this->payload(['is_capital' => false, 'capital_type' => CapitalType::GOVERNORATE->value]))
             ->assertSessionHasNoErrors();
 
         $this->assertNull($city->fresh()->capital_type);
@@ -188,7 +188,7 @@ class CityPagesTest extends TenantTestCase
         $count = City::query()->count();
 
         $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE."/{$city->id}/edit"))
+            ->get($this->siteUrl(self::BASE."/{$city->id}/edit"))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('GeoLocation/City/Edit')
@@ -202,7 +202,7 @@ class CityPagesTest extends TenantTestCase
                 ->has('capitalTypes'));
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl(self::BASE.'/'.$city->id), $this->payload(['name' => 'جديد', 'population' => 20]))
+            ->put($this->siteUrl(self::BASE.'/'.$city->id), $this->payload(['name' => 'جديد', 'population' => 20]))
             ->assertRedirect(route('cities.index'))
             ->assertSessionHasNoErrors();
 
@@ -221,20 +221,20 @@ class CityPagesTest extends TenantTestCase
 
         foreach ([$withDistrict, $withBranch] as $used) {
             $this->actingAs($this->staff)
-                ->from($this->tenantUrl(self::BASE))
-                ->delete($this->tenantUrl(self::BASE.'/'.$used->id))
+                ->from($this->siteUrl(self::BASE))
+                ->delete($this->siteUrl(self::BASE.'/'.$used->id))
                 ->assertSessionHas('error');
             $this->assertNotNull($used->fresh());
         }
 
         $this->actingAs($this->staff)
-            ->from($this->tenantUrl(self::BASE))
-            ->delete($this->tenantUrl(self::BASE), ['ids' => [$free->id, $withDistrict->id]])
+            ->from($this->siteUrl(self::BASE))
+            ->delete($this->siteUrl(self::BASE), ['ids' => [$free->id, $withDistrict->id]])
             ->assertSessionHas('error');
         $this->assertNotNull($free->fresh());
 
         $this->actingAs($this->staff)
-            ->delete($this->tenantUrl(self::BASE.'/'.$free->id))
+            ->delete($this->siteUrl(self::BASE.'/'.$free->id))
             ->assertSessionHas('success');
         $this->assertNull($free->fresh());
     }
@@ -249,18 +249,18 @@ class CityPagesTest extends TenantTestCase
 
         $city = City::query()->firstOrFail();
 
-        $this->actingAs($viewer)->get($this->tenantUrl(self::BASE))->assertOk();
-        $this->actingAs($viewer)->get($this->tenantUrl(self::BASE.'/add'))->assertForbidden();
-        $this->actingAs($viewer)->post($this->tenantUrl(self::BASE), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->get($this->tenantUrl(self::BASE."/{$city->id}/edit"))->assertForbidden();
-        $this->actingAs($viewer)->put($this->tenantUrl(self::BASE."/{$city->id}"), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl(self::BASE."/{$city->id}"))->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl(self::BASE), ['ids' => [$city->id]])->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl(self::BASE))->assertOk();
+        $this->actingAs($viewer)->get($this->siteUrl(self::BASE.'/add'))->assertForbidden();
+        $this->actingAs($viewer)->post($this->siteUrl(self::BASE), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl(self::BASE."/{$city->id}/edit"))->assertForbidden();
+        $this->actingAs($viewer)->put($this->siteUrl(self::BASE."/{$city->id}"), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl(self::BASE."/{$city->id}"))->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl(self::BASE), ['ids' => [$city->id]])->assertForbidden();
     }
 
     public function test_a_non_numeric_id_is_a_not_found(): void
     {
-        $this->actingAs($this->staff)->get($this->tenantUrl(self::BASE.'/abc/edit'))->assertNotFound();
+        $this->actingAs($this->staff)->get($this->siteUrl(self::BASE.'/abc/edit'))->assertNotFound();
     }
 
     private function emptyGovernorate(): Governorate
@@ -285,7 +285,7 @@ class CityPagesTest extends TenantTestCase
     private function idsFor(string $query): array
     {
         $response = $this->actingAs($this->staff)
-            ->get($this->tenantUrl(self::BASE.'?perPage=100&sort=id&'.$query))
+            ->get($this->siteUrl(self::BASE.'?perPage=100&sort=id&'.$query))
             ->assertOk();
 
         return array_column($response->viewData('page')['props']['table']['data'], 'id');

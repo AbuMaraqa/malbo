@@ -9,9 +9,9 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
 use Modules\Items\Entities\Brand;
 use Modules\Items\Entities\Product;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class BrandPagesTest extends TenantTestCase
+class BrandPagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -81,7 +81,7 @@ class BrandPagesTest extends TenantTestCase
     public function test_adding_saves_the_translation_image_and_creator(): void
     {
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/brand'), $this->payload())
+            ->post($this->siteUrl('/ar/admin/brand'), $this->payload())
             ->assertRedirect()
             ->assertSessionHasNoErrors()
             ->assertSessionHas('success');
@@ -108,7 +108,7 @@ class BrandPagesTest extends TenantTestCase
         $this->brand('سامسونج', 'taken');
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/brand'), $this->payload(['name' => '', 'slug' => 'taken', 'image' => null, 'description' => str_repeat('x', 256)]))
+            ->post($this->siteUrl('/ar/admin/brand'), $this->payload(['name' => '', 'slug' => 'taken', 'image' => null, 'description' => str_repeat('x', 256)]))
             ->assertSessionHasErrors(['name', 'slug', 'image', 'description']);
     }
 
@@ -118,7 +118,7 @@ class BrandPagesTest extends TenantTestCase
         $media = $brand->getFirstMedia('brand')->id;
 
         $this->actingAs($this->staff)
-            ->post($this->tenantUrl('/ar/admin/brand/'.$brand->id), [...$this->payload(['slug' => 'old-slug', 'name' => 'معدل', 'image' => null]), '_method' => 'put'])
+            ->post($this->siteUrl('/ar/admin/brand/'.$brand->id), [...$this->payload(['slug' => 'old-slug', 'name' => 'معدل', 'image' => null]), '_method' => 'put'])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
@@ -135,7 +135,7 @@ class BrandPagesTest extends TenantTestCase
         $old = $brand->getFirstMedia('brand')->id;
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/brand/'.$brand->id), $this->payload(['slug' => 'old-slug']))
+            ->put($this->siteUrl('/ar/admin/brand/'.$brand->id), $this->payload(['slug' => 'old-slug']))
             ->assertSessionHasNoErrors();
 
         $media = $brand->fresh()->getMedia('brand');
@@ -143,7 +143,7 @@ class BrandPagesTest extends TenantTestCase
         $this->assertNotSame($old, $media->first()->id);
 
         $this->actingAs($this->staff)
-            ->put($this->tenantUrl('/ar/admin/brand/'.$brand->id), $this->payload(['slug' => 'old-slug', 'image' => null, 'removed_image' => [$media->first()->id]]))
+            ->put($this->siteUrl('/ar/admin/brand/'.$brand->id), $this->payload(['slug' => 'old-slug', 'image' => null, 'removed_image' => [$media->first()->id]]))
             ->assertSessionHasNoErrors();
 
         $this->assertFalse($brand->fresh()->hasMedia('brand'));
@@ -154,7 +154,7 @@ class BrandPagesTest extends TenantTestCase
         $brand = $this->brand('سامسونج', 'samsung');
         $product = Product::factory()->create(['brand_id' => $brand->id]);
 
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/brand/'.$brand->id))->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/brand/'.$brand->id))->assertRedirect();
 
         $this->assertNull(Brand::query()->find($brand->id));
         $this->assertNull($product->fresh()->brand_id);
@@ -165,7 +165,7 @@ class BrandPagesTest extends TenantTestCase
         $one = $this->brand('واحد', 'one');
         $two = $this->brand('اثنان', 'two');
 
-        $this->actingAs($this->staff)->delete($this->tenantUrl('/ar/admin/brand'), ['ids' => [$one->id, $two->id]])->assertRedirect();
+        $this->actingAs($this->staff)->delete($this->siteUrl('/ar/admin/brand'), ['ids' => [$one->id, $two->id]])->assertRedirect();
 
         $this->assertSame(0, Brand::query()->count());
     }
@@ -180,7 +180,7 @@ class BrandPagesTest extends TenantTestCase
     public function test_a_bad_id_is_a_not_found_not_a_server_error(): void
     {
         $this->page('/brand/abc/info')->assertNotFound();
-        $this->actingAs($this->staff)->put($this->tenantUrl('/ar/admin/brand/999999'), $this->payload())->assertNotFound();
+        $this->actingAs($this->staff)->put($this->siteUrl('/ar/admin/brand/999999'), $this->payload())->assertNotFound();
     }
 
     public function test_every_action_needs_its_permission(): void
@@ -193,24 +193,24 @@ class BrandPagesTest extends TenantTestCase
 
         $brand = $this->brand('سامسونج', 'samsung');
 
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/brand'))->assertOk();
-        $this->actingAs($viewer)->post($this->tenantUrl('/ar/admin/brand'), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/brand/'.$brand->id.'/info'))->assertForbidden();
-        $this->actingAs($viewer)->put($this->tenantUrl('/ar/admin/brand/'.$brand->id), $this->payload())->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl('/ar/admin/brand/'.$brand->id))->assertForbidden();
-        $this->actingAs($viewer)->delete($this->tenantUrl('/ar/admin/brand'), ['ids' => [$brand->id]])->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/brand'))->assertOk();
+        $this->actingAs($viewer)->post($this->siteUrl('/ar/admin/brand'), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/brand/'.$brand->id.'/info'))->assertForbidden();
+        $this->actingAs($viewer)->put($this->siteUrl('/ar/admin/brand/'.$brand->id), $this->payload())->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl('/ar/admin/brand/'.$brand->id))->assertForbidden();
+        $this->actingAs($viewer)->delete($this->siteUrl('/ar/admin/brand'), ['ids' => [$brand->id]])->assertForbidden();
 
         $this->assertNotNull($brand->fresh());
     }
 
     public function test_guests_go_to_the_login_page(): void
     {
-        $this->get($this->tenantUrl('/ar/admin/brand'))->assertRedirect();
+        $this->get($this->siteUrl('/ar/admin/brand'))->assertRedirect();
     }
 
     private function page(string $path)
     {
-        return $this->actingAs($this->staff)->get($this->tenantUrl('/ar/admin'.$path));
+        return $this->actingAs($this->staff)->get($this->siteUrl('/ar/admin'.$path));
     }
 
     private function brand(string $name, string $slug): Brand

@@ -14,9 +14,9 @@ use Modules\Items\Entities\Offer;
 use Modules\Items\Entities\Product;
 use Modules\Items\Enums\OfferType;
 use Spatie\Permission\Models\Role;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class OfferPagesTest extends TenantTestCase
+class OfferPagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -289,7 +289,7 @@ class OfferPagesTest extends TenantTestCase
     {
         $offer = $this->offer(['name' => 'Summer', 'code' => 'API']);
 
-        $this->getJson($this->tenantUrl('/api/v1/items/offers?filter[name]=SUMMER'), ['Accept-Language' => 'ar'])->assertOk()->assertJsonPath('data.0.id', $offer->id);
+        $this->getJson($this->siteUrl('/api/v1/items/offers?filter[name]=SUMMER'), ['Accept-Language' => 'ar'])->assertOk()->assertJsonPath('data.0.id', $offer->id);
     }
 
     private function productIn(Branch $branch): Product
@@ -356,6 +356,6 @@ class OfferPagesTest extends TenantTestCase
 
     private function url(string $path): string
     {
-        return $this->tenantUrl('/ar/admin'.$path);
+        return $this->siteUrl('/ar/admin'.$path);
     }
 }

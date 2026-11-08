@@ -45,12 +45,6 @@ return [
             'driver' => 'sanctum',
             'provider' => 'users',
         ],
-
-        // Platform admins (central database), never store users.
-        'platform' => [
-            'driver' => 'session',
-            'provider' => 'platform_admins',
-        ],
     ],
 
     /*
@@ -74,11 +68,6 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', \Modules\Core\Entities\User::class),
-        ],
-
-        'platform_admins' => [
-            'driver' => 'eloquent',
-            'model' => \App\Models\PlatformAdmin::class,
         ],
 
         // 'users' => [

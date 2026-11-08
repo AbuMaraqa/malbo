@@ -22,9 +22,10 @@ export default defineConfig({
             '@modules': fileURLToPath(new URL('./Modules', import.meta.url)),
         },
     },
+    // No `host` here: laravel-vite-plugin serves on the APP_URL host with its Herd/Valet
+    // certificate (https://malbo.test:5173). Stores are subdomains of it or of localhost.
     server: {
-        host: 'localhost',
-        cors: { origin: /^https?:\/\/([a-z0-9-]+\.)?localhost(:\d+)?$/ },
+        cors: { origin: /^https?:\/\/([a-z0-9-]+\.)*(localhost|[a-z0-9-]+\.test)(:\d+)?$/ },
         watch: { ignored: ['**/storage/**', '**/vendor/**'] },
     },
 });

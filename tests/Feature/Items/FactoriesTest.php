@@ -13,9 +13,9 @@ use Modules\Items\Entities\Label;
 use Modules\Items\Entities\Product;
 use Modules\Items\Entities\Tag;
 use Modules\Items\Enums\ProductStatus;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class FactoriesTest extends TenantTestCase
+class FactoriesTest extends DatabaseTestCase
 {
     protected function setUp(): void
     {

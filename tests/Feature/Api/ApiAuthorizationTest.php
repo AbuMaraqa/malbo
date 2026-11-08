@@ -12,14 +12,14 @@ use Modules\Core\Enums\UserRole;
 use Modules\Items\Entities\Order;
 use Modules\Items\Enums\OrderStatus;
 use Spatie\Activitylog\Models\Activity;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
  * Every route of the API is listed here as staff, buyer or public. A new route that is in no list
  * fails `test_every_api_route_is_classified`, so nobody adds an endpoint without deciding who may
  * call it. Staff endpoints need the permission of their admin page.
  */
-class ApiAuthorizationTest extends TenantTestCase
+class ApiAuthorizationTest extends DatabaseTestCase
 {
     /** "METHOD uri" => the permission it needs. */
     private const STAFF = [
@@ -161,7 +161,7 @@ class ApiAuthorizationTest extends TenantTestCase
 
     public function test_a_made_up_token_is_refused(): void
     {
-        $this->getJson($this->tenantUrl('/api/v1/users'), ['Authorization' => 'Bearer 999999|not-a-token-of-this-store'])->assertUnauthorized();
+        $this->getJson($this->siteUrl('/api/v1/users'), ['Authorization' => 'Bearer 999999|not-a-token-of-this-store'])->assertUnauthorized();
     }
 
     /* ---- Own records ---- */
@@ -194,9 +194,9 @@ class ApiAuthorizationTest extends TenantTestCase
         $buyer = $this->user();
         $token = $this->tokenFor($buyer);
 
-        $this->getJson($this->tenantUrl('/api/v1/items/orders/'.$this->order($buyer)->id), $this->bearer($token))->assertOk();
+        $this->getJson($this->siteUrl('/api/v1/items/orders/'.$this->order($buyer)->id), $this->bearer($token))->assertOk();
         $this->forgetGuards();
-        $this->getJson($this->tenantUrl('/api/v1/items/orders/'.$this->order($this->user())->id), $this->bearer($token))->assertForbidden();
+        $this->getJson($this->siteUrl('/api/v1/items/orders/'.$this->order($this->user())->id), $this->bearer($token))->assertForbidden();
     }
 
     public function test_a_buyer_cannot_change_the_status_of_their_own_order(): void
@@ -204,7 +204,7 @@ class ApiAuthorizationTest extends TenantTestCase
         $buyer = $this->user();
         $order = $this->order($buyer);
 
-        $this->patchJson($this->tenantUrl("/api/v1/items/orders/{$order->id}/status"), ['status' => OrderStatus::CONFIRMED->value], $this->bearer($this->tokenFor($buyer)))->assertForbidden();
+        $this->patchJson($this->siteUrl("/api/v1/items/orders/{$order->id}/status"), ['status' => OrderStatus::CONFIRMED->value], $this->bearer($this->tokenFor($buyer)))->assertForbidden();
 
         $this->assertSame(OrderStatus::PENDING, $order->fresh()->status);
     }
@@ -213,7 +213,7 @@ class ApiAuthorizationTest extends TenantTestCase
     {
         $order = $this->order($this->user());
         $token = $this->tokenFor($this->user()->givePermissionTo('Order Update'));
-        $url = $this->tenantUrl("/api/v1/items/orders/{$order->id}/status");
+        $url = $this->siteUrl("/api/v1/items/orders/{$order->id}/status");
 
         $this->patchJson($url, ['status' => OrderStatus::DELIVERED->value], $this->bearer($token))->assertStatus(422);
         $this->assertSame(OrderStatus::PENDING, $order->fresh()->status);
@@ -229,18 +229,18 @@ class ApiAuthorizationTest extends TenantTestCase
         $other = $this->user();
         $token = $this->tokenFor($user);
 
-        $this->getJson($this->tenantUrl("/api/v1/users/{$user->id}"), $this->bearer($token))->assertOk()->assertJsonPath('data.id', $user->id);
+        $this->getJson($this->siteUrl("/api/v1/users/{$user->id}"), $this->bearer($token))->assertOk()->assertJsonPath('data.id', $user->id);
 
         $this->forgetGuards();
-        $this->patchJson($this->tenantUrl("/api/v1/users/{$user->id}"), ['name' => 'New name', 'email' => 'NEW-'.Str::lower(Str::random(6)).'@Api.test'], $this->bearer($token))->assertOk();
+        $this->patchJson($this->siteUrl("/api/v1/users/{$user->id}"), ['name' => 'New name', 'email' => 'NEW-'.Str::lower(Str::random(6)).'@Api.test'], $this->bearer($token))->assertOk();
         $this->assertSame('New name', $user->fresh()->name);
         $this->assertSame(Str::lower($user->fresh()->email), $user->fresh()->email);
 
         $this->forgetGuards();
-        $this->getJson($this->tenantUrl("/api/v1/users/{$other->id}"), $this->bearer($token))->assertForbidden();
+        $this->getJson($this->siteUrl("/api/v1/users/{$other->id}"), $this->bearer($token))->assertForbidden();
 
         $this->forgetGuards();
-        $this->patchJson($this->tenantUrl("/api/v1/users/{$other->id}"), ['name' => 'Hijacked'], $this->bearer($token))->assertForbidden();
+        $this->patchJson($this->siteUrl("/api/v1/users/{$other->id}"), ['name' => 'Hijacked'], $this->bearer($token))->assertForbidden();
         $this->assertNotSame('Hijacked', $other->fresh()->name);
     }
 
@@ -248,7 +248,7 @@ class ApiAuthorizationTest extends TenantTestCase
     {
         $user = $this->user();
 
-        $this->patchJson($this->tenantUrl("/api/v1/users/{$user->id}"), [
+        $this->patchJson($this->siteUrl("/api/v1/users/{$user->id}"), [
             'name' => 'Same person',
             'roles' => [UserRole::SUPER_ADMIN->value],
             'role' => UserRole::SUPER_ADMIN->value,
@@ -265,7 +265,7 @@ class ApiAuthorizationTest extends TenantTestCase
         $user = $this->user();
         $other = $this->user();
 
-        $this->patchJson($this->tenantUrl("/api/v1/users/{$user->id}"), ['email' => Str::upper($other->email)], $this->bearer($this->tokenFor($user)))
+        $this->patchJson($this->siteUrl("/api/v1/users/{$user->id}"), ['email' => Str::upper($other->email)], $this->bearer($this->tokenFor($user)))
             ->assertStatus(422)
             ->assertJsonValidationErrors('email', 'data');
     }
@@ -275,9 +275,9 @@ class ApiAuthorizationTest extends TenantTestCase
         $admin = $this->user()->assignRole(UserRole::SUPER_ADMIN->value);
         $token = $this->tokenFor($this->user()->givePermissionTo(['User Update', 'User Delete']));
 
-        $this->patchJson($this->tenantUrl("/api/v1/users/{$admin->id}"), ['password' => 'hijacked-pass'], $this->bearer($token))->assertForbidden();
+        $this->patchJson($this->siteUrl("/api/v1/users/{$admin->id}"), ['password' => 'hijacked-pass'], $this->bearer($token))->assertForbidden();
         $this->forgetGuards();
-        $this->deleteJson($this->tenantUrl("/api/v1/users/{$admin->id}"), [], $this->bearer($token))->assertForbidden();
+        $this->deleteJson($this->siteUrl("/api/v1/users/{$admin->id}"), [], $this->bearer($token))->assertForbidden();
 
         $this->assertNotNull($admin->fresh());
     }
@@ -286,7 +286,7 @@ class ApiAuthorizationTest extends TenantTestCase
     {
         $user = $this->user()->givePermissionTo('User Delete');
 
-        $this->deleteJson($this->tenantUrl("/api/v1/users/{$user->id}"), [], $this->bearer($this->tokenFor($user)))->assertStatus(422);
+        $this->deleteJson($this->siteUrl("/api/v1/users/{$user->id}"), [], $this->bearer($this->tokenFor($user)))->assertStatus(422);
 
         $this->assertNotNull($user->fresh());
     }
@@ -297,7 +297,7 @@ class ApiAuthorizationTest extends TenantTestCase
 
         foreach (['/api/v1/users/abc', '/api/v1/items/orders/abc', '/api/v1/currencies/abc', '/api/v1/activity-logs/abc'] as $path) {
             $this->forgetGuards();
-            $this->getJson($this->tenantUrl($path), $this->bearer($token))->assertNotFound()->assertJson(['status' => false]);
+            $this->getJson($this->siteUrl($path), $this->bearer($token))->assertNotFound()->assertJson(['status' => false]);
         }
     }
 
@@ -307,7 +307,7 @@ class ApiAuthorizationTest extends TenantTestCase
 
         foreach (['/api/v1/sync/users', '/api/v1/items/sync/orders', '/api/v1/items/sync/addons', '/api/v1/branches/sync/branches'] as $path) {
             $this->forgetGuards();
-            $this->getJson($this->tenantUrl($path.'?since=not-a-date'), $this->bearer($token))->assertStatus(422);
+            $this->getJson($this->siteUrl($path.'?since=not-a-date'), $this->bearer($token))->assertStatus(422);
         }
     }
 
@@ -317,7 +317,7 @@ class ApiAuthorizationTest extends TenantTestCase
     {
         $email = 'Buyer-'.Str::lower(Str::random(6)).'@Api.test';
 
-        $this->postJson($this->tenantUrl('/api/v1/auth/register'), $this->registration(['email' => $email]))->assertOk();
+        $this->postJson($this->siteUrl('/api/v1/auth/register'), $this->registration(['email' => $email]))->assertOk();
 
         $user = User::where('email', Str::lower($email))->firstOrFail();
 
@@ -330,31 +330,31 @@ class ApiAuthorizationTest extends TenantTestCase
         foreach ([UserRole::SUPER_ADMIN->value, UserRole::USER->value, 'Student', 'Company Supervisor'] as $role) {
             $email = 'x-'.Str::lower(Str::random(6)).'@api.test';
 
-            $this->postJson($this->tenantUrl('/api/v1/auth/register'), $this->registration(['email' => $email, 'role' => $role]))->assertStatus(422);
+            $this->postJson($this->siteUrl('/api/v1/auth/register'), $this->registration(['email' => $email, 'role' => $role]))->assertStatus(422);
             $this->assertFalse(User::where('email', $email)->exists());
         }
     }
 
     public function test_register_accepts_the_customer_role(): void
     {
-        $this->postJson($this->tenantUrl('/api/v1/auth/register'), $this->registration(['role' => UserRole::CUSTOMER->value]))->assertOk();
+        $this->postJson($this->siteUrl('/api/v1/auth/register'), $this->registration(['role' => UserRole::CUSTOMER->value]))->assertOk();
     }
 
     public function test_register_refuses_a_taken_email_in_another_letter_case(): void
     {
-        $this->postJson($this->tenantUrl('/api/v1/auth/register'), $this->registration(['email' => Str::upper($this->user()->email)]))->assertStatus(422);
+        $this->postJson($this->siteUrl('/api/v1/auth/register'), $this->registration(['email' => Str::upper($this->user()->email)]))->assertStatus(422);
     }
 
     public function test_sign_in_in_another_letter_case_gives_a_token_that_works(): void
     {
         $user = $this->user();
 
-        $token = $this->postJson($this->tenantUrl('/api/v1/auth/login'), ['email' => Str::upper($user->email), 'password' => 'password'])
+        $token = $this->postJson($this->siteUrl('/api/v1/auth/login'), ['email' => Str::upper($user->email), 'password' => 'password'])
             ->assertOk()
             ->json('data.token');
 
         $this->forgetGuards();
-        $this->getJson($this->tenantUrl('/api/v1/items/orders'), $this->bearer($token))->assertOk();
+        $this->getJson($this->siteUrl('/api/v1/items/orders'), $this->bearer($token))->assertOk();
     }
 
     public function test_sign_in_and_sign_up_are_rate_limited(): void
@@ -370,12 +370,12 @@ class ApiAuthorizationTest extends TenantTestCase
         $user = $this->user();
         [$first, $second] = [$this->tokenFor($user), $this->tokenFor($user)];
 
-        $this->postJson($this->tenantUrl('/api/v1/auth/logout'), [], $this->bearer($first))->assertOk();
+        $this->postJson($this->siteUrl('/api/v1/auth/logout'), [], $this->bearer($first))->assertOk();
 
         $this->forgetGuards();
-        $this->getJson($this->tenantUrl('/api/v1/items/orders'), $this->bearer($first))->assertUnauthorized();
+        $this->getJson($this->siteUrl('/api/v1/items/orders'), $this->bearer($first))->assertUnauthorized();
         $this->forgetGuards();
-        $this->getJson($this->tenantUrl('/api/v1/items/orders'), $this->bearer($second))->assertOk();
+        $this->getJson($this->siteUrl('/api/v1/items/orders'), $this->bearer($second))->assertOk();
     }
 
     /* ---- Helpers ---- */
@@ -406,7 +406,7 @@ class ApiAuthorizationTest extends TenantTestCase
         [$method, $uri] = explode(' ', $key, 2);
 
         // Records first: logging their activity resolves the user of the previous request.
-        $url = $this->tenantUrl('/'.$this->fill($uri));
+        $url = $this->siteUrl('/'.$this->fill($uri));
 
         $this->forgetGuards();
 
@@ -475,7 +475,7 @@ class ApiAuthorizationTest extends TenantTestCase
     {
         $this->forgetGuards();
 
-        return array_column($this->getJson($this->tenantUrl($path), $this->bearer($token))->assertOk()->json('data'), 'id');
+        return array_column($this->getJson($this->siteUrl($path), $this->bearer($token))->assertOk()->json('data'), 'id');
     }
 
     /**

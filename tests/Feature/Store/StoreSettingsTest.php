@@ -4,9 +4,9 @@ namespace Tests\Feature\Store;
 
 use Modules\Store\Settings\StoreAppearanceSettings;
 use Modules\Store\Settings\StoreContactSettings;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class StoreSettingsTest extends TenantTestCase
+class StoreSettingsTest extends DatabaseTestCase
 {
     public function test_a_store_has_the_appearance_defaults(): void
     {

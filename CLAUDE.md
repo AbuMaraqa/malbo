@@ -1,9 +1,10 @@
 # core-view — notes for Claude
 
-Multi-tenant store platform (stancl/tenancy, one PostgreSQL database per store, store = subdomain)
-on Laravel 13, nwidart modules, Inertia 3, Vue 3 + TypeScript. Rebuilt from `C:\laragon\www\core`,
-which is read only. User-facing replies are in Arabic.
-Design: `docs/superpowers/specs/2026-11-04-core-view-design.md`.
+A single store: admin panel (`/{locale}/admin`) and storefront on one site and one PostgreSQL
+database, on Laravel 13, nwidart modules, Inertia 3, Vue 3 + TypeScript. Rebuilt from
+`C:\laragon\www\core`, which is read only. User-facing replies are in Arabic.
+Design: `docs/superpowers/specs/2026-11-04-core-view-design.md` (written for the earlier
+multi-tenant version: multi-tenancy has since been removed).
 
 ## Module structure
 
@@ -34,12 +35,13 @@ Design: `docs/superpowers/specs/2026-11-04-core-view-design.md`.
 - Search with `whereLike(..., caseSensitive: false)`, never `where(..., 'like', ...)`.
 - Booleans are compared with `true/false`. A failed query aborts the open transaction.
 
-## Tenancy
+## Database and seeding
 
-- Never call `Cache::flush()`: Redis flushes every store. Each store has its own cache prefix.
-- Central migrations in `database/migrations`, store migrations in `database/migrations/tenant`,
-  `database/settings` and `Modules/*/database/migrations`. `tenants:seed --class=<Module>DatabaseSeeder`
-  for existing stores; never re-run Core's seeder there.
+- No multi-tenancy and no Redis: cache, sessions and queue are in the database.
+- `php artisan migrate` runs `database/migrations`, `database/settings` and `Modules/*/database/migrations`.
+- `php artisan db:seed`: `BaseDataSeeder` (permissions, roles, base data) then
+  `Modules/Core/database/seeders/AdminSeeder.php` (the Super Admin from `ADMIN_*` in `.env`,
+  `config/admin.php`). Safe to run again.
 
 ## Frontend
 
@@ -52,13 +54,13 @@ Design: `docs/superpowers/specs/2026-11-04-core-view-design.md`.
 - Every `t('...')` text has an Arabic entry in a `Lang/ar.json` (`ArabicTextsTest`).
 - RTL by default: logical Tailwind utilities only (`ms-`, `pe-`, `start-`, `text-start`), never `ml-`, `right-`.
 - Dark mode is on in the admin: use `dark:` variants as TailAdmin does, or the `ink`, `muted`, `line`,
-  `surface`, `card` tokens. Brand tints need a dark variant: `text-brand-600 dark:text-brand-400`, `bg-brand-50 dark:bg-brand-500/15`. Colors: admin `brand-*` (TailAdmin), storefront `store-*` (the color of each store).
+  `surface`, `card` tokens. Brand tints need a dark variant: `text-brand-600 dark:text-brand-400`, `bg-brand-50 dark:bg-brand-500/15`. Colors: admin `brand-*` (TailAdmin), storefront `store-*` (the store's color).
 - Icons: Solar only, through `resources/js/lib/icons.ts` (`SolarIconsTest`). Sidebar keys in `Components/layout/navIcons.ts`.
 - Languages: add a line to `config/app.php` `locales` (native name, direction, flag) and a `Lang/<code>.json`.
 - Heavy libraries (Tiptap, Leaflet, ApexCharts, Sortable) are loaded with `defineAsyncComponent`.
 
 ## Tests
 
-- `Tests\TenantTestCase` (store `testing`) or `Tests\CentralTestCase`, on `core_view_central_testing`
-  and `test_tenant_*` only. Page tests use `assertInertia`.
+- `Tests\DatabaseTestCase` on `core_view_testing` (RefreshDatabase, seeded with `BaseDataSeeder`,
+  `siteUrl()` for absolute URLs). Page tests use `assertInertia`.
 - The machine is RAM-constrained: run single files while working, full suites at the end.

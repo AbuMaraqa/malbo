@@ -12,14 +12,14 @@ use Modules\Items\Entities\AddonOption;
 use Modules\Items\Entities\Attribute;
 use Modules\Items\Entities\AttributeValue;
 use Modules\Items\Enums\AddonType;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
  * Saving an attribute or an addon wrote the translation of each saved value and option, loading
  * their translations one row at a time (logged as Lazy loading AttributeValue::translations and
  * AddonOption::translations).
  */
-class CatalogLazyLoadingTest extends TenantTestCase
+class CatalogLazyLoadingTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -86,17 +86,17 @@ class CatalogLazyLoadingTest extends TenantTestCase
         AttributeValue::factory()->for($attribute)->create();
         AddonOption::factory()->for(Addon::factory())->create();
 
-        $this->getJson($this->tenantUrl('/api/v1/items/attributes'))->assertOk();
-        $this->getJson($this->tenantUrl('/api/v1/items/addons'))->assertOk();
+        $this->getJson($this->siteUrl('/api/v1/items/attributes'))->assertOk();
+        $this->getJson($this->siteUrl('/api/v1/items/addons'))->assertOk();
         // A translated name, which an array or a plain column filter could not do.
-        $this->getJson($this->tenantUrl('/api/v1/items/attributes?filter[name]=x'))->assertOk();
-        $this->getJson($this->tenantUrl('/api/v1/items/addons?filter[name]=x'))->assertOk();
+        $this->getJson($this->siteUrl('/api/v1/items/attributes?filter[name]=x'))->assertOk();
+        $this->getJson($this->siteUrl('/api/v1/items/addons?filter[name]=x'))->assertOk();
 
         $this->assertSame([], array_values(array_unique($this->lazy)));
     }
 
     private function url(string $path): string
     {
-        return $this->tenantUrl('/ar/admin'.$path);
+        return $this->siteUrl('/ar/admin'.$path);
     }
 }

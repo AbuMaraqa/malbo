@@ -16,9 +16,9 @@ use Modules\Items\Enums\ProductStatus;
 use Modules\Items\Events\ProductUpdated;
 use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
 use Modules\Items\Services\ProductService;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class ProductServiceTest extends TenantTestCase
+class ProductServiceTest extends DatabaseTestCase
 {
     private ProductService $service;
 

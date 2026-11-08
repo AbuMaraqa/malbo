@@ -29,9 +29,9 @@ use Modules\Items\Enums\PaymentMethod;
 use Modules\Items\Enums\PaymentStatus;
 use RuntimeException;
 use Spatie\Permission\Models\Role;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class OrderPagesTest extends TenantTestCase
+class OrderPagesTest extends DatabaseTestCase
 {
     private User $staff;
 
@@ -540,7 +540,7 @@ class OrderPagesTest extends TenantTestCase
     {
         $this->order();
 
-        $this->actingAs($this->staff, 'sanctum')->getJson($this->tenantUrl('/api/v1/items/orders'))->assertOk()->assertJsonCount(1, 'data');
+        $this->actingAs($this->staff, 'sanctum')->getJson($this->siteUrl('/api/v1/items/orders'))->assertOk()->assertJsonCount(1, 'data');
     }
 
     public function test_the_pages_and_a_save_load_no_relation_lazily(): void
@@ -635,6 +635,6 @@ class OrderPagesTest extends TenantTestCase
 
     private function url(string $path): string
     {
-        return $this->tenantUrl('/ar/admin'.$path);
+        return $this->siteUrl('/ar/admin'.$path);
     }
 }

@@ -10,9 +10,9 @@ use Modules\Branch\Enums\WeekDay;
 use Modules\Branch\Services\BranchService;
 use Modules\Core\Entities\User;
 use Modules\GeoLocation\Entities\City;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class BranchApiTest extends TenantTestCase
+class BranchApiTest extends DatabaseTestCase
 {
     private Branch $branch;
 
@@ -91,6 +91,6 @@ class BranchApiTest extends TenantTestCase
 
     private function apiGet(string $path): TestResponse
     {
-        return $this->getJson($this->tenantUrl($path), ['Accept-Language' => 'ar']);
+        return $this->getJson($this->siteUrl($path), ['Accept-Language' => 'ar']);
     }
 }

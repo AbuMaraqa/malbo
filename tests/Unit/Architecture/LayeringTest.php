@@ -12,7 +12,7 @@ use Symfony\Component\Finder\Finder;
  * service under another name is reported, and code built dynamically is not seen.
  *
  * ENTITIES and FILES are generated: an entity counts as moved when it has a repository, and every
- * controller in `Modules/<M>/Http/Controllers` and `app/Http/Controllers/Platform` is checked.
+ * controller in `Modules/<M>/Http/Controllers` is checked.
  * What is known and owed is in KNOWN: a new line in any other file fails, and so does a file that
  * no longer needs its entry.
  */
@@ -73,7 +73,6 @@ class LayeringTest extends TestCase
 
         $this->assertContains('Modules/Core/Http/Controllers/Admin/CurrencyController.php', $files);
         $this->assertContains('Modules/Items/Http/Controllers/Api/V1/ProductController.php', $files);
-        $this->assertContains('app/Http/Controllers/Platform/StoreController.php', $files);
 
         foreach (['Product', 'Category', 'Page', 'ContactMessage', 'Member', 'Currency', 'User', 'Branch', 'City'] as $entity) {
             $this->assertContains($entity, self::entities());
@@ -155,7 +154,6 @@ class LayeringTest extends TestCase
         $root = self::root();
         $finder = Finder::create()->files()->name('*.php')->in([
             ...glob($root.'/Modules/*/Http/Controllers', GLOB_ONLYDIR),
-            $root.'/app/Http/Controllers/Platform',
         ]);
 
         $files = [];

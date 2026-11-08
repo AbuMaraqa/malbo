@@ -2,22 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Symfony\Component\HttpFoundation\Response;
-
 /**
- * `/{locale}` on every host: the storefront home on a store host, the platform landing page on a
- * central host.
+ * `/{locale}`: the storefront home. Resolved for each request, so the storefront controller and
+ * the layout it memoizes are never reused by a later request (Laravel keeps a route's controller).
  */
 class HomeController extends Controller
 {
-    public function __invoke(Request $request): mixed
+    public function __invoke(): mixed
     {
-        if (tenancy()->initialized) {
-            return app()->call(\Modules\Store\Http\Controllers\Storefront\HomeController::class);
-        }
-
-        return Inertia::render('Platform/Landing', ['signUpUrl' => url('/'.app()->getLocale().'/register-store')]);
+        return app()->call(\Modules\Store\Http\Controllers\Storefront\HomeController::class);
     }
 }

@@ -4,6 +4,5 @@
 return [
     'groups' => [
         'storefront' => ['home', 'store.*', 'robots'],
-        'platform' => ['home', 'central.*'],
     ],
 ];

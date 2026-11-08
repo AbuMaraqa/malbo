@@ -21,7 +21,7 @@ class StorefrontSeoTest extends StorefrontTestCase
         Category::factory()->create(['slug' => 'cups']);
         app(PageService::class)->setPublished(app(PageRepositoryInterface::class)->findByKey('terms'), false);
 
-        $xml = $this->get($this->tenantUrl('/sitemap.xml'))
+        $xml = $this->get($this->siteUrl('/sitemap.xml'))
             ->assertOk()
             ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
             ->getContent();
@@ -36,17 +36,10 @@ class StorefrontSeoTest extends StorefrontTestCase
 
     public function test_robots_points_a_store_at_its_sitemap(): void
     {
-        $this->get($this->tenantUrl('/robots.txt'))
+        $this->get($this->siteUrl('/robots.txt'))
             ->assertOk()
-            ->assertSee('Sitemap: '.$this->tenantUrl('/sitemap.xml'), false)
+            ->assertSee('Sitemap: '.$this->siteUrl('/sitemap.xml'), false)
             ->assertSee('Disallow: /*/admin', false);
-    }
-
-    public function test_robots_on_the_platform_host(): void
-    {
-        $this->asCentral();
-
-        $this->get('http://localhost/robots.txt')->assertOk()->assertDontSee('Sitemap:', false);
     }
 
     public function test_product_page_has_share_tags_and_structured_data(): void
@@ -59,10 +52,10 @@ class StorefrontSeoTest extends StorefrontTestCase
         $this->assertSame('كوب فخار — Maison', $seo['title']);
         $this->assertSame('product', $seo['og']['type']);
         $this->assertSame('كوب مصنوع يدوياً', $seo['description']);
-        $this->assertSame($this->tenantUrl('/ar/product/clay-cup'), $seo['canonical']);
-        $this->assertSame($this->tenantUrl('/en/product/clay-cup'), $seo['alternates']['en']);
-        $this->assertSame($this->tenantUrl('/ar/product/clay-cup'), $seo['alternates']['ar']);
-        $this->assertSame($this->tenantUrl('/ar/product/clay-cup'), $seo['x_default']);
+        $this->assertSame($this->siteUrl('/ar/product/clay-cup'), $seo['canonical']);
+        $this->assertSame($this->siteUrl('/en/product/clay-cup'), $seo['alternates']['en']);
+        $this->assertSame($this->siteUrl('/ar/product/clay-cup'), $seo['alternates']['ar']);
+        $this->assertSame($this->siteUrl('/ar/product/clay-cup'), $seo['x_default']);
         $this->assertFalse($seo['noindex']);
 
         $data = json_decode($seo['json_ld'][0], true);
@@ -88,7 +81,7 @@ class StorefrontSeoTest extends StorefrontTestCase
         $seo = $this->props('/ar', 'Store/Storefront/Home')['seo'];
 
         $this->assertSame('Store', json_decode($seo['json_ld'][0], true)['@type']);
-        $this->assertSame($this->tenantUrl('/ar'), $seo['canonical']);
+        $this->assertSame($this->siteUrl('/ar'), $seo['canonical']);
         $this->assertSame('ar_AR', $seo['og']['locale']);
     }
 
@@ -96,9 +89,9 @@ class StorefrontSeoTest extends StorefrontTestCase
     {
         $props = $this->props('/en/shop?q=x', 'Store/Storefront/Shop');
 
-        $this->assertSame($this->tenantUrl('/en/shop'), $props['seo']['canonical']);
+        $this->assertSame($this->siteUrl('/en/shop'), $props['seo']['canonical']);
         $this->assertSame('en_US', $props['seo']['og']['locale']);
-        $this->assertSame($this->tenantUrl('/ar/shop?q=x'), $props['store']['other_locale_url']);
+        $this->assertSame($this->siteUrl('/ar/shop?q=x'), $props['store']['other_locale_url']);
     }
 
     public function test_a_missing_product_shows_the_store_404_page(): void
@@ -125,7 +118,7 @@ class StorefrontSeoTest extends StorefrontTestCase
 
     public function test_addresses_without_a_language_still_redirect(): void
     {
-        $this->get($this->tenantUrl('/shop'))->assertRedirect($this->tenantUrl('/ar/shop'));
+        $this->get($this->siteUrl('/shop'))->assertRedirect($this->siteUrl('/ar/shop'));
     }
 
     public function test_storefront_props_do_not_list_admin_routes_or_admin_texts(): void
@@ -140,7 +133,7 @@ class StorefrontSeoTest extends StorefrontTestCase
 
     private function assertStore404(string $path): void
     {
-        $this->get($this->tenantUrl($path))
+        $this->get($this->siteUrl($path))
             ->assertNotFound()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Store/Storefront/NotFound')

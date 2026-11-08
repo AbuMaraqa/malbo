@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
 use Modules\Core\Services\SidebarService;
+use Modules\Core\Settings\GeneralSettings;
 use Modules\Core\Support\DashboardTheme;
 use Tighten\Ziggy\Ziggy;
 
@@ -32,7 +33,7 @@ class HandleInertiaRequests extends Middleware
     {
         $section = self::section($request);
 
-        Inertia::disableSsr(! in_array($section, ['storefront', 'platform'], true));
+        Inertia::disableSsr($section !== 'storefront');
 
         return [
             ...parent::share($request),
@@ -46,9 +47,8 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
             ],
             'translations' => Inertia::once(fn () => FrontendTranslations::for($section)),
-            'ziggy' => Inertia::once(fn () => (new Ziggy($section === 'admin' ? null : str_replace('platform-admin', 'platform', $section)))->toArray()),
+            'ziggy' => Inertia::once(fn () => (new Ziggy($section === 'admin' ? null : $section))->toArray()),
             ...($section === 'admin' ? $this->adminProps($request) : []),
-            ...(in_array($section, ['platform', 'platform-admin'], true) ? $this->platformProps($request) : []),
         ];
     }
 
@@ -68,31 +68,13 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $request->user()->getAllPermissions()->pluck('name'),
             ] : ['user' => null, 'permissions' => []],
             'sidebar' => fn () => $request->user() ? app(SidebarService::class)->all() : [],
-            'store' => fn () => tenancy()->initialized ? [
-                'id' => tenant()->getTenantKey(),
-                'name' => tenant()->name[app()->getLocale()] ?? tenant()->getTenantKey(),
-            ] : null,
-            'dashboardTheme' => fn () => tenancy()->initialized ? [
+            'store' => fn () => ['name' => app(GeneralSettings::class)->site_name],
+            'dashboardTheme' => fn () => [
                 'css' => app(DashboardTheme::class)->css(),
                 'fontsUrl' => app(DashboardTheme::class)->fontsUrl(),
-            ] : null,
+            ],
             'unreadNotifications' => fn () => $request->user()?->unreadNotifications()->count() ?? 0,
             'realtime' => fn () => Realtime::client($request->user()),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function platformProps(Request $request): array
-    {
-        return [
-            'appName' => fn () => config('app.name'),
-            // url(), not route(): stay on the central host the admin signed in on.
-            'platformAdmin' => fn () => ($admin = $request->user('platform')) ? [
-                'name' => $admin->name,
-                'logoutUrl' => url('/'.app()->getLocale().'/platform/logout'),
-            ] : null,
         ];
     }
 
@@ -102,11 +84,6 @@ class HandleInertiaRequests extends Middleware
     public static function section(Request $request): string
     {
         $name = $request->route()?->getName() ?? '';
-
-        if (! tenancy()->initialized) {
-            // central.platform.* on the first central domain, central.alias1.platform.* on the others.
-            return preg_match('/^central\.(alias\d+\.)?platform\./', $name) === 1 ? 'platform-admin' : 'platform';
-        }
 
         if ($name === 'home' || str_starts_with($name, 'store.')) {
             return 'storefront';

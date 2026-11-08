@@ -6,12 +6,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Items\Entities\Product;
 use Modules\Items\Enums\ProductStatus;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
  * Status never had a form field, so every existing product is a draft by accident (spec §6.3).
  */
-class PublishExistingDraftProductsTest extends TenantTestCase
+class PublishExistingDraftProductsTest extends DatabaseTestCase
 {
     private const UPDATED_AT = '2025-01-01 10:00:00';
 

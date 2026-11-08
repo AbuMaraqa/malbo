@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
 /**
  * Behaviour of core's ProfileInformationTest and UpdatePasswordTest on the Inertia profile page.
  */
-class ProfilePagesTest extends TenantTestCase
+class ProfilePagesTest extends DatabaseTestCase
 {
     private User $user;
 
@@ -31,7 +31,7 @@ class ProfilePagesTest extends TenantTestCase
     public function test_current_profile_information_is_available(): void
     {
         $this->actingAs($this->user)
-            ->get($this->tenantUrl('/ar/admin/profile'))
+            ->get($this->siteUrl('/ar/admin/profile'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Core/Profile/Index')
@@ -45,7 +45,7 @@ class ProfilePagesTest extends TenantTestCase
     public function test_profile_information_can_be_updated(): void
     {
         $this->actingAs($this->user)
-            ->put($this->tenantUrl('/ar/admin/profile'), ['name' => 'Test Name', 'email' => 'Test@Example.com'])
+            ->put($this->siteUrl('/ar/admin/profile'), ['name' => 'Test Name', 'email' => 'Test@Example.com'])
             ->assertSessionHasNoErrors()
             ->assertRedirect();
 
@@ -58,7 +58,7 @@ class ProfilePagesTest extends TenantTestCase
         User::forceCreate(['name' => 'Other', 'email' => 'other@example.com', 'password' => 'password']);
 
         $this->actingAs($this->user)
-            ->put($this->tenantUrl('/ar/admin/profile'), ['name' => 'Staff', 'email' => 'OTHER@example.com'])
+            ->put($this->siteUrl('/ar/admin/profile'), ['name' => 'Staff', 'email' => 'OTHER@example.com'])
             ->assertSessionHasErrors('email');
     }
 
@@ -67,7 +67,7 @@ class ProfilePagesTest extends TenantTestCase
         Storage::fake('media');
 
         $this->actingAs($this->user)
-            ->put($this->tenantUrl('/ar/admin/profile'), [
+            ->put($this->siteUrl('/ar/admin/profile'), [
                 'name' => 'Staff',
                 'email' => 'staff@example.com',
                 'avatar' => UploadedFile::fake()->image('a.png'),
@@ -76,14 +76,14 @@ class ProfilePagesTest extends TenantTestCase
             ->assertSessionHasNoErrors();
 
         $this->actingAs($this->user)
-            ->get($this->tenantUrl('/ar/admin/profile'))
+            ->get($this->siteUrl('/ar/admin/profile'))
             ->assertInertia(fn (Assert $page) => $page
                 ->has('profile.avatar', 1)
                 ->has('profile.cover_photo', 1)
                 ->whereNot('profile.cover_url', null));
 
         $this->actingAs($this->user)
-            ->put($this->tenantUrl('/ar/admin/profile'), ['name' => 'Staff', 'email' => 'staff@example.com', 'remove_avatar' => true])
+            ->put($this->siteUrl('/ar/admin/profile'), ['name' => 'Staff', 'email' => 'staff@example.com', 'remove_avatar' => true])
             ->assertSessionHasNoErrors();
 
         $fresh = $this->user->fresh();
@@ -94,7 +94,7 @@ class ProfilePagesTest extends TenantTestCase
     public function test_an_avatar_must_be_an_image(): void
     {
         $this->actingAs($this->user)
-            ->put($this->tenantUrl('/ar/admin/profile'), [
+            ->put($this->siteUrl('/ar/admin/profile'), [
                 'name' => 'Staff',
                 'email' => 'staff@example.com',
                 'avatar' => UploadedFile::fake()->create('a.pdf', 1, 'application/pdf'),
@@ -105,7 +105,7 @@ class ProfilePagesTest extends TenantTestCase
     public function test_password_can_be_updated(): void
     {
         $this->actingAs($this->user)
-            ->put($this->tenantUrl('/ar/admin/profile/password'), [
+            ->put($this->siteUrl('/ar/admin/profile/password'), [
                 'current_password' => 'password',
                 'password' => 'new-password',
                 'password_confirmation' => 'new-password',
@@ -118,7 +118,7 @@ class ProfilePagesTest extends TenantTestCase
     public function test_current_password_must_be_correct(): void
     {
         $this->actingAs($this->user)
-            ->put($this->tenantUrl('/ar/admin/profile/password'), [
+            ->put($this->siteUrl('/ar/admin/profile/password'), [
                 'current_password' => 'wrong-password',
                 'password' => 'new-password',
                 'password_confirmation' => 'new-password',
@@ -131,7 +131,7 @@ class ProfilePagesTest extends TenantTestCase
     public function test_new_passwords_must_match(): void
     {
         $this->actingAs($this->user)
-            ->put($this->tenantUrl('/ar/admin/profile/password'), [
+            ->put($this->siteUrl('/ar/admin/profile/password'), [
                 'current_password' => 'password',
                 'password' => 'new-password',
                 'password_confirmation' => 'wrong-password',
@@ -145,24 +145,24 @@ class ProfilePagesTest extends TenantTestCase
     {
         $customer = User::forceCreate(['name' => 'C', 'email' => 'c@example.com', 'password' => 'password'])->assignRole('Customer');
 
-        $this->actingAs($customer)->get($this->tenantUrl('/ar/admin/profile'))->assertRedirect();
+        $this->actingAs($customer)->get($this->siteUrl('/ar/admin/profile'))->assertRedirect();
     }
 
     public function test_guests_go_to_the_login_page(): void
     {
-        $this->get($this->tenantUrl('/ar/admin/profile'))->assertRedirect();
+        $this->get($this->siteUrl('/ar/admin/profile'))->assertRedirect();
     }
 
     public function test_fortify_endpoints_update_the_store_user(): void
     {
         $this->actingAs($this->user)
-            ->put($this->tenantUrl('/user/profile-information'), ['name' => 'Via Fortify', 'email' => 'Via@Example.com'])
+            ->put($this->siteUrl('/user/profile-information'), ['name' => 'Via Fortify', 'email' => 'Via@Example.com'])
             ->assertSessionHasNoErrors();
 
         $this->assertSame('via@example.com', $this->user->fresh()->email);
 
         $this->actingAs($this->user->fresh())
-            ->put($this->tenantUrl('/user/password'), [
+            ->put($this->siteUrl('/user/password'), [
                 'current_password' => 'password',
                 'password' => 'new-password',
                 'password_confirmation' => 'new-password',

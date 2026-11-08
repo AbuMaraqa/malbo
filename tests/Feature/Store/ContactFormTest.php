@@ -88,20 +88,20 @@ class ContactFormTest extends StorefrontTestCase
 
         $this->assertSame(1, app(ContactMessageRepositoryInterface::class)->unreadCount());
 
-        $this->get($this->tenantUrl(self::INBOX))
+        $this->get($this->siteUrl(self::INBOX))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Store/ContactMessage/Index')
                 ->where('table.meta.total', 2)
                 ->where('table.data.0.message', fn ($message) => in_array($message, ['سؤال عن المقاسات', $old->message], true)));
 
-        $this->post($this->tenantUrl(self::INBOX."/{$new->id}/open"))->assertRedirect();
+        $this->post($this->siteUrl(self::INBOX."/{$new->id}/open"))->assertRedirect();
         $this->assertTrue($new->fresh()->isRead());
 
-        $this->post($this->tenantUrl(self::INBOX."/{$new->id}/unread"))->assertRedirect();
+        $this->post($this->siteUrl(self::INBOX."/{$new->id}/unread"))->assertRedirect();
         $this->assertFalse($new->fresh()->isRead());
 
-        $this->delete($this->tenantUrl(self::INBOX."/{$old->id}"))->assertRedirect();
+        $this->delete($this->siteUrl(self::INBOX."/{$old->id}"))->assertRedirect();
         $this->assertNull(ContactMessage::find($old->id));
     }
 
@@ -111,7 +111,7 @@ class ContactFormTest extends StorefrontTestCase
         ContactMessage::factory()->read()->create(['name' => 'أحمد', 'phone' => null]);
         $this->actingAs($this->inboxStaff());
 
-        $total = fn (string $query, int $expected) => $this->get($this->tenantUrl(self::INBOX.'?'.$query))
+        $total = fn (string $query, int $expected) => $this->get($this->siteUrl(self::INBOX.'?'.$query))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('table.meta.total', $expected));
 
@@ -131,31 +131,31 @@ class ContactFormTest extends StorefrontTestCase
         $messages = ContactMessage::factory()->count(3)->create();
         $this->actingAs($this->inboxStaff());
 
-        $this->post($this->tenantUrl(self::INBOX.'/read'), ['ids' => $messages->take(2)->modelKeys()])->assertRedirect();
+        $this->post($this->siteUrl(self::INBOX.'/read'), ['ids' => $messages->take(2)->modelKeys()])->assertRedirect();
 
         $this->assertSame(1, app(ContactMessageRepositoryInterface::class)->unreadCount());
     }
 
     public function test_the_inbox_needs_the_permission(): void
     {
-        $this->get($this->tenantUrl(self::INBOX))->assertRedirect();
+        $this->get($this->siteUrl(self::INBOX))->assertRedirect();
 
         $message = ContactMessage::factory()->create();
         $this->actingAs($this->staff(['Product View List']));
 
-        $this->get($this->tenantUrl(self::INBOX))->assertForbidden();
-        $this->post($this->tenantUrl(self::INBOX."/{$message->id}/open"))->assertForbidden();
-        $this->post($this->tenantUrl(self::INBOX."/{$message->id}/unread"))->assertForbidden();
-        $this->post($this->tenantUrl(self::INBOX.'/read'), ['ids' => [$message->id]])->assertForbidden();
-        $this->delete($this->tenantUrl(self::INBOX."/{$message->id}"))->assertForbidden();
+        $this->get($this->siteUrl(self::INBOX))->assertForbidden();
+        $this->post($this->siteUrl(self::INBOX."/{$message->id}/open"))->assertForbidden();
+        $this->post($this->siteUrl(self::INBOX."/{$message->id}/unread"))->assertForbidden();
+        $this->post($this->siteUrl(self::INBOX.'/read'), ['ids' => [$message->id]])->assertForbidden();
+        $this->delete($this->siteUrl(self::INBOX."/{$message->id}"))->assertForbidden();
     }
 
     public function test_a_bad_or_unknown_id_touches_nothing(): void
     {
         $this->actingAs($this->inboxStaff());
 
-        $this->post($this->tenantUrl(self::INBOX.'/abc/open'))->assertStatus(405); // no such route for POST
-        $this->post($this->tenantUrl(self::INBOX.'/999999/open'))->assertNotFound();
+        $this->post($this->siteUrl(self::INBOX.'/abc/open'))->assertStatus(405); // no such route for POST
+        $this->post($this->siteUrl(self::INBOX.'/999999/open'))->assertNotFound();
     }
 
     /**
@@ -163,7 +163,7 @@ class ContactFormTest extends StorefrontTestCase
      */
     private function send(array $fields)
     {
-        return $this->post($this->tenantUrl('/ar/contact'), $fields);
+        return $this->post($this->siteUrl('/ar/contact'), $fields);
     }
 
     private function inboxStaff(): User

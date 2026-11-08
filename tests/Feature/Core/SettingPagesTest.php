@@ -9,9 +9,9 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\AppVersion;
 use Modules\Core\Entities\User;
 use Modules\Core\Settings\GeneralSettings;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class SettingPagesTest extends TenantTestCase
+class SettingPagesTest extends DatabaseTestCase
 {
     private User $admin;
 
@@ -31,7 +31,7 @@ class SettingPagesTest extends TenantTestCase
         AppVersion::query()->create($this->version('android'));
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/settings'))
+            ->get($this->siteUrl('/ar/admin/settings'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Core/Settings/Index')
@@ -44,7 +44,7 @@ class SettingPagesTest extends TenantTestCase
     public function test_saving_updates_the_settings(): void
     {
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload(['site_name' => 'New Name']))
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload(['site_name' => 'New Name']))
             ->assertSessionHasNoErrors()
             ->assertRedirect()
             ->assertSessionHas('success');
@@ -59,7 +59,7 @@ class SettingPagesTest extends TenantTestCase
         AppVersion::query()->create($this->version('old'));
 
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload([
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload([
                 'app_versions' => [
                     [...$this->version('android'), 'latest_version' => '9.9.9', 'maintenance_mode' => '1'],
                     $this->version('ios'),
@@ -80,7 +80,7 @@ class SettingPagesTest extends TenantTestCase
         AppVersion::query()->create($this->version('android'));
 
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload())
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload())
             ->assertSessionHasNoErrors();
 
         $this->assertSame(1, AppVersion::query()->count());
@@ -89,7 +89,7 @@ class SettingPagesTest extends TenantTestCase
     public function test_validation_errors_are_returned(): void
     {
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload([
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload([
                 'site_name' => '',
                 'email_address_for_contact' => 'nope',
                 'app_versions' => [
@@ -105,17 +105,17 @@ class SettingPagesTest extends TenantTestCase
         Storage::fake('media');
 
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload(['logo' => UploadedFile::fake()->image('logo.png')]))
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload(['logo' => UploadedFile::fake()->image('logo.png')]))
             ->assertSessionHasNoErrors();
 
         $this->assertNotEmpty(app(GeneralSettings::class)->refresh()->site_logo_url);
 
         $this->actingAs($this->admin)
-            ->get($this->tenantUrl('/ar/admin/settings'))
+            ->get($this->siteUrl('/ar/admin/settings'))
             ->assertInertia(fn (Assert $page) => $page->has('logo', 1));
 
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload(['remove_logo' => true]))
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload(['remove_logo' => true]))
             ->assertSessionHasNoErrors();
 
         $this->assertNull(app(GeneralSettings::class)->refresh()->site_logo_url);
@@ -124,7 +124,7 @@ class SettingPagesTest extends TenantTestCase
     public function test_a_logo_must_be_an_image(): void
     {
         $this->actingAs($this->admin)
-            ->put($this->tenantUrl('/ar/admin/settings'), $this->payload(['logo' => UploadedFile::fake()->create('logo.svg', 1, 'image/svg+xml')]))
+            ->put($this->siteUrl('/ar/admin/settings'), $this->payload(['logo' => UploadedFile::fake()->create('logo.svg', 1, 'image/svg+xml')]))
             ->assertSessionHasErrors('logo');
     }
 
@@ -133,9 +133,9 @@ class SettingPagesTest extends TenantTestCase
         $viewer = User::forceCreate(['name' => 'V', 'email' => 'v@example.com', 'password' => 'secret-password'])->givePermissionTo('Setting View List');
         $other = User::forceCreate(['name' => 'O', 'email' => 'o@example.com', 'password' => 'secret-password'])->givePermissionTo('Currency View List');
 
-        $this->actingAs($viewer)->get($this->tenantUrl('/ar/admin/settings'))->assertOk();
-        $this->actingAs($viewer)->put($this->tenantUrl('/ar/admin/settings'), $this->payload())->assertForbidden();
-        $this->actingAs($other)->get($this->tenantUrl('/ar/admin/settings'))->assertForbidden();
+        $this->actingAs($viewer)->get($this->siteUrl('/ar/admin/settings'))->assertOk();
+        $this->actingAs($viewer)->put($this->siteUrl('/ar/admin/settings'), $this->payload())->assertForbidden();
+        $this->actingAs($other)->get($this->siteUrl('/ar/admin/settings'))->assertForbidden();
     }
 
     /**

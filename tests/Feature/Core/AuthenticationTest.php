@@ -4,13 +4,13 @@ namespace Tests\Feature\Core;
 
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class AuthenticationTest extends TenantTestCase
+class AuthenticationTest extends DatabaseTestCase
 {
     public function test_login_screen_can_be_rendered(): void
     {
-        $this->get($this->tenantUrl('/login'))
+        $this->get($this->siteUrl('/login'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Auth/Login'));
     }
@@ -19,7 +19,7 @@ class AuthenticationTest extends TenantTestCase
     {
         $user = $this->makeUser();
 
-        $response = $this->post($this->tenantUrl('/login'), [
+        $response = $this->post($this->siteUrl('/login'), [
             'email' => $user->email,
             'password' => 'password',
         ]);
@@ -32,7 +32,7 @@ class AuthenticationTest extends TenantTestCase
     {
         $user = $this->makeUser();
 
-        $this->post($this->tenantUrl('/login'), [
+        $this->post($this->siteUrl('/login'), [
             'email' => $user->email,
             'password' => 'wrong-password',
         ]);

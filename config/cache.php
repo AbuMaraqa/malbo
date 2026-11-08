@@ -78,21 +78,6 @@ return [
             ],
         ],
 
-        // Sessions keep one fixed prefix: ScopeSessionToStore binds each session to its store, and a
-        // session must read the same whether it starts before or after the store is identified.
-        'sessions' => [
-            'driver' => 'redis',
-            'connection' => 'default',
-            'lock_connection' => 'default',
-            'prefix' => env('SESSION_CACHE_PREFIX', 'core_view_session_'),
-        ],
-
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
-            'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
-        ],
-
         'dynamodb' => [
             'driver' => 'dynamodb',
             'key' => env('AWS_ACCESS_KEY_ID'),

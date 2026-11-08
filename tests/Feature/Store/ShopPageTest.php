@@ -36,8 +36,8 @@ class ShopPageTest extends StorefrontTestCase
         $this->assertSame('حقائب', $props['category']['name']);
         $this->assertSame(['حقيبة جلد'], array_column($props['products']['data'], 'name'));
 
-        $this->get($this->tenantUrl('/ar/category/hidden'))->assertNotFound();
-        $this->get($this->tenantUrl('/ar/category/nothing'))->assertNotFound();
+        $this->get($this->siteUrl('/ar/category/hidden'))->assertNotFound();
+        $this->get($this->siteUrl('/ar/category/nothing'))->assertNotFound();
     }
 
     public function test_search_and_sort_update_the_list(): void
@@ -93,11 +93,11 @@ class ShopPageTest extends StorefrontTestCase
 
     public function test_an_array_or_broken_query_does_not_break_the_page(): void
     {
-        $this->get($this->tenantUrl('/ar/shop?q[]=x'))->assertOk();
-        $this->get($this->tenantUrl('/ar?q[]=x'))->assertOk();
-        $this->get($this->tenantUrl('/ar/shop?sort[]=x&page[]=2'))->assertOk();
-        $this->get($this->tenantUrl('/ar/shop?q=%00'))->assertOk();
-        $this->get($this->tenantUrl('/ar/shop?q=%FF'))->assertOk();
+        $this->get($this->siteUrl('/ar/shop?q[]=x'))->assertOk();
+        $this->get($this->siteUrl('/ar?q[]=x'))->assertOk();
+        $this->get($this->siteUrl('/ar/shop?sort[]=x&page[]=2'))->assertOk();
+        $this->get($this->siteUrl('/ar/shop?q=%00'))->assertOk();
+        $this->get($this->siteUrl('/ar/shop?q=%FF'))->assertOk();
     }
 
     public function test_a_page_past_the_end_says_so(): void

@@ -3,13 +3,13 @@
 namespace Tests\Feature\Database;
 
 use Illuminate\Support\Facades\DB;
-use Tests\TenantTestCase;
+use Tests\DatabaseTestCase;
 
-class ForeignKeysAreIndexedTest extends TenantTestCase
+class ForeignKeysAreIndexedTest extends DatabaseTestCase
 {
     public function test_every_foreign_key_has_an_index(): void
     {
-        $migration = require database_path('migrations/tenant/2027_01_01_000002_index_foreign_keys.php');
+        $migration = require database_path('migrations/2027_01_01_000002_index_foreign_keys.php');
 
         $this->assertSame([], DB::select($migration::UNINDEXED_FOREIGN_KEYS));
     }

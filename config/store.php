@@ -3,14 +3,6 @@
 return [
 
     /*
-    | Slugs that can never be a store id (subdomain). Str::is patterns.
-    */
-    'reserved_slugs' => [
-        'www', 'admin', 'api', 'app', 'platform', 'mail', 'static', 'assets',
-        'cdn', 'help', 'support', 'status', 'demo-*',
-    ],
-
-    /*
     | Storefront fonts: Arabic + Latin Google Fonts. family = the css2 `family=` value.
     */
     'default_font' => 'tajawal',

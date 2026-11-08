@@ -12,7 +12,7 @@ class CoreDatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            AdminSeeder::class,
+            // First: it resets the permissions table, the other modules add theirs after it.
             PermissionSeeder::class,
             CurrencySeeder::class,
             AppVersionSeeder::class,

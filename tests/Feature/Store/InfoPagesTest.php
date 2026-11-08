@@ -47,8 +47,8 @@ class InfoPagesTest extends StorefrontTestCase
         $pages = app(PageRepositoryInterface::class);
         app(PageService::class)->setPublished($pages->findByKey('terms'), false);
 
-        $this->get($this->tenantUrl('/ar/page/terms'))->assertNotFound();
-        $this->get($this->tenantUrl('/ar/page/nothing'))->assertNotFound();
+        $this->get($this->siteUrl('/ar/page/terms'))->assertNotFound();
+        $this->get($this->siteUrl('/ar/page/nothing'))->assertNotFound();
     }
 
     public function test_footer_lists_published_footer_pages_and_contact(): void

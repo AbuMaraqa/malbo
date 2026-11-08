@@ -214,8 +214,8 @@ class User extends Authenticatable implements HasMedia
 
     public function receivesBroadcastNotificationsOn(): string
     {
-        // One Reverb app serves every store and ids repeat between stores: see routes/channels.php.
-        return 'store.'.tenant()?->getTenantKey().'.users.'.$this->id;
+        // See routes/channels.php.
+        return 'users.'.$this->id;
     }
 
     //    public function routeNotificationForFcm()

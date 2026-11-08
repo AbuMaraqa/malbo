@@ -52,9 +52,8 @@ class StorefrontCatalogCache
         return Cache::rememberForever(self::key('version'), fn () => Str::random(12));
     }
 
-    /** Per store also by key, should the cache store ever be shared between stores. */
     private static function key(string $key): string
     {
-        return 'store.catalog.'.(tenant()?->getTenantKey() ?? 'central').'.'.$key;
+        return 'store.catalog.'.$key;
     }
 }
