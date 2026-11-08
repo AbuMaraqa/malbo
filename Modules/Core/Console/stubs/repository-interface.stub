@@ -1,0 +1,12 @@
+<?php
+
+namespace Modules\{{module}}\Repositories\Contracts;
+
+use Modules\Core\Repositories\Contracts\RepositoryInterface;
+
+/**
+ * Reads of {{entity}}: add named methods here (e.g. tableQuery(), findBySlug()), not filter arrays.
+ */
+interface {{entity}}RepositoryInterface extends RepositoryInterface
+{
+}

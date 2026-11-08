@@ -1,0 +1,14 @@
+<?php
+
+namespace Modules\{{module}}\Services;
+
+use Modules\{{module}}\Repositories\Contracts\{{entity}}RepositoryInterface;
+
+/**
+ * Writes of {{entity}}: business rules, one DB::transaction when more than one table changes,
+ * translations passed explicitly (Modules\Core\Support\Translations).
+ */
+class {{entity}}Service
+{
+    public function __construct(private {{entity}}RepositoryInterface ${{variable}}) {}
+}

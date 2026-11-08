@@ -1,0 +1,73 @@
+import type { Component } from 'vue';
+
+/**
+ * Every icon in the system, from the Solar set. Icons compile into the bundle at build time, so a
+ * page only carries the ones it uses. Add new icons here: `~icons/solar/<name>-linear`.
+ */
+export type IconComponent = Component;
+
+export { default as ArrowDown } from '~icons/solar/arrow-down-linear';
+export { default as ArrowUp } from '~icons/solar/arrow-up-linear';
+export { default as CheckRead } from '~icons/solar/check-read-linear';
+export { default as EnvelopeUnread } from '~icons/solar/letter-unread-linear';
+export { default as MessageDots } from '~icons/solar/chat-round-dots-linear';
+export { default as Phone } from '~icons/solar/phone-linear';
+export { default as Letter } from '~icons/solar/letter-linear';
+export { default as Returns } from '~icons/solar/restart-linear';
+export { default as Truck } from '~icons/solar/delivery-linear';
+export { default as ArrowUpDown } from '~icons/solar/sort-vertical-linear';
+export { default as Bell } from '~icons/solar/bell-linear';
+export { default as Bold } from '~icons/solar/text-bold-linear';
+export { default as Boxes } from '~icons/solar/shop-2-linear';
+export { default as Check } from '~icons/solar/check-read-linear';
+export { default as ChevronDown } from '~icons/solar/alt-arrow-down-linear';
+export { default as ChevronLeft } from '~icons/solar/alt-arrow-left-linear';
+export { default as ChevronRight } from '~icons/solar/alt-arrow-right-linear';
+export { default as ChevronUp } from '~icons/solar/alt-arrow-up-linear';
+export { default as CircleAlert } from '~icons/solar/danger-circle-linear';
+export { default as CircleCheck } from '~icons/solar/check-circle-linear';
+export { default as Columns3 } from '~icons/solar/columns-3-linear';
+export { default as Copy } from '~icons/solar/copy-linear';
+export { default as ExternalLink } from '~icons/solar/square-top-down-linear';
+export { default as Eye } from '~icons/solar/eye-linear';
+export { default as Globe } from '~icons/solar/global-linear';
+export { default as GripVertical } from '~icons/solar/reorder-linear';
+export { default as Heading2 } from '~icons/solar/text-linear';
+export { default as Heading3 } from '~icons/solar/text-field-linear';
+export { default as Home } from '~icons/solar/home-2-linear';
+export { default as ImagePlus } from '~icons/solar/gallery-add-linear';
+export { default as DollarSign } from '~icons/solar/dollar-minimalistic-linear';
+export { default as Printer } from '~icons/solar/printer-linear';
+export { default as QrCode } from '~icons/solar/qr-code-linear';
+export { default as Info } from '~icons/solar/info-circle-linear';
+export { default as Italic } from '~icons/solar/text-italic-linear';
+export { default as Link2 } from '~icons/solar/link-linear';
+export { default as List } from '~icons/solar/list-linear';
+export { default as ListFilter } from '~icons/solar/filter-linear';
+export { default as ListOrdered } from '~icons/solar/list-check-linear';
+export { default as LogOut } from '~icons/solar/logout-2-linear';
+export { default as MapPin } from '~icons/solar/map-point-linear';
+export { default as Menu } from '~icons/solar/hamburger-menu-linear';
+export { default as MoreHorizontal } from '~icons/solar/menu-dots-linear';
+export { default as Moon } from '~icons/solar/moon-linear';
+export { default as Package } from '~icons/solar/box-linear';
+export { default as Pencil } from '~icons/solar/pen-linear';
+export { default as Plus } from '~icons/solar/add-square-linear';
+export { default as Quote } from '~icons/solar/quote-linear';
+export { default as Redo2 } from '~icons/solar/undo-right-linear';
+export { default as Search } from '~icons/solar/magnifer-linear';
+export { default as SearchX } from '~icons/solar/magnifer-zoom-out-linear';
+export { default as Settings } from '~icons/solar/settings-linear';
+export { default as ShieldCheck } from '~icons/solar/shield-check-linear';
+export { default as ShoppingBag } from '~icons/solar/bag-linear';
+export { default as ShoppingCart } from '~icons/solar/cart-large-linear';
+export { default as Store } from '~icons/solar/shop-linear';
+export { default as Sun } from '~icons/solar/sun-linear';
+export { default as Tag } from '~icons/solar/tag-linear';
+export { default as Trash2 } from '~icons/solar/trash-bin-minimalistic-linear';
+export { default as Undo2 } from '~icons/solar/undo-left-linear';
+export { default as UserCircle } from '~icons/solar/user-circle-linear';
+export { default as UserRound } from '~icons/solar/user-rounded-linear';
+export { default as Users } from '~icons/solar/users-group-rounded-linear';
+export { default as UsersRound } from '~icons/solar/users-group-two-rounded-linear';
+export { default as X } from '~icons/solar/close-square-linear';

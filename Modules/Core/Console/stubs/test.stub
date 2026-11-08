@@ -1,0 +1,17 @@
+<?php
+
+namespace Tests\Feature\{{module}};
+
+use Modules\{{module}}\Repositories\Contracts\{{entity}}RepositoryInterface;
+use Modules\{{module}}\Repositories\{{entity}}Repository;
+use Modules\{{module}}\Services\{{entity}}Service;
+use Tests\TenantTestCase;
+
+class {{entity}}ServiceTest extends TenantTestCase
+{
+    public function test_layer_resolves(): void
+    {
+        $this->assertInstanceOf({{entity}}Repository::class, app({{entity}}RepositoryInterface::class));
+        $this->assertInstanceOf({{entity}}Service::class, app({{entity}}Service::class));
+    }
+}

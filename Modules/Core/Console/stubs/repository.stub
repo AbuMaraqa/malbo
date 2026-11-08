@@ -1,0 +1,15 @@
+<?php
+
+namespace Modules\{{module}}\Repositories;
+
+use Modules\Core\Repositories\BaseEloquentRepository;
+use Modules\{{module}}\Entities\{{entity}};
+use Modules\{{module}}\Repositories\Contracts\{{entity}}RepositoryInterface;
+
+class {{entity}}Repository extends BaseEloquentRepository implements {{entity}}RepositoryInterface
+{
+    public function __construct({{entity}} $model)
+    {
+        parent::__construct($model);
+    }
+}

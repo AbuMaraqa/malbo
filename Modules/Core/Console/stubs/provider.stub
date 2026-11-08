@@ -1,0 +1,24 @@
+<?php
+
+namespace Modules\{{module}}\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+/**
+ * Repository bindings of the {{module}} module (`php artisan module:make-entity` adds to this list).
+ */
+class RepositoryServiceProvider extends ServiceProvider
+{
+    /**
+     * @var array<class-string, class-string>
+     */
+    protected array $repositories = [
+    ];
+
+    public function register(): void
+    {
+        foreach ($this->repositories as $interface => $implementation) {
+            $this->app->bind($interface, $implementation);
+        }
+    }
+}

@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import './tailadmin.css';
+
+@source '../../Modules/*/resources/js/**/*.vue';
+
+:root {
+    /* The store's own identity for the storefront; ThemeService overrides these per store. */
+    --brand: #1f6f50;
+    --brand-contrast: #ffffff;
+    --brand-50: #eef6f2;
+    --brand-100: #d6e9e0;
+    --brand-200: #aed3c1;
+    --brand-300: #7fb99f;
+    --brand-400: #4f9b7b;
+    --brand-500: #2f8261;
+    --brand-600: #1f6f50;
+    --brand-700: #195a41;
+    --brand-800: #144632;
+    --brand-900: #0f3426;
+    --font-sans: 'Tajawal', system-ui, sans-serif;
+
+    --ink: #1d2939;
+    --muted: #667085;
+    --line: #e4e7ec;
+    --surface: #f9fafb;
+    --card: #ffffff;
+}
+
+.dark {
+    /* Native controls (checkboxes, selects, date pickers, scrollbars) follow the theme. */
+    color-scheme: dark;
+    --ink: rgb(255 255 255 / 0.9);
+    --muted: #98a2b3;
+    --line: #1d2939;
+    --surface: #182230;
+    --card: #161e2d;
+}
+
+@theme {
+    /* Admin (TailAdmin palette). */
+    --color-brand: var(--color-brand-500);
+    --color-brand-contrast: #ffffff;
+    --color-ink: var(--ink);
+    --color-muted: var(--muted);
+    --color-line: var(--line);
+    --color-surface: var(--surface);
+    --color-card: var(--card);
+    --color-danger: var(--color-error-600);
+    --color-danger-50: var(--color-error-50);
+    --color-warning: var(--color-warning-700);
+    --color-warning-50: var(--color-warning-50);
+    --color-success: var(--color-success-700);
+    --color-success-50: var(--color-success-50);
+    --color-info: var(--color-blue-light-700);
+    --color-info-50: var(--color-blue-light-50);
+    --radius-control: 0.5rem;
+
+    /* Storefront: the color each store chose. */
+    --color-store: var(--brand);
+    --color-store-contrast: var(--brand-contrast);
+    --color-store-50: var(--brand-50);
+    --color-store-100: var(--brand-100);
+    --color-store-200: var(--brand-200);
+    --color-store-300: var(--brand-300);
+    --color-store-400: var(--brand-400);
+    --color-store-500: var(--brand-500);
+    --color-store-600: var(--brand-600);
+    --color-store-700: var(--brand-700);
+    --color-store-800: var(--brand-800);
+    --color-store-900: var(--brand-900);
+}
+
+@layer base {
+    html {
+        font-family: var(--font-sans);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    [dir='rtl'] input:is([type='email'], [type='tel'], [type='url'], [type='number'], [type='password'], [type='date']) {
+        direction: ltr;
+        text-align: right;
+    }
+
+    /* A page form fills the height left, so its action bar sits on the bottom edge of the screen. */
+    form:has(> [data-form-actions]) {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-brand-500);
+        outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
+
+@utility tabular {
+    font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,7 @@
+{
+    "Core": true,
+    "Items": true,
+    "GeoLocation": true,
+    "Branch": true,
+    "Store": true
+}
