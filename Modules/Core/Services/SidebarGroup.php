@@ -11,7 +11,15 @@ class SidebarGroup implements SidebarItemsInterface
     protected array $children = [];
     protected array $permissions = [];
     protected int $sort = 1000;
+    /** The heading the entry sits under in the sidebar ("Sales", "Catalog"); null for none. */
+    protected ?string $section = null;
 
+    public function section(string $section): static
+    {
+        $this->section = $section;
+
+        return $this;
+    }
 
     public function __construct(
         string $title,
@@ -31,6 +39,11 @@ class SidebarGroup implements SidebarItemsInterface
         return $this;
     }
 
+
+    public function title(): string
+    {
+        return $this->title;
+    }
 
     public function permissions(array $permissions): static
     {
@@ -60,6 +73,7 @@ class SidebarGroup implements SidebarItemsInterface
             'icon' => $this->icon,
             'permissions' => $this->permissions,
             'sort' => $this->sort,
+            'section' => $this->section,
             'children' => collect($this->children)
                 ->filter(fn($item) => $item->canSee())
                 ->map(fn($item) => $item->toArray())

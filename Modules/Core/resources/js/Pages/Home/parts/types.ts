@@ -36,3 +36,12 @@ export interface RecentOrders {
     url: string | null;
     rows: RecentOrder[];
 }
+
+/** Something that needs attention now (DashboardService::alerts). */
+export interface Alert {
+    key: 'awaiting_confirmation' | 'low_stock' | 'open_returns';
+    title: string;
+    value: number;
+    /** The list that shows them; null while the page is not available. */
+    url: string | null;
+}

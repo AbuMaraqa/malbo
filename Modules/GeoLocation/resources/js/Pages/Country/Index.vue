@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import RowMenu from '@/Components/table/RowMenu.vue';
+import DropdownItem from '@/Components/ui/DropdownItem.vue';
+import DropdownSeparator from '@/Components/ui/DropdownSeparator.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { Pencil, Trash2 } from '@/lib/icons';
 import { computed } from 'vue';
@@ -63,7 +66,7 @@ async function removeMany(ids: (number | string)[]): Promise<void> {
 </script>
 
 <template>
-    <PageHeader :title="t('Countries List')">
+    <PageHeader :title="t('Countries List')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('Country Create')" variant="primary" :href="route('countries.add')">{{ t('Add Country') }}</Button>
         </template>
@@ -78,8 +81,11 @@ async function removeMany(ids: (number | string)[]): Promise<void> {
             <span class="text-muted uppercase">{{ row.locales.join(', ') }}</span>
         </template>
         <template #actions="{ row }">
-            <Button v-if="can('Country Update')" variant="ghost" size="icon" :href="route('countries.edit', row.id)" :aria-label="t('Edit')"><Pencil class="size-4" /></Button>
-            <Button v-if="can('Country Delete')" variant="ghost" size="icon" :aria-label="t('Delete')" @click="remove(row)"><Trash2 class="size-4" /></Button>
+            <RowMenu>
+                <DropdownItem v-if="can('Country Update')" :href="route('countries.edit', row.id)"><Pencil />{{ t('Edit') }}</DropdownItem>
+                <DropdownSeparator v-if="can('Country Delete')" />
+                <DropdownItem v-if="can('Country Delete')" destructive @select="remove(row)"><Trash2 />{{ t('Delete') }}</DropdownItem>
+            </RowMenu>
         </template>
         <template #bulk="{ selected }">
             <Button variant="danger" size="sm" @click="removeMany(selected)">{{ t('Delete') }}</Button>

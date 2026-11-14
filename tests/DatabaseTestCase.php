@@ -2,13 +2,13 @@
 
 namespace Tests;
 
-use Database\Seeders\BaseDataSeeder;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**
- * Tests that use the database (`core_view_testing`). It is migrated and seeded with the base data
- * (permissions, roles, settings; no user) once per run, and every test runs inside a transaction
- * that is rolled back afterwards.
+ * Tests that use the database (`core_view_testing`). It is migrated and seeded once per run with
+ * everything `db:seed` creates (the admin account included), and every test runs inside a
+ * transaction that is rolled back afterwards.
  */
 abstract class DatabaseTestCase extends TestCase
 {
@@ -16,7 +16,7 @@ abstract class DatabaseTestCase extends TestCase
 
     protected bool $seed = true;
 
-    protected string $seeder = BaseDataSeeder::class;
+    protected string $seeder = DatabaseSeeder::class;
 
     /**
      * An absolute URL on the site, as a browser would request it.

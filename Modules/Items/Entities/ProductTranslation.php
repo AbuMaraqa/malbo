@@ -24,5 +24,9 @@ class ProductTranslation extends Model
         'name',
         'short_description',
         'description',
+        'fabric',
+        'composition',
+        'fit',
+        'care',
     ];
 }

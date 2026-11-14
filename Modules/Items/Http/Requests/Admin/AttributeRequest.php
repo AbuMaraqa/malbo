@@ -31,6 +31,9 @@ class AttributeRequest extends FormRequest
             'slug' => ['required', 'string', 'max:255', Rule::unique((new Attribute)->getTable(), 'slug')->ignore($id)],
             'type' => ['required', Rule::enum(AttributeType::class)],
             'description' => ['nullable', 'string'],
+            // Absent: a new attribute is filterable when it is a color, a saved one keeps its choice.
+            'is_filterable' => ['sometimes', 'boolean'],
+            'is_size' => ['sometimes', 'boolean'],
             'values' => ['nullable', 'array'],
             // A value of another attribute cannot be taken over by sending its id.
             'values.*.id' => ['nullable', 'integer', Rule::exists((new AttributeValue)->getTable(), 'id')->where('attribute_id', (int) $id)],
@@ -50,6 +53,8 @@ class AttributeRequest extends FormRequest
             'slug' => __('Slug'),
             'type' => __('Attribute Type'),
             'description' => __('Description'),
+            'is_filterable' => __('Show as a filter in the shop'),
+            'is_size' => __('This is the size (shown on product cards and used for the size guide)'),
             'values.*.name' => __('Name'),
             'values.*.description' => __('Description'),
             'values.*.color_code' => __('Color'),

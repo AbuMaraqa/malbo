@@ -60,7 +60,8 @@ class StorefrontFrontendTest extends TestCase
         $root = $this->root();
         $sources = ['StorefrontLayout.vue' => (string) file_get_contents($root.'/resources/js/Layouts/StorefrontLayout.vue')];
 
-        $finder = Finder::create()->files()->name(['*.vue', '*.ts'])->in([$root.'/resources/js/Components/storefront', $root.'/Modules/Store/resources/js/Pages/Storefront']);
+        // Component specs (Vitest, in jsdom) are not storefront code: they never reach SSR or a buyer.
+        $finder = Finder::create()->files()->name(['*.vue', '*.ts'])->notPath('__tests__')->in([$root.'/resources/js/Components/storefront', $root.'/Modules/Store/resources/js/Pages/Storefront']);
 
         foreach ($finder as $file) {
             $sources[$file->getRelativePathname()] = $file->getContents();

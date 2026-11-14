@@ -52,6 +52,12 @@ class StoreAppearanceSettings extends Settings
     /** @var array<string, string> */
     public array $membership_text;
 
+    /** The home page's Instagram section (phase 8B): the admin's posts, InstagramFeedSource. */
+    public bool $instagram_enabled;
+
+    /** @var array<string, string> */
+    public array $instagram_title;
+
     public static function group(): string
     {
         return 'store_appearance';

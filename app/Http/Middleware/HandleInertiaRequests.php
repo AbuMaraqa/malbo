@@ -33,7 +33,7 @@ class HandleInertiaRequests extends Middleware
     {
         $section = self::section($request);
 
-        Inertia::disableSsr($section !== 'storefront');
+        Inertia::disableSsr(! in_array($section, ['storefront', 'wholesale'], true));
 
         return [
             ...parent::share($request),
@@ -79,11 +79,16 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Which part of the site this request belongs to. Decides SSR, routes and texts sent.
+     * Which part of the site this request belongs to. Decides SSR, routes and texts sent. The
+     * wholesale portal is a storefront of its own: the store's pages never carry its routes or texts.
      */
     public static function section(Request $request): string
     {
         $name = $request->route()?->getName() ?? '';
+
+        if (str_starts_with($name, 'store.wholesale.')) {
+            return 'wholesale';
+        }
 
         if ($name === 'home' || str_starts_with($name, 'store.')) {
             return 'storefront';

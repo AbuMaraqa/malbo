@@ -24,4 +24,18 @@ interface AttributeRepositoryInterface extends RepositoryInterface
      * @return \Illuminate\Database\Eloquent\Collection<int, Attribute>
      */
     public function withValues(): \Illuminate\Database\Eloquent\Collection;
+
+    /**
+     * The attributes the shop filters by, in id order, with their names and their active values in
+     * their order.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Attribute>
+     */
+    public function filterable(): \Illuminate\Database\Eloquent\Collection;
+
+    /**
+     * The attribute staff marked as the size (`is_size`): product cards list its values. Null
+     * while none is marked: cards then show no sizes.
+     */
+    public function sizeAttributeId(): ?int;
 }

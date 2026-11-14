@@ -131,6 +131,12 @@ class PermissionSeeder extends Seeder
                 'guard_name' => 'web',
                 'module_name' => 'Settings',
             ],
+            // The global activity log (read only)
+            [
+                'name' => 'Activity Log View List',
+                'guard_name' => 'web',
+                'module_name' => 'Activity Log',
+            ],
         ];
 
         foreach ($permissions as $perm) {

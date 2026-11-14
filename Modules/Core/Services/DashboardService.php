@@ -46,7 +46,33 @@ class DashboardService
             'newUsersPerMonth' => $canUsers ? $this->perMonth($this->dashboard->usersByMonth($this->from())) : null,
             'ordersByStatus' => $canOrders ? $this->ordersByStatus() : null,
             'recentOrders' => $canOrders ? $this->recentOrders($user) : null,
+            'alerts' => $this->alerts($user, $canOrders),
         ];
+    }
+
+    /**
+     * What needs someone's attention, each linking to the list that shows it.
+     *
+     * @return list<array{key: string, title: string, value: int, url: ?string}>
+     */
+    private function alerts(User $user, bool $canOrders): array
+    {
+        $url = fn (string $route, array $query = []) => Route::has($route) ? route($route, $query) : null;
+        $alerts = [];
+
+        if ($canOrders) {
+            $alerts[] = ['key' => 'awaiting_confirmation', 'title' => __('Orders awaiting confirmation'), 'value' => $this->dashboard->awaitingConfirmationCount(), 'url' => $url('orders.index', ['filter' => ['awaiting_confirmation' => 1]])];
+        }
+
+        if ($user->can('Stock View List')) {
+            $alerts[] = ['key' => 'low_stock', 'title' => __('Low stock'), 'value' => $this->dashboard->lowStockCount(), 'url' => $url('stock.low')];
+        }
+
+        if ($user->can('Return Request View List')) {
+            $alerts[] = ['key' => 'open_returns', 'title' => __('Open return requests'), 'value' => $this->dashboard->openReturnRequestsCount(), 'url' => $url('return-requests.index', ['filter' => ['open' => 1]])];
+        }
+
+        return $alerts;
     }
 
     /**
@@ -154,7 +180,8 @@ class DashboardService
                 ->map(fn (Order $order) => [
                     'id' => $order->id,
                     'order_number' => $order->order_number,
-                    'customer' => $order->user?->name,
+                    // A storefront guest has no account: their name is on the order.
+                    'customer' => $order->user?->name ?? $order->customer_name,
                     'total' => number_format((float) $order->total, 2),
                     'status' => $order->status?->getLabel(),
                     'tone' => $this->tone($order->status),

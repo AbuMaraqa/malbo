@@ -26,13 +26,13 @@ class SidebarServiceProvider extends ServiceProvider
         );
 
         $sidebar->add(
-            (new SidebarGroup('Users', 'users' , [] , 30))
+            (new SidebarGroup('Users', 'users' , [] , 130))->section('Administration')
             ->add(new SidebarItem('Users List' , 'users' , ['User View List'] ,  'users.index' ))
                 ->add(new SidebarItem('Add User' , 'users' , ['User Create'] , 'users.add' ))
         );
 
         $sidebar->add(
-            (new SidebarGroup('Settings', 'settings' , [] , 140))
+            (new SidebarGroup('Settings', 'settings' , [] , 140))->section('Administration')
             ->add(new SidebarItem('System Settings', 'settings', ['Setting View List'] , 'settings' ))
             ->add(new SidebarItem('Roles And Permissions', 'settings', ['Roles And Permissions View List'] , 'roles.index' ))
             ->add(new SidebarItem('Currencies', 'settings', ['Currency View List'] ,  'currencies.index' ))
@@ -40,6 +40,7 @@ class SidebarServiceProvider extends ServiceProvider
             ->add(new SidebarItem('Governorates', 'settings', ['Governorate View List'] , 'governorates.index' ))
             ->add(new SidebarItem('Cities', 'settings', ['City View List'] , 'cities.index' ))
             ->add(new SidebarItem('Districts', 'settings', ['District View List'] , 'districts.index' ))
+            ->add(new SidebarItem('Activity log', 'activity', ['Activity Log View List'], 'activity-log.index'))
         );
     }
 

@@ -95,7 +95,8 @@ class ProductController extends Controller
         $maxPerPage = config('core.pagination.max_per_page');
         $perPage = min(request('per_page', $defaultPerPage), $maxPerPage);
 
-        $products = QueryBuilder::for($products->query())
+        // Sets and bundles are sold on the storefront only: the app never lists them.
+        $products = QueryBuilder::for($products->query()->whereNull('bundle_type'))
             ->allowedFields(...ProductResource::allowedFields())
             ->allowedFilters(...ProductResource::allowedFilters())
             ->allowedSorts(...ProductResource::allowedSorts())
@@ -169,6 +170,8 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        abort_if($product->isBundle(), 404);
+
         $product->load([
             'media',
             'translations',

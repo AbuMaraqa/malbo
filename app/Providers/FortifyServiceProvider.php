@@ -42,6 +42,9 @@ class FortifyServiceProvider extends ServiceProvider
             'token' => (string) $request->route('token'),
         ]));
         Fortify::twoFactorChallengeView(fn () => Inertia::render('Auth/TwoFactorChallenge'));
+        // The password is confirmed on the profile page (its two-step form asks for it): Fortify's
+        // own confirm page (where `password.confirm` sends) leads there instead of failing.
+        Fortify::confirmPasswordView(fn () => redirect()->route('profile.index', ['locale' => app()->getLocale()]));
 
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);

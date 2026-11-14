@@ -10,6 +10,7 @@ import TextInput from '@/Components/form/TextInput.vue';
 import Tabs from '@/Components/ui/Tabs.vue';
 import { t } from '@/lib/i18n';
 
+import DetailsTab from './DetailsTab.vue';
 import { rowTabsWithError } from './fieldTabs';
 import GeneralTab from './GeneralTab.vue';
 import InventoryTab from './InventoryTab.vue';
@@ -27,6 +28,7 @@ const withErrors = computed(() => rowTabsWithError(props.errors, prefix.value));
 const tabs = computed(() =>
     [
         { value: 'general', label: t('General') },
+        { value: 'details', label: t('Details') },
         { value: 'price', label: t('Price') },
         { value: 'inventory', label: t('Inventory') },
         { value: 'images', label: t('Images') },
@@ -59,6 +61,7 @@ watch(
 
         <Tabs v-model="active" :tabs="tabs">
             <template #general><GeneralTab :row="row" :error="error" /></template>
+            <template #details><DetailsTab :row="row" :error="error" inherits /></template>
             <template #price><PriceTab :row="row" :error="error" /></template>
             <template #inventory><InventoryTab :row="row" :error="error" /></template>
             <template #images><MediaTab :row="row" :error="error" /></template>

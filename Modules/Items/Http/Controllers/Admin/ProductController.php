@@ -20,8 +20,10 @@ use Modules\Items\Entities\AddonOption;
 use Modules\Items\Entities\Attribute;
 use Modules\Items\Entities\AttributeValue;
 use Modules\Items\Entities\Product;
+use Modules\Items\Enums\AttributeType;
 use Modules\Items\Enums\ProductActive;
 use Modules\Items\Enums\ProductStatus;
+use Modules\Items\Http\Requests\Admin\LookRequest;
 use Modules\Items\Http\Requests\Admin\ProductRequest;
 use Modules\Items\Repositories\Contracts\AddonRepositoryInterface;
 use Modules\Items\Repositories\Contracts\AttributeRepositoryInterface;
@@ -31,8 +33,10 @@ use Modules\Items\Repositories\Contracts\LabelRepositoryInterface;
 use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
 use Modules\Items\Repositories\Contracts\TagRepositoryInterface;
 use Modules\Items\Services\ItemsPdfService;
+use Modules\Items\Services\LookService;
 use Modules\Items\Services\ProductService;
 use Modules\Items\Support\IntegerFilter;
+use Modules\Items\Support\ProductRowLinks;
 use Modules\Items\Support\ProductSeo;
 use Modules\Items\Support\RecordInfo;
 use Modules\Items\Support\TranslatedSort;
@@ -69,6 +73,8 @@ class ProductController extends Controller
                     AdminFilter::relation('category_id', 'categories'),
                     IntegerFilter::make('brand_id'),
                     AdminFilter::boolean('is_featured'),
+                    AdminFilter::boolean('is_new'),
+                    AdminFilter::boolean('is_best_seller'),
                     AllowedFilter::exact('stock_status'),
                     ...AdminFilter::numberRange('base_price'),
                     ...AdminFilter::numberRange('sale_price'),
@@ -87,11 +93,15 @@ class ProductController extends Controller
                     'base_price' => $product->base_price,
                     'sale_price' => $product->sale_price,
                     'discount' => $product->discount,
+                    'is_new' => (bool) $product->is_new,
+                    'is_best_seller' => (bool) $product->is_best_seller,
                     'locales' => $product->translations->pluck('locale'),
                 ]),
             'statuses' => $this->statuses(),
             'categories' => fn () => self::options($this->categories->options()),
             'brands' => fn () => $this->brands->options(),
+            // Other modules' links in the row menu (a product's wholesale prices).
+            'rowLinks' => app(ProductRowLinks::class)->all(),
         ]);
     }
 
@@ -112,20 +122,49 @@ class ProductController extends Controller
         return to_route('products.index')->with('success', __('Product created successfully'));
     }
 
-    public function edit(int $product): Response
+    public function edit(int $product): Response|RedirectResponse
     {
         $model = $this->products->forEdit($product);
+
+        // A set or bundle has its own form.
+        if ($model->isBundle()) {
+            return to_route('bundles.edit', $model->id);
+        }
 
         return Inertia::render('Items/Product/Edit', [
             ...$this->formProps(),
             'product' => $this->formState($model),
+            // "Complete the look": saved on its own (look()), next to the product's form.
+            'look' => $this->products->lookOptions($model)->map(fn (Product $item) => ['value' => $item->id, 'label' => (string) $item->name])->values(),
         ]);
+    }
+
+    /**
+     * "Complete the look": the products shown next to this one on its page, in order.
+     */
+    public function look(LookRequest $request, LookService $lookService, int $product): RedirectResponse
+    {
+        /** @var Product $model */
+        $model = $this->products->findProductOrFail($product);
+
+        $lookService->sync($model, array_map('intval', $request->validated()['products'] ?? []));
+
+        return back()->with('success', __('Saved Successfully'));
+    }
+
+    /**
+     * Products a look may hold (not variants, not sets), 50 at a time.
+     */
+    public function lookLookup(Request $request): JsonResponse
+    {
+        return response()->json($this->products->searchParents(trim((string) $request->query('q', '')))
+            ->map(fn (Product $item) => ['value' => $item->id, 'label' => (string) $item->name])->values());
     }
 
     public function update(ProductRequest $request, int $product): RedirectResponse
     {
         /** @var Product $model */
-        $model = $this->products->findOrFail($product);
+        $model = $this->products->findProductOrFail($product);
 
         $this->productService->update($model, $request->forService(), app()->getLocale(), $request->user()->id);
 
@@ -137,7 +176,7 @@ class ProductController extends Controller
         $status = $request->validate(['status' => ['required', Rule::in(array_keys(ProductStatus::formOptions()))]])['status'];
 
         /** @var Product $model */
-        $model = $this->products->findOrFail($product);
+        $model = $this->products->findProductOrFail($product);
 
         $this->productService->setStatus($model, (int) $status);
 
@@ -149,7 +188,7 @@ class ProductController extends Controller
         $active = $request->validate(['active' => ['required', 'boolean']])['active'];
 
         /** @var Product $model */
-        $model = $this->products->findOrFail($product);
+        $model = $this->products->findProductOrFail($product);
 
         $this->productService->setActive($model, (bool) $active);
 
@@ -159,7 +198,7 @@ class ProductController extends Controller
     public function destroy(int $product): RedirectResponse
     {
         /** @var Product $model */
-        $model = $this->products->findOrFail($product);
+        $model = $this->products->findProductOrFail($product);
 
         $this->productService->forceDelete($model);
 
@@ -170,7 +209,7 @@ class ProductController extends Controller
     {
         $ids = $request->validate(['ids' => ['required', 'array'], 'ids.*' => ['integer']])['ids'];
 
-        $this->productService->forceDeleteMany($this->products->query()->whereKey($ids)->get());
+        $this->productService->forceDeleteMany($this->products->query()->whereKey($ids)->whereNull('bundle_type')->get());
 
         return back()->with('success', __('Products deleted successfully'));
     }
@@ -263,6 +302,7 @@ class ProductController extends Controller
             'attributes' => $this->attributes->withValues()->map(fn (Attribute $attribute) => [
                 'id' => $attribute->id,
                 'name' => (string) $attribute->name,
+                'swatch' => (int) $attribute->type === AttributeType::COLOR->value,
                 'values' => $attribute->attributeValues->map(fn (AttributeValue $value) => [
                     'id' => $value->id,
                     'name' => (string) $value->name,
@@ -293,6 +333,9 @@ class ProductController extends Controller
             'id' => $product->id,
             ...$this->rowState($product, $locale),
             'status' => $product->status?->value,
+            'is_new' => (bool) $product->is_new,
+            'is_best_seller' => (bool) $product->is_best_seller,
+            'video_url' => $product->video_url,
             'brand_id' => $product->brand_id,
             'tags' => $product->tags->pluck('name')->filter()->values(),
             'labels' => $product->labels->pluck('name')->filter()->values(),
@@ -337,6 +380,13 @@ class ProductController extends Controller
             'slug' => $product->slug,
             'short_description' => $translation?->short_description ?? '',
             'description' => $translation?->description ?? '',
+            'fabric' => $translation?->fabric ?? '',
+            'composition' => $translation?->composition ?? '',
+            'fit' => $translation?->fit ?? '',
+            'care' => $translation?->care ?? '',
+            'model_height' => $product->model_height,
+            'model_weight' => $product->model_weight,
+            'model_size' => $product->model_size,
             'sku' => $product->sku,
             'barcode' => $product->barcode,
             'weight' => $product->weight,
@@ -352,13 +402,22 @@ class ProductController extends Controller
             'discount_end_date' => $product->discount_end_date ? substr((string) $product->discount_end_date, 0, 10) : null,
             'manage_stock' => (bool) $product->manage_stock,
             'stock_quantity' => $product->stock_quantity,
+            // What the form showed: only a change the admin types moves stock (InventoryService::fromForm).
+            'stock_quantity_loaded' => $product->stock_quantity,
+            // Shown only: goods on their way are received on the stock page, which lowers them.
+            'incoming_quantity' => (int) $product->incoming_quantity,
             'low_stock_threshold' => $product->low_stock_threshold,
             'stock_status' => $product->stock_status,
             'allow_backorder' => (bool) $product->allow_backorder,
             'max_quantity_per_order' => $product->max_quantity_per_order,
             'category_id' => $product->categories->modelKeys(),
             'images' => $images('product'),
-            'gallery_images' => $images('product_gallery'),
+            // Each with the color it shows (a COLOR attribute value), or null.
+            'gallery_images' => $product->getMedia('product_gallery')->map(fn (Media $media) => [
+                'id' => $media->id,
+                'url' => $media->getUrl(),
+                'color' => $media->getCustomProperty('attribute_value_id'),
+            ])->values(),
             ...ProductSeo::unpack($product->meta_data, $locale),
         ];
     }

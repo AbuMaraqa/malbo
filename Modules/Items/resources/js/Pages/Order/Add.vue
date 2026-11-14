@@ -33,6 +33,9 @@ const form = useForm<OrderForm>({
     delivery_address: '',
     contact_phone: '',
     notes: '',
+    customer_name: '',
+    customer_email: '',
+    internal_notes: '',
     latitude: null,
     longitude: null,
 });

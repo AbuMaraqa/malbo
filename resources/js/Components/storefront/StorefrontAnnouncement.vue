@@ -3,5 +3,5 @@ defineProps<{ text: string }>();
 </script>
 
 <template>
-    <div data-section="announcement" class="border-b border-line bg-white px-4 py-2.5 text-center text-sm text-(--ink-soft)">{{ text }}</div>
+    <div data-section="announcement" class="bg-(--night) px-4 py-2.5 text-center text-[13px] font-medium tracking-wide text-white/90">{{ text }}</div>
 </template>

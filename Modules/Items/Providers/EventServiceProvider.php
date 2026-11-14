@@ -3,6 +3,8 @@
 namespace Modules\Items\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Modules\Items\Events\OrderStatusChanged;
+use Modules\Items\Listeners\CancelPendingShipment;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -11,7 +13,10 @@ class EventServiceProvider extends ServiceProvider
      *
      * @var array<string, array<int, string>>
      */
-    protected $listen = [];
+    protected $listen = [
+        // Synchronous: the shipment is cancelled in the order's own transaction.
+        OrderStatusChanged::class => [CancelPendingShipment::class],
+    ];
 
     /**
      * Indicates if events should be discovered.

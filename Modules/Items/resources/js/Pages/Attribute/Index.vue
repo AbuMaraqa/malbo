@@ -22,6 +22,7 @@ interface Row {
     slug: string;
     description: string | null;
     type: string | null;
+    is_filterable: boolean;
     locales: string[];
 }
 
@@ -32,6 +33,7 @@ const columns = computed<TableColumn[]>(() => [
     { key: 'slug', label: t('Slug'), sort: 'slug' },
     { key: 'configuration', label: t('Configure Attribute') },
     { key: 'type', label: t('Type'), sort: 'type' },
+    { key: 'is_filterable', label: t('Shop filter'), toggleable: true },
     { key: 'locales', label: t('Locale'), toggleable: true },
 ]);
 
@@ -45,7 +47,7 @@ const { remove, removeMany } = useRecordDelete('attributes');
 </script>
 
 <template>
-    <PageHeader :title="t('Attributes List')">
+    <PageHeader :title="t('Attributes List')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('Attribute Create')" variant="primary" :href="route('attributes.add')">{{ t('Add Attribute') }}</Button>
         </template>
@@ -58,6 +60,9 @@ const { remove, removeMany } = useRecordDelete('attributes');
         </template>
         <template #cell-configuration="{ row }">
             <Link v-if="can('Attribute Update')" :href="`${route('attributes.edit', row.id)}#values`" class="text-brand-600 dark:text-brand-400 hover:underline">{{ t('Configure Attribute') }}</Link>
+        </template>
+        <template #cell-is_filterable="{ row }">
+            <span :class="row.is_filterable ? 'text-success-600 dark:text-success-400' : 'text-muted'">{{ row.is_filterable ? t('Yes') : t('No') }}</span>
         </template>
         <template #cell-locales="{ row }">
             <span class="text-muted uppercase">{{ row.locales.join(', ') }}</span>

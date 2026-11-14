@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import RowMenu from '@/Components/table/RowMenu.vue';
+import DropdownItem from '@/Components/ui/DropdownItem.vue';
+import DropdownSeparator from '@/Components/ui/DropdownSeparator.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { Eye, Pencil, Trash2 } from '@/lib/icons';
 import { computed, ref } from 'vue';
@@ -25,6 +28,7 @@ interface Row {
     phone: string | null;
     roles: { name: string; label: string }[];
     branch: string | null;
+    orders_count: number;
     created_at: string | null;
     updated_at: string | null;
     can_manage: boolean;
@@ -46,11 +50,13 @@ const columns = computed<TableColumn[]>(() => [
     { key: 'phone', label: t('Phone'), toggleable: true },
     { key: 'roles', label: t('Roles') },
     { key: 'branch', label: t('Branches'), toggleable: true },
+    { key: 'orders_count', label: t('Orders'), class: 'tabular', toggleable: true },
     { key: 'created_at', label: t('Created At'), sort: 'created_at', toggleable: true },
     { key: 'updated_at', label: t('Updated At'), sort: 'updated_at', toggleable: true, hidden: true },
 ]);
 
 const filters = computed<TableFilter[]>(() => [
+    { type: 'boolean', key: 'customers', label: t('Customers'), trueLabel: t('Customers only'), falseLabel: t('Staff only') },
     { key: 'role', label: t('Roles'), options: props.roleOptions },
     { key: 'branch', label: t('Branches'), options: props.branchOptions },
     { type: 'text', key: 'name', label: t('Name') },
@@ -67,7 +73,7 @@ async function remove(row: Row): Promise<void> {
 </script>
 
 <template>
-    <PageHeader :title="t('Users List')">
+    <PageHeader :title="t('Users List')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('User Create')" variant="primary" :href="route('users.add')">{{ t('Add User') }}</Button>
         </template>
@@ -90,9 +96,12 @@ async function remove(row: Row): Promise<void> {
             </span>
         </template>
         <template #actions="{ row }">
-            <Button v-if="can('User View')" variant="ghost" size="icon" :aria-label="t('View')" @click="viewing = row"><Eye class="size-4" /></Button>
-            <Button v-if="can('User Update') && row.can_manage" variant="ghost" size="icon" :href="route('users.edit', row.id)" :aria-label="t('Edit')"><Pencil class="size-4" /></Button>
-            <Button v-if="can('User Delete') && row.can_manage" variant="ghost" size="icon" :aria-label="t('Delete')" @click="remove(row)"><Trash2 class="size-4" /></Button>
+            <RowMenu>
+                <DropdownItem v-if="can('User View')" @select="viewing = row"><Eye />{{ t('View') }}</DropdownItem>
+                <DropdownItem v-if="can('User Update') && row.can_manage" :href="route('users.edit', row.id)"><Pencil />{{ t('Edit') }}</DropdownItem>
+                <DropdownSeparator v-if="can('User Delete') && row.can_manage" />
+                <DropdownItem v-if="can('User Delete') && row.can_manage" destructive @select="remove(row)"><Trash2 />{{ t('Delete') }}</DropdownItem>
+            </RowMenu>
         </template>
     </DataTable>
 

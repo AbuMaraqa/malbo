@@ -37,7 +37,7 @@ watch(
         </div>
         <template #footer>
             <Button @click="answer(false)">{{ t('Cancel') }}</Button>
-            <Button variant="danger" :disabled="!allowed" @click="answer(true)">{{ confirmState.options.confirmLabel ?? t('Delete') }}</Button>
+            <Button :variant="confirmState.options.tone ?? 'danger'" :disabled="!allowed" @click="answer(true)">{{ confirmState.options.confirmLabel ?? t('Delete') }}</Button>
         </template>
     </Modal>
 </template>

@@ -40,11 +40,17 @@ class Attribute extends Model implements TranslatableContract
     protected $fillable = [
         'slug',
         'type',
+        // The shop offers it as a filter, and a card's sizes come from one (StorefrontShop, CardSizes).
+        'is_filterable',
+        // The size (one attribute at most): card sizes and the size guide's place.
+        'is_size',
         'created_by',
     ];
 
     protected $casts = [
         'status' => AttributeType::class,
+        'is_filterable' => 'boolean',
+        'is_size' => 'boolean',
     ];
 
     public $translatedAttributes = [

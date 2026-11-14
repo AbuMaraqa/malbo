@@ -3,6 +3,8 @@
 namespace Modules\Core\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Core\Repositories\ActivityLogRepository;
+use Modules\Core\Repositories\Contracts\ActivityLogRepositoryInterface;
 use Modules\Core\Repositories\Contracts\CurrencyRepositoryInterface;
 use Modules\Core\Repositories\Contracts\DashboardRepositoryInterface;
 use Modules\Core\Repositories\Contracts\RoleRepositoryInterface;
@@ -23,5 +25,6 @@ class RepositoryServiceProvider extends ServiceProvider
         RoleRepositoryInterface::class => RoleRepository::class,
         SettingRepositoryInterface::class => SettingRepository::class,
         DashboardRepositoryInterface::class => DashboardRepository::class,
+        ActivityLogRepositoryInterface::class => ActivityLogRepository::class,
     ];
 }

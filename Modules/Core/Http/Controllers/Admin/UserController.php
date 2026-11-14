@@ -18,6 +18,8 @@ use Modules\Core\Repositories\Contracts\UserRepositoryInterface;
 use Modules\Core\Services\UserService;
 use Modules\Core\Support\AdminFilter;
 use Modules\Core\Support\AdminTable;
+use Illuminate\Database\Eloquent\Builder;
+use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -36,6 +38,10 @@ class UserController extends Controller
                 ->search(['name', 'email', 'phone'], null)
                 ->filters(
                     AdminFilter::relation('role', 'roles'),
+                    // Buyers (Customer, Merchant: UserRole::nonStaff), or everyone else.
+                    AllowedFilter::callback('customers', fn (Builder $query, mixed $value) => filter_var($value, FILTER_VALIDATE_BOOLEAN)
+                        ? $query->whereHas('roles', fn (Builder $roles) => $roles->whereIn('name', UserRole::nonStaff()))
+                        : $query->whereDoesntHave('roles', fn (Builder $roles) => $roles->whereIn('name', UserRole::nonStaff()))),
                     AdminFilter::relation('branch', 'branch'),
                     AdminFilter::text('name'),
                     AdminFilter::text('email'),
@@ -53,6 +59,7 @@ class UserController extends Controller
                         'label' => __($role->name),
                     ])->values(),
                     'branch' => $user->branch?->name,
+                    'orders_count' => (int) $user->orders_count,
                     'created_at' => $user->created_at?->format('Y-m-d H:i'),
                     'updated_at' => $user->updated_at?->format('Y-m-d H:i'),
                     'can_manage' => $this->userService->canManage($request->user(), $user),

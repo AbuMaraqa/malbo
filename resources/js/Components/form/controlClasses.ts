@@ -1,0 +1,3 @@
+/** The look of a text field, a textarea and a select: one place, so every form matches. */
+export const controlClasses =
+    'w-full min-w-0 rounded-lg border border-gray-200 bg-card px-3.5 text-sm text-gray-900 shadow-theme-xs outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 hover:border-gray-300 focus:border-brand-300 focus:shadow-focus-ring disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 aria-invalid:border-error-400 aria-invalid:focus:shadow-[0_0_0_4px_rgb(239_68_68/0.12)] dark:border-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:hover:border-gray-700 dark:focus:border-brand-500/50 dark:disabled:bg-white/[0.03] dark:aria-invalid:border-error-500/60';

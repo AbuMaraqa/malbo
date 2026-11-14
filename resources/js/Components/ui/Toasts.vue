@@ -43,7 +43,7 @@ watch(
         <div
             v-for="toast in toasts"
             :key="toast.id"
-            class="flex items-start gap-2 rounded-control border bg-card p-3 text-sm shadow-md"
+            class="flex animate-pop-in items-start gap-2.5 rounded-xl border bg-card p-3.5 text-sm shadow-theme-lg"
             :class="toast.kind === 'success' ? 'border-success/30' : 'border-danger/40'"
         >
             <CircleCheck v-if="toast.kind === 'success'" class="mt-0.5 size-4 shrink-0 text-success" />

@@ -67,7 +67,7 @@ async function removeMany(ids: (number | string)[]): Promise<void> {
 </script>
 
 <template>
-    <PageHeader :title="t('Categories List')">
+    <PageHeader :title="t('Categories List')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('Category Create')" variant="primary" :href="route('categories.add')">{{ t('Add Category') }}</Button>
         </template>

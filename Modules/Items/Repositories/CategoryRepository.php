@@ -118,6 +118,37 @@ class CategoryRepository extends BaseEloquentRepository implements CategoryRepos
         return $this->query()->with('translations')->where('slug', $slug)->where('status', CategoryStatus::ACTIVE)->first();
     }
 
+    public function searchActive(string $term, int $limit = 4): Collection
+    {
+        $term = trim($term);
+        $escaped = addcslashes($term, '%_\\');
+        $translations = $this->model->translations()->getRelated()->getTable();
+
+        $query = $this->query()->with('translations')->where('status', CategoryStatus::ACTIVE);
+
+        // Every word in the name, in one spelling (items_search_norm), as the shop's product search.
+        foreach (array_slice(preg_split('/\s+/u', $term, -1, PREG_SPLIT_NO_EMPTY) ?: [], 0, 6) as $word) {
+            $query->whereHas('translations', fn (Builder $translations) => $translations
+                ->whereRaw('items_search_norm(name) like items_search_norm(?)', ['%'.addcslashes($word, '%_\\').'%']));
+        }
+
+        return $query
+            // A name equal to the term, then one that starts with it, then the rest.
+            ->orderByRaw(
+                "(select min(case when items_search_norm(rank_t.name) = items_search_norm(?) then 0 when items_search_norm(rank_t.name) like items_search_norm(?) then 1 else 2 end) from {$translations} rank_t where rank_t.category_id = {$this->model->getTable()}.id) asc nulls last",
+                [$term, $escaped.'%'],
+            )
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function withTranslations(array $ids): Collection
+    {
+        return $this->query()->with('translations')->whereKey($ids)->get()->keyBy('id');
+    }
+
     public function activeSlugs(): array
     {
         return $this->query()->where('status', CategoryStatus::ACTIVE)->orderBy('sort_order')->orderBy('id')->pluck('slug')->all();
@@ -131,6 +162,20 @@ class CategoryRepository extends BaseEloquentRepository implements CategoryRepos
         // One query per level; skipping seen ids stops a parent_id loop.
         while ($level !== []) {
             $level = $this->query()->whereIn('parent_id', $level)->where('status', CategoryStatus::ACTIVE)->whereKeyNot($ids)->pluck('id')->all();
+            $ids = [...$ids, ...$level];
+        }
+
+        return $ids;
+    }
+
+    public function treeIds(int $categoryId): array
+    {
+        $ids = [$categoryId];
+        $level = $ids;
+
+        // One query per level; skipping seen ids stops a parent_id loop.
+        while ($level !== []) {
+            $level = $this->query()->whereIn('parent_id', $level)->whereKeyNot($ids)->pluck('id')->map(fn ($id) => (int) $id)->all();
             $ids = [...$ids, ...$level];
         }
 

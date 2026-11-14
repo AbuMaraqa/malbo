@@ -46,7 +46,7 @@ const { remove, removeMany } = useRecordDelete('addons');
 </script>
 
 <template>
-    <PageHeader :title="t('Addons List')">
+    <PageHeader :title="t('Addons List')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('Addon Create')" variant="primary" :href="route('addons.add')">{{ t('Add Addon') }}</Button>
         </template>

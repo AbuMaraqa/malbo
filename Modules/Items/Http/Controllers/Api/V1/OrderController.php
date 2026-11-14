@@ -13,10 +13,10 @@ use Modules\Items\Entities\Order;
 use Modules\Items\Entities\Product;
 use Modules\Items\Enums\OfferType;
 use Modules\Items\Enums\OrderStatus;
-use Modules\Items\Enums\PaymentStatus;
 use Modules\Items\Enums\ProductStatus;
 use Modules\Items\Http\Requests\OrderRequest;
 use Modules\Items\Http\Requests\UpdateOrderStatusRequest;
+use Modules\Items\Services\OrderService;
 use Modules\Items\Transformers\V1\OrderResource;
 use Modules\Store\Services\PricingService;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -196,7 +196,7 @@ class OrderController extends Controller
      * @OA\Response(response=422, description="Validation Error")
      * )
      */
-    public function store(OrderRequest $request, PricingService $pricing)
+    public function store(OrderRequest $request, PricingService $pricing, OrderService $orders)
     {
         $validatedData = $request->validated();
         $itemsData = $validatedData['items'];
@@ -266,49 +266,27 @@ class OrderController extends Controller
             ];
         }
 
-        $order = null;
+        // No delivery fee or coupon exists yet: nothing from the request can change the total.
+        $deliveryFee = 0;
+        $discount = 0;
+        $subTotalAfterDiscount = max(0, $subTotal - $discount);
 
         try {
-            DB::transaction(function () use ($validatedData, $subTotal, $itemsToCreate, &$order) {
-                // No delivery fee or coupon exists yet: nothing from the request can change the total.
-                $deliveryFee = 0;
-                $discount = 0;
-                $subTotalAfterDiscount = max(0, $subTotal - $discount);
-
-                $order = Order::create([
-                    'user_id'          => auth()->id(),
-                    'order_number'     => $this->generateOrderNumber(),
-                    'delivery_address' => $validatedData['delivery_address'] ?? null,
-                    'branch_id'        => $validatedData['branch_id'],
-                    'contact_phone'    => $validatedData['contact_phone'] ?? null,
-                    'payment_method'   => $validatedData['payment_method'],
-                    'notes'            => $validatedData['notes'] ?? null,
-                    'delivery_type'    => $validatedData['delivery_type'],
-
-                    'sub_total'        => $subTotalAfterDiscount,
-                    'delivery_fee'     => $deliveryFee,
-                    'discount'         => $discount,
-                    'total'            => $subTotalAfterDiscount + $deliveryFee,
-
-                    'status'           => OrderStatus::PENDING,
-                    'payment_status'   => PaymentStatus::UNPAID,
-                    'created_by'       => auth()->id(),
-                ]);
-
-                foreach ($itemsToCreate as $itemData) {
-                    $orderItem = $order->items()->create([
-                        'product_id'     => $itemData['product_id'],
-                        'quantity'       => $itemData['quantity'],
-                        'price'          => $itemData['price'],
-                        'total_price'    => $itemData['total_price'],
-                        'notes'          => $itemData['notes'],
-                    ]);
-
-                    if (! empty($itemData['options_to_attach'])) {
-                        $orderItem->addonOptions()->attach($itemData['options_to_attach']);
-                    }
-                }
-            });
+            $order = $orders->place([
+                'order_number'     => $this->generateOrderNumber(),
+                'delivery_address' => $validatedData['delivery_address'] ?? null,
+                'branch_id'        => $validatedData['branch_id'],
+                'contact_phone'    => $validatedData['contact_phone'] ?? null,
+                'payment_method'   => $validatedData['payment_method'],
+                'notes'            => $validatedData['notes'] ?? null,
+                'delivery_type'    => $validatedData['delivery_type'],
+                'sub_total'        => $subTotalAfterDiscount,
+                'delivery_fee'     => $deliveryFee,
+                'discount'         => $discount,
+                'total'            => $subTotalAfterDiscount + $deliveryFee,
+            ], $itemsToCreate, (int) auth()->id());
+        } catch (ValidationException $e) {
+            throw $e; // short stock: a 422 the app shows, not a server error
         } catch (\Exception $e) {
             report($e);
 
@@ -437,29 +415,12 @@ class OrderController extends Controller
      * @OA\Response(response=422, description="Invalid status transition")
      * )
      */
-    public function updateOrderStatus(UpdateOrderStatusRequest $request, Order $order)
+    public function updateOrderStatus(UpdateOrderStatusRequest $request, Order $order, OrderService $orders)
     {
         try {
-            DB::transaction(function () use ($request, $order) {
-                $newStatus = OrderStatus::from((int) $request->status);
-                $oldStatus = $order->status;
-
-                $order->update([
-                    'status' => $newStatus
-                ]);
-
-                if ($order->user_id && $oldStatus != $newStatus) {
-                    $order->user->notify(new GeneralNotification(
-                        title: __('Order Status Updated'),
-                        message: __('Your order #:order_number status is now :status', [
-                            'order_number' => $order->order_number,
-                            'status'       => $newStatus->getLabel()
-                        ]),
-                        icon: 'bell',
-                        color: 'text-primary',
-                    ));
-                }
-            });
+            $orders->changeStatus($order, OrderStatus::from((int) $request->status), (int) $request->user()->id);
+        } catch (ValidationException $e) {
+            throw $e; // a status the order cannot reach (checked again on the locked row)
         } catch (\Exception $e) {
             report($e);
 

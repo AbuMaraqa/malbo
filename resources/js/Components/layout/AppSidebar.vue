@@ -1,45 +1,21 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 import { t } from '@/lib/i18n';
-import { MoreHorizontal, Store } from '@/lib/icons';
-import { route } from '@/lib/route';
-import { useSidebar } from '@/tailadmin/composables/useSidebar';
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarMenu } from '@/tailadmin/ui/sidebar';
+import { ChevronsStart } from '@/lib/icons';
+import { useSidebar } from '@/lib/useSidebar';
 
+import SidebarBrand from './SidebarBrand.vue';
 import SidebarLink from './SidebarLink.vue';
 import SidebarLinkGroup from './SidebarLinkGroup.vue';
-import type { NavEntry } from './navIcons';
+import { useNavigation } from './useNavigation';
 
-const page = usePage();
-const { open, isMobile, isHovered } = useSidebar();
-
-const entries = computed(() => (page.props.sidebar ?? []) as NavEntry[]);
-const store = computed(() => page.props.store as { name: string } | null);
-const path = computed(() => page.url.split('?')[0]);
-const showText = computed(() => open.value || isHovered.value || isMobile.value);
-
-function hrefOf(entry: NavEntry): string {
-    return route(entry.route as string);
-}
-
-const links = computed(() => entries.value.flatMap((entry) => (entry.type === 'group' ? (entry.children ?? []) : [entry])).map((entry) => new URL(hrefOf(entry)).pathname));
-
-/** The one link that best matches the page: on /products/add that is "Add product", not also "Products". */
-const activeLink = computed(() => {
-    const home = new URL(route('dashboard')).pathname;
-    const matches = links.value.filter((link) => path.value === link || (link !== home && path.value.startsWith(`${link}/`)));
-
-    return matches.sort((a, b) => b.length - a.length)[0] ?? null;
-});
-
-function isActive(entry: NavEntry): boolean {
-    return new URL(hrefOf(entry)).pathname === activeLink.value;
-}
+const { collapsed, mobileOpen, isMobile, hovered, showText, toggle, closeMobile } = useSidebar();
+const { entries, path, hrefOf, isActive } = useNavigation();
 
 const groupWithActiveChild = (): string | null => entries.value.find((entry) => (entry.children ?? []).some(isActive))?.title ?? null;
 
+/** One group open at a time: the one holding the page, until another is opened. */
 const openGroup = ref<string | null>(groupWithActiveChild());
 
 watch(path, () => (openGroup.value = groupWithActiveChild()));
@@ -47,41 +23,70 @@ watch(path, () => (openGroup.value = groupWithActiveChild()));
 function toggleGroup(title: string): void {
     openGroup.value = openGroup.value === title ? null : title;
 }
+
+/** Collapsed on a desktop: the sidebar opens over the page while the pointer is on it. */
+function hover(value: boolean): void {
+    if (collapsed.value && !isMobile.value) hovered.value = value;
+}
 </script>
 
 <template>
-    <!-- `left` is the logical start edge: the sidebar follows the page direction. -->
-    <Sidebar side="left" collapsible="icon">
-        <SidebarHeader class="h-20 justify-center px-5 py-0">
-            <Link :href="route('dashboard')" class="flex items-center gap-2.5" :class="{ 'justify-center': !showText }" :title="store?.name">
-                <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white"><Store class="size-5.5" /></span>
-                <span v-if="showText && store" class="truncate text-lg font-semibold text-gray-800 dark:text-white/90">{{ store.name }}</span>
-            </Link>
-        </SidebarHeader>
+    <Transition enter-from-class="opacity-0" leave-to-class="opacity-0" enter-active-class="transition-opacity" leave-active-class="transition-opacity">
+        <div v-if="isMobile && mobileOpen" class="fixed inset-0 z-[55] bg-gray-950/30 backdrop-blur-[2px] lg:hidden" aria-hidden="true" @click="closeMobile" />
+    </Transition>
 
-        <SidebarContent class="custom-scrollbar overflow-x-hidden overflow-y-auto px-5 duration-300 ease-linear">
-            <nav class="mb-6" :aria-label="t('Main menu')">
-                <SidebarGroup class="p-0">
-                    <SidebarGroupLabel class="mb-3 flex h-5 items-center p-0 text-xs leading-5 text-gray-400" :class="{ 'justify-center': !showText }">
-                        <template v-if="showText">{{ t('Menu') }}</template>
-                        <MoreHorizontal v-else class="size-5" />
-                    </SidebarGroupLabel>
-                    <SidebarMenu class="gap-1">
-                        <template v-for="entry in entries" :key="entry.title">
-                            <SidebarLink v-if="entry.type === 'item'" :entry="entry" :href="hrefOf(entry)" :active="isActive(entry)" :show-text="showText" />
-                            <SidebarLinkGroup
-                                v-else
-                                :entry="entry"
-                                :open="openGroup === entry.title"
-                                :show-text="showText"
-                                :href-of="hrefOf"
-                                :is-active="isActive"
-                                @toggle="toggleGroup(entry.title)"
-                            />
-                        </template>
-                    </SidebarMenu>
-                </SidebarGroup>
-            </nav>
-        </SidebarContent>
-    </Sidebar>
+    <aside
+        class="fixed inset-y-0 start-0 z-[60] flex w-sidebar flex-col border-e border-line bg-card transition-[width,translate,box-shadow] duration-200 ease-out"
+        :class="{
+            'lg:w-sidebar-collapsed': collapsed && !hovered,
+            'shadow-theme-xl': hovered || (isMobile && mobileOpen),
+            'max-lg:ltr:-translate-x-full max-lg:rtl:translate-x-full': !mobileOpen,
+        }"
+        :aria-label="t('Main menu')"
+        @mouseenter="hover(true)"
+        @mouseleave="hover(false)"
+    >
+        <div class="relative flex h-header shrink-0 items-center px-5" :class="{ 'lg:justify-center lg:px-0': !showText }">
+            <SidebarBrand :show-text="showText" />
+
+            <button
+                type="button"
+                class="absolute top-1/2 -end-3.5 hidden size-7 -translate-y-1/2 items-center justify-center rounded-lg border border-line bg-card text-gray-500 shadow-theme-xs hover:text-brand-600 lg:flex dark:text-gray-400 dark:hover:text-brand-400"
+                :aria-label="collapsed ? t('Expand sidebar') : t('Collapse sidebar')"
+                :aria-expanded="!collapsed"
+                :title="`${collapsed ? t('Expand sidebar') : t('Collapse sidebar')} (Ctrl+B)`"
+                @click="toggle"
+            >
+                <!-- Points to the start edge to fold, to the end edge to unfold, in either direction. -->
+                <ChevronsStart class="size-4 transition-transform" :class="collapsed ? 'rotate-180 rtl:rotate-0' : 'rtl:rotate-180'" />
+            </button>
+        </div>
+
+        <nav class="custom-scrollbar flex-1 overflow-x-hidden overflow-y-auto px-3 pt-2 pb-6">
+            <ul class="flex flex-col gap-0.5">
+                <template v-for="(entry, index) in entries" :key="entry.title">
+                    <!-- A section's heading, before its first entry: "Sales", "Catalog"... -->
+                    <li
+                        v-if="entry.section && entry.section !== entries[index - 1]?.section"
+                        class="mt-4 mb-1 flex h-6 items-center px-2.5 text-xs font-medium text-gray-400 first:mt-0 dark:text-gray-500"
+                        :class="{ 'justify-center': !showText }"
+                        role="presentation"
+                    >
+                        <template v-if="showText">{{ t(entry.section) }}</template>
+                        <span v-else class="h-px w-5 bg-line" aria-hidden="true" />
+                    </li>
+                    <SidebarLink v-if="entry.type === 'item'" :entry="entry" :href="hrefOf(entry)" :active="isActive(entry)" :show-text="showText" />
+                    <SidebarLinkGroup
+                        v-else
+                        :entry="entry"
+                        :open="openGroup === entry.title"
+                        :show-text="showText"
+                        :href-of="hrefOf"
+                        :is-active="isActive"
+                        @toggle="toggleGroup(entry.title)"
+                    />
+                </template>
+            </ul>
+        </nav>
+    </aside>
 </template>

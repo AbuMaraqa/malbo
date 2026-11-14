@@ -12,6 +12,15 @@ class SidebarItem implements SidebarItemsInterface
     protected ?array $permissions = [];
     protected ?string $badge = null;
     protected int $sort = 0;
+    /** The heading the entry sits under in the sidebar ("Sales", "Catalog"); null for none. */
+    protected ?string $section = null;
+
+    public function section(string $section): static
+    {
+        $this->section = $section;
+
+        return $this;
+    }
 
     public function __construct(
         string $title,
@@ -62,6 +71,7 @@ class SidebarItem implements SidebarItemsInterface
             'permissions' => $this->permissions,
             'badge' => $this->badge,
             'sort' => $this->sort,
+            'section' => $this->section,
         ];
     }
 }

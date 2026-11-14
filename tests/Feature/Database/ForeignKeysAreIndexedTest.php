@@ -16,6 +16,10 @@ class ForeignKeysAreIndexedTest extends DatabaseTestCase
 
     public function test_translated_names_have_a_trigram_index(): void
     {
-        $this->assertSame(2, DB::table('pg_indexes')->whereLike('indexname', '%_name_trgm')->count());
+        // Product and category names (2027_01_01_000001), tag names for the shop's search (phase 7).
+        $this->assertSame(
+            ['items_category_translations_name_trgm', 'items_product_translations_name_trgm', 'items_tag_translations_name_trgm'],
+            DB::table('pg_indexes')->whereLike('indexname', '%_name_trgm')->orderBy('indexname')->pluck('indexname')->all(),
+        );
     }
 }

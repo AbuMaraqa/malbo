@@ -1,19 +1,19 @@
 <script setup lang="ts">
+import StatCard from '@/Components/dashboard/StatCard.vue';
 import { Package, ShoppingCart, UserRound, UsersRound } from '@/lib/icons';
-
-import MetricCard from '@/tailadmin/dashboard/MetricCard.vue';
 
 import type { Metric } from './types';
 
 defineProps<{ metrics: Metric[] }>();
 
 const icons = { users: UsersRound, clients: UserRound, products: Package, orders: ShoppingCart };
+const tones = { users: 'brand', clients: 'info', products: 'warning', orders: 'success' } as const;
 </script>
 
 <template>
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-        <MetricCard v-for="metric in metrics" :key="metric.key" :title="metric.title" :value="metric.value.toLocaleString('en')">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <StatCard v-for="metric in metrics" :key="metric.key" :label="metric.title" :value="metric.value.toLocaleString('en')" :tone="tones[metric.key]">
             <template #icon><component :is="icons[metric.key]" /></template>
-        </MetricCard>
+        </StatCard>
     </div>
 </template>

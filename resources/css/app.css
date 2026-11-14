@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import './tailadmin.css';
+@import './admin.css';
 
 @source '../../Modules/*/resources/js/**/*.vue';
 
@@ -25,20 +25,24 @@
     --line: #e4e7ec;
     --surface: #f9fafb;
     --card: #ffffff;
+    /* The admin page behind the cards. */
+    --canvas: #ffffff;
 }
 
 .dark {
     /* Native controls (checkboxes, selects, date pickers, scrollbars) follow the theme. */
     color-scheme: dark;
-    --ink: rgb(255 255 255 / 0.9);
-    --muted: #98a2b3;
-    --line: #1d2939;
-    --surface: #182230;
-    --card: #161e2d;
+    --ink: #eef0f5;
+    --muted: #9ba3b8;
+    --line: #232a3d;
+    --surface: #181d2b;
+    --card: #11151f;
+    --canvas: #0b0e15;
 }
 
 @theme {
-    /* Admin (TailAdmin palette). */
+    /* Admin (resources/css/admin.css). */
+    --color-canvas: var(--canvas);
     --color-brand: var(--color-brand-500);
     --color-brand-contrast: #ffffff;
     --color-ink: var(--ink);

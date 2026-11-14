@@ -22,7 +22,7 @@ class SidebarServiceProvider extends ServiceProvider
         $sidebar = $this->app->make(SidebarService::class);
 
         $sidebar->add(
-            (new SidebarGroup('Branches', 'branches', [], 80)) // no permissions: shown when one of its items is
+            (new SidebarGroup('Branches', 'branches', [], 80))->section('Store') // no permissions: shown when one of its items is
                 ->add(new SidebarItem('Branches List', 'branches', ['Branch View List'], 'branches.index'))
                 ->add(new SidebarItem('Add Branch', 'branches', ['Branch Create'], 'branches.add'))
         );

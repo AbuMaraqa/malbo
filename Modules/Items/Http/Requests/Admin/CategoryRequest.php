@@ -34,6 +34,7 @@ class CategoryRequest extends FormRequest
                 $this->notInsideItself(...),
             ],
             'description' => ['nullable', 'string'],
+            'size_guide' => ['nullable', 'string', 'max:100000'],
             'status' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
             'image' => [$this->imageIsRequired() ? 'required' : 'nullable', 'image', 'mimes:jpeg,jpg,png,gif,webp', 'max:2048'],
@@ -51,6 +52,7 @@ class CategoryRequest extends FormRequest
             'slug' => __('Slug'),
             'parent_id' => __('Parent Category'),
             'description' => __('Description'),
+            'size_guide' => __('Size guide'),
             'sort_order' => __('Sort Order'),
             'image' => __('Image'),
         ];

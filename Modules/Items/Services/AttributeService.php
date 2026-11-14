@@ -26,7 +26,14 @@ class AttributeService
         return DB::transaction(function () use ($data, $locale, $userId): Attribute {
             /** @var Attribute $attribute */
             $attribute = $this->attributes->query()->newModelInstance();
-            $attribute->fill(['created_by' => $userId, 'slug' => $data['slug'], 'type' => $data['type']]);
+            $attribute->fill([
+                'created_by' => $userId,
+                'slug' => $data['slug'],
+                'type' => $data['type'],
+                // Colors are what buyers filter by first.
+                'is_filterable' => (bool) ($data['is_filterable'] ?? (int) $data['type'] === AttributeType::COLOR->value),
+            ]);
+            $this->applySize($attribute, (bool) ($data['is_size'] ?? false));
             Translations::fill($attribute, Translations::fromForm($data, $locale, self::TRANSLATED));
             $attribute->save();
 
@@ -45,6 +52,15 @@ class AttributeService
     {
         return DB::transaction(function () use ($attribute, $data, $locale, $userId): Attribute {
             $attribute->fill(['slug' => $data['slug'], 'type' => $data['type']]);
+
+            if (array_key_exists('is_filterable', $data)) {
+                $attribute->is_filterable = (bool) $data['is_filterable'];
+            }
+
+            if (array_key_exists('is_size', $data)) {
+                $this->applySize($attribute, (bool) $data['is_size']);
+            }
+
             Translations::fill($attribute, Translations::fromForm($data, $locale, self::TRANSLATED));
             $attribute->save();
 
@@ -54,6 +70,23 @@ class AttributeService
 
             return $attribute;
         });
+    }
+
+    /**
+     * The size is one attribute: marking this one unmarks the one before (the partial unique index
+     * would refuse two). The size is always a filter.
+     */
+    private function applySize(Attribute $attribute, bool $isSize): void
+    {
+        if ($isSize) {
+            $this->attributes->query()->where('is_size', true)
+                ->when($attribute->exists, fn ($others) => $others->whereKeyNot($attribute->getKey()))
+                ->get()
+                ->each(fn (Attribute $other) => $other->forceFill(['is_size' => false])->save());
+            $attribute->is_filterable = true;
+        }
+
+        $attribute->is_size = $isSize;
     }
 
     /**

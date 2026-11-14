@@ -12,9 +12,9 @@ const open = defineModel<boolean>('open', { required: true });
 <template>
     <DialogRoot v-model:open="open">
         <DialogPortal>
-            <DialogOverlay class="fixed inset-0 z-[80] bg-gray-900/50 backdrop-blur-[2px]" />
+            <DialogOverlay class="fixed inset-0 z-[80] bg-gray-950/30 backdrop-blur-[3px] data-[state=open]:animate-fade-in" />
             <DialogContent
-                class="fixed start-1/2 top-[8vh] z-[90] max-h-[84vh] w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-line bg-card shadow-xl ltr:-translate-x-1/2 rtl:translate-x-1/2"
+                class="fixed start-1/2 top-[8vh] z-[90] max-h-[84vh] w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-line bg-card shadow-theme-xl outline-none ltr:-translate-x-1/2 rtl:translate-x-1/2"
                 :class="width"
                 :aria-describedby="description ? undefined : undefined"
             >

@@ -75,7 +75,7 @@ const { remove, removeMany } = useRecordDelete('offers');
 </script>
 
 <template>
-    <PageHeader :title="t('Offers List')">
+    <PageHeader :title="t('Offers List')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('Offer Create')" variant="primary" :href="route('offers.add')">{{ t('Add Offer') }}</Button>
         </template>

@@ -24,6 +24,21 @@ interface DashboardRepositoryInterface
     public function ordersCount(): int;
 
     /**
+     * Cash orders waiting for MALBO to call the buyer.
+     */
+    public function awaitingConfirmationCount(): int;
+
+    /**
+     * Products and variants with managed stock at or below their low-stock threshold.
+     */
+    public function lowStockCount(): int;
+
+    /**
+     * Return and exchange requests still being handled (requested, approved, received).
+     */
+    public function openReturnRequestsCount(): int;
+
+    /**
      * Orders per month since the given date.
      *
      * @return Collection<string, int> count by `YYYY-MM`; months without orders are absent

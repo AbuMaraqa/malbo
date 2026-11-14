@@ -24,4 +24,20 @@ class OfferRepository extends BaseEloquentRepository implements OfferRepositoryI
         /** @var Offer */
         return $this->query()->with(['translations', 'media'])->findOrFail($id);
     }
+
+    public function findCoupon(string $code, bool $lock = false): ?Offer
+    {
+        if (trim($code) === '') {
+            return null;
+        }
+
+        /** @var Offer|null */
+        return $this->query()
+            ->whereNotNull('code')
+            // No wildcard: an exact match that ignores letter case.
+            ->whereLike('code', addcslashes(trim($code), '%_\\'), caseSensitive: false)
+            ->when($lock, fn (Builder $query) => $query->lockForUpdate())
+            ->orderBy('id')
+            ->first();
+    }
 }

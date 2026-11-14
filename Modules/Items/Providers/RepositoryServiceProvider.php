@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Modules\Items\Repositories\AddonRepository;
 use Modules\Items\Repositories\AttributeRepository;
 use Modules\Items\Repositories\BrandRepository;
+use Modules\Items\Repositories\BundleRepository;
+use Modules\Items\Repositories\Contracts\BundleRepositoryInterface;
 use Modules\Items\Repositories\CategoryRepository;
 use Modules\Items\Repositories\Contracts\AddonRepositoryInterface;
 use Modules\Items\Repositories\Contracts\AttributeRepositoryInterface;
@@ -20,6 +22,12 @@ use Modules\Items\Repositories\LabelRepository;
 use Modules\Items\Repositories\OfferRepository;
 use Modules\Items\Repositories\OrderRepository;
 use Modules\Items\Repositories\ProductRepository;
+use Modules\Items\Repositories\Contracts\ReturnRequestRepositoryInterface;
+use Modules\Items\Repositories\ReturnRequestRepository;
+use Modules\Items\Repositories\Contracts\ShipmentRepositoryInterface;
+use Modules\Items\Repositories\Contracts\StockMovementRepositoryInterface;
+use Modules\Items\Repositories\ShipmentRepository;
+use Modules\Items\Repositories\StockMovementRepository;
 use Modules\Items\Repositories\TagRepository;
 
 /**
@@ -40,6 +48,10 @@ class RepositoryServiceProvider extends ServiceProvider
         AddonRepositoryInterface::class => AddonRepository::class,
         OfferRepositoryInterface::class => OfferRepository::class,
         OrderRepositoryInterface::class => OrderRepository::class,
+        ReturnRequestRepositoryInterface::class => ReturnRequestRepository::class,
+        ShipmentRepositoryInterface::class => ShipmentRepository::class,
+        StockMovementRepositoryInterface::class => StockMovementRepository::class,
+        BundleRepositoryInterface::class => BundleRepository::class,
     ];
 
     public function register(): void

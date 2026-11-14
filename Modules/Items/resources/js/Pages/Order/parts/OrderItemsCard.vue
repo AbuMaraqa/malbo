@@ -10,6 +10,7 @@ import RemoteSelect from '@/Components/form/RemoteSelect.vue';
 import Repeater from '@/Components/form/Repeater.vue';
 import TextInput from '@/Components/form/TextInput.vue';
 import Card from '@/Components/ui/Card.vue';
+import OrderBundleLines from './OrderBundleLines.vue';
 import { t } from '@/lib/i18n';
 import { route } from '@/lib/route';
 
@@ -23,14 +24,27 @@ const props = defineProps<{
     /** Already on the order, set when it was placed. */
     discount?: number | string;
     isDelivered: boolean;
+    /** Delivered (or later) or with a return request: the lines are shown, not edited. */
+    locked?: boolean;
+    /** Edit only: the pieces of the sets on the order (kept or removed whole). */
+    bundleItems?: OrderItemRow[];
 }>();
+
+const emit = defineEmits<{ removeBundle: [key: string] }>();
+
+const productName = (productId: number | string | null): string =>
+    props.selectedProducts?.find((option) => Number(option.value) === Number(productId))?.label ?? t('Deleted product');
 
 const errors = computed(() => props.form.errors as Record<string, string | undefined>);
 const newItem = (): OrderItemRow => ({ product_id: null, quantity: 1, price: 0, addons_total: 0 });
 
 const money = (value: number): string => value.toFixed(2);
 
-const subTotal = computed(() => props.form.items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0) + (Number(item.addons_total) || 0), 0));
+const subTotal = computed(
+    () =>
+        props.form.items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0) + (Number(item.addons_total) || 0), 0) +
+        (props.bundleItems ?? []).reduce((sum, item) => sum + (Number(item.total) || 0), 0),
+);
 const fee = computed(() => (props.isDelivered ? Number(props.form.delivery_fee) || 0 : 0));
 const grandTotal = computed(() => Math.max(0, subTotal.value - (Number(props.discount) || 0)) + fee.value);
 
@@ -42,7 +56,29 @@ function picked(item: OrderItemRow, option: ProductOption): void {
 
 <template>
     <Card :title="t('Products')">
+        <OrderBundleLines v-if="bundleItems?.length" :items="bundleItems" :locked="locked" class="mb-4" @remove="emit('removeBundle', $event)" />
+        <template v-if="locked">
+            <p class="mb-3 text-sm text-muted">{{ t('The items are locked: the order was delivered, or it has a return request.') }}</p>
+            <table class="w-full text-sm">
+                <thead class="text-muted">
+                    <tr>
+                        <th class="pb-2 text-start font-medium">{{ t('Product') }}</th>
+                        <th class="pb-2 text-start font-medium">{{ t('Quantity') }}</th>
+                        <th class="pb-2 text-start font-medium">{{ t('Price per unit') }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line">
+                    <tr v-for="(item, index) in form.items" :key="item.id ?? index">
+                        <td class="py-2">{{ productName(item.product_id) }}</td>
+                        <td class="py-2 tabular-nums">{{ item.quantity }}</td>
+                        <td class="py-2 tabular-nums">{{ item.price }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p v-if="errors.items" class="mt-2 text-sm text-error-600 dark:text-error-400">{{ errors.items }}</p>
+        </template>
         <Repeater
+            v-else
             v-model="form.items"
             name="items"
             :errors="errors"

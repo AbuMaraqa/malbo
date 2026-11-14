@@ -18,6 +18,7 @@ use Modules\Items\Enums\ProductStatus;
 use Modules\Items\Events\ProductUpdated;
 use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
 use Modules\Items\Support\ProductSeo;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Writes products. $data is the product form's state (name, prices, tags, labels, category_id,
@@ -30,7 +31,7 @@ class ProductService
     /** Form keys that are not product columns. */
     private const NOT_COLUMNS = [
         'tags', 'labels', 'category_id', 'categories', 'branches', 'addons', 'variations', 'attributes',
-        'image', 'gallery', 'removed_image', 'removed_gallery', 'gallery_order',
+        'image', 'gallery', 'removed_image', 'removed_gallery', 'gallery_order', 'gallery_colors', 'gallery_new_colors',
         'locale', 'meta_title', 'meta_description', 'meta_keywords',
     ];
 
@@ -38,6 +39,7 @@ class ProductService
         private ProductRepositoryInterface $products,
         private ProductVariations $variations,
         private ProductAddons $addons,
+        private InventoryService $inventory,
     ) {}
 
     public function create(array $data, string $locale, int $userId): Product
@@ -54,7 +56,7 @@ class ProductService
 
             /** @var Product $product */
             $product = $this->products->query()->getModel()->newInstance();
-            $this->fillAndSave($product, $attributes, $data, $locale);
+            $this->fillAndSave($product, $attributes, $data, $locale, $userId);
             $this->saveRelations($product, $data, $locale, $userId);
 
             if (! empty($data['variations'])) {
@@ -81,7 +83,7 @@ class ProductService
             }
             $attributes['meta_data'] = ProductSeo::pack($data, $locale, $product->meta_data);
 
-            $this->fillAndSave($product, $attributes, $data, $locale);
+            $this->fillAndSave($product, $attributes, $data, $locale, $userId);
 
             if ($product->wasChanged('status')) {
                 $product->variations()->update(['status' => $product->status]); // variations follow their parent
@@ -218,9 +220,42 @@ class ProductService
             $product->addImage($image);
         }
 
-        if ($gallery = $uploaded($data['gallery'] ?? null)) {
-            $product->addGalleryImage($gallery);
+        // A saved image's color; ids from the browser only ever reach this product's own gallery.
+        if (! empty($data['gallery_colors']) && is_array($data['gallery_colors'])) {
+            $saved = $product->getMedia('product_gallery')->keyBy('id');
+
+            foreach ($data['gallery_colors'] as $mediaId => $valueId) {
+                if ($media = $saved->get((int) $mediaId)) {
+                    self::setColor($media, $valueId);
+                }
+            }
         }
+
+        if ($gallery = $uploaded($data['gallery'] ?? null)) {
+            $colors = array_values((array) ($data['gallery_new_colors'] ?? []));
+
+            foreach ($product->addGalleryImage($gallery) ?? [] as $index => $media) {
+                self::setColor($media, $colors[$index] ?? null);
+            }
+        }
+    }
+
+    /**
+     * The color a gallery image shows (an attribute value of a COLOR attribute), or none.
+     */
+    private static function setColor(Media $media, mixed $valueId): void
+    {
+        $current = $media->getCustomProperty('attribute_value_id');
+        $valueId = filled($valueId) ? (int) $valueId : null;
+
+        if ($current === $valueId) {
+            return;
+        }
+
+        $valueId === null
+            ? $media->forgetCustomProperty('attribute_value_id')
+            : $media->setCustomProperty('attribute_value_id', $valueId);
+        $media->save();
     }
 
     /**
@@ -245,15 +280,23 @@ class ProductService
         return Arr::except($data, [...self::NOT_COLUMNS, ...$this->products->query()->getModel()->translatedAttributes]);
     }
 
-    private function fillAndSave(Product $product, array $attributes, array $data, string $locale): void
+    private function fillAndSave(Product $product, array $attributes, array $data, string $locale, int $userId): void
     {
         $translated = array_values(array_filter(
             $product->translatedAttributes,
             fn (string $field) => array_key_exists($field, $data),
         ));
 
+        // Stock changes only through the inventory ledger, from what the form showed.
+        $stock = isset($attributes['stock_quantity']) ? (int) $attributes['stock_quantity'] : null;
+        $loaded = isset($attributes['stock_quantity_loaded']) ? (int) $attributes['stock_quantity_loaded'] : null;
+        unset($attributes['stock_quantity'], $attributes['stock_quantity_loaded']);
+        $isNew = ! $product->exists;
+
         Translations::fill($product, Translations::fromForm($data, $locale, $translated));
         $product->fill($attributes)->save();
+
+        $this->inventory->fromForm($product, $stock, $loaded, $isNew, $userId);
     }
 
     private function saveRelations(Product $product, array $data, string $locale, int $userId): void

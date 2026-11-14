@@ -279,6 +279,7 @@ class PermissionSeeder extends Seeder
                 'module_name' => 'Addon Management',
             ],
 
+
             // Todo Order
             [
                 'name' => 'Order View List',
@@ -310,6 +311,63 @@ class PermissionSeeder extends Seeder
                 'guard_name' => 'web',
                 'module_name' => 'Order Management',
             ],
+            // Printing an order's papers: the invoice and the waybill.
+            [
+                'name' => 'Order Invoice',
+                'guard_name' => 'web',
+                'module_name' => 'Order Management',
+            ],
+
+            // Shipments
+            [
+                'name' => 'Shipment View List',
+                'guard_name' => 'web',
+                'module_name' => 'Shipment Management',
+            ],
+            [
+                'name' => 'Shipment Create',
+                'guard_name' => 'web',
+                'module_name' => 'Shipment Management',
+            ],
+            [
+                'name' => 'Shipment Update',
+                'guard_name' => 'web',
+                'module_name' => 'Shipment Management',
+            ],
+
+            // Stock: the ledger and low stock (View List), receiving goods and adjustments (Update)
+            [
+                'name' => 'Stock View List',
+                'guard_name' => 'web',
+                'module_name' => 'Stock Management',
+            ],
+            [
+                'name' => 'Stock Update',
+                'guard_name' => 'web',
+                'module_name' => 'Stock Management',
+            ],
+
+            // Returns and exchanges
+            [
+                'name' => 'Return Request View List',
+                'guard_name' => 'web',
+                'module_name' => 'Return Request Management',
+            ],
+            [
+                'name' => 'Return Request Create',
+                'guard_name' => 'web',
+                'module_name' => 'Return Request Management',
+            ],
+            [
+                'name' => 'Return Request Update',
+                'guard_name' => 'web',
+                'module_name' => 'Return Request Management',
+            ],
+            // Sets and bundle offers (phase 8B).
+            ['name' => 'Bundle View List', 'guard_name' => 'web', 'module_name' => 'Bundle Management'],
+            ['name' => 'Bundle Create', 'guard_name' => 'web', 'module_name' => 'Bundle Management'],
+            ['name' => 'Bundle Update', 'guard_name' => 'web', 'module_name' => 'Bundle Management'],
+            ['name' => 'Bundle Delete', 'guard_name' => 'web', 'module_name' => 'Bundle Management'],
         ];
 
         foreach ($permissions as $perm) {

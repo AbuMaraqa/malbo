@@ -3,5 +3,7 @@
     "Items": true,
     "GeoLocation": true,
     "Branch": true,
-    "Store": true
+    "Store": true,
+    "Wholesale": true,
+    "Reports": true
 }

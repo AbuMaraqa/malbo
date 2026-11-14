@@ -17,4 +17,10 @@ interface OfferRepositoryInterface extends RepositoryInterface
      * An offer with what its form shows.
      */
     public function findForForm(int $id): Offer;
+
+    /**
+     * The offer whose code is $code, in any letter case, or null. With $lock the row is locked for
+     * the rest of the transaction: two checkouts using its last use wait for each other.
+     */
+    public function findCoupon(string $code, bool $lock = false): ?Offer;
 }

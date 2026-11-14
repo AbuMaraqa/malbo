@@ -45,6 +45,7 @@ class OrderPagesTest extends DatabaseTestCase
 
     private Product $product;
 
+    /** These tests are about money: their products do not manage stock (OrderStockTest covers that). */
     protected function setUp(): void
     {
         parent::setUp();
@@ -66,7 +67,7 @@ class OrderPagesTest extends DatabaseTestCase
 
         $this->branch = Branch::factory()->create();
         [$this->city, $this->district] = $this->cityWithDistrict();
-        $this->product = Product::factory()->create(['base_price' => 100, 'sale_price' => null]);
+        $this->product = Product::factory()->create(['base_price' => 100, 'sale_price' => null, 'manage_stock' => false]);
     }
 
     // ---------------------------------------------------------------- the list
@@ -84,7 +85,7 @@ class OrderPagesTest extends DatabaseTestCase
             ->where('table.data.0.status', OrderStatus::PENDING->getLabel())
             ->where('table.data.0.status_tone', 'warning')
             ->where('table.data.0.items.0.quantity', 2)
-            ->has('statuses', 9)
+            ->has('statuses', count(OrderStatus::cases()))
             ->missing('table.data.0.created_by'));
     }
 
@@ -135,7 +136,7 @@ class OrderPagesTest extends DatabaseTestCase
         $this->page('/orders/add')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Items/Order/Add')
             ->has('submitToken')
-            ->has('statuses', 4)
+            ->has('statuses', 5)
             ->where('statuses.0.value', OrderStatus::PENDING->value)
             ->has('districts')
             ->has('cities'));
@@ -183,8 +184,8 @@ class OrderPagesTest extends DatabaseTestCase
 
     public function test_the_price_is_the_products_current_one_with_its_sale_and_discount(): void
     {
-        $sale = Product::factory()->create(['base_price' => 100, 'sale_price' => 80]);
-        $discounted = Product::factory()->create(['base_price' => 100, 'sale_price' => null, 'discount_type' => 'percentage', 'discount_value' => 10]);
+        $sale = Product::factory()->create(['manage_stock' => false, 'base_price' => 100, 'sale_price' => 80]);
+        $discounted = Product::factory()->create(['manage_stock' => false, 'base_price' => 100, 'sale_price' => null, 'discount_type' => 'percentage', 'discount_value' => 10]);
 
         $this->store(['items' => [['product_id' => $sale->id, 'quantity' => 1], ['product_id' => $discounted->id, 'quantity' => 1]]])->assertSessionHasNoErrors();
 
@@ -275,7 +276,7 @@ class OrderPagesTest extends DatabaseTestCase
 
     public function test_a_total_too_large_for_the_column_is_a_validation_error(): void
     {
-        $dear = Product::factory()->create(['base_price' => 99999999, 'sale_price' => null]);
+        $dear = Product::factory()->create(['manage_stock' => false, 'base_price' => 99999999, 'sale_price' => null]);
 
         $this->store(['items' => [['product_id' => $dear->id, 'quantity' => 100]]])->assertSessionHasErrors('items');
     }
@@ -295,9 +296,10 @@ class OrderPagesTest extends DatabaseTestCase
             ->where('order.items.0.quantity', 2)
             ->where('selectedCustomer.label', 'Ahmad Customer')
             ->where('selectedProducts.0.value', $this->product->id)
-            ->has('statuses', 2)
+            ->has('statuses', 3)
             ->where('statuses.0.value', OrderStatus::CONFIRMED->value)
             ->where('statuses.1.value', OrderStatus::PREPARING->value)
+            ->where('statuses.2.value', OrderStatus::CANCELLED->value)
             ->missing('order.created_by'));
     }
 
@@ -306,7 +308,7 @@ class OrderPagesTest extends DatabaseTestCase
         $order = $this->order(['discount' => 10, 'sub_total' => 1, 'total' => 1]);
         $line = $order->items()->create(['product_id' => $this->product->id, 'price' => 75, 'quantity' => 1, 'total_price' => 75]);
         $removed = $order->items()->create(['product_id' => $this->product->id, 'price' => 75, 'quantity' => 1, 'total_price' => 75]);
-        $new = Product::factory()->create(['base_price' => 20, 'sale_price' => null]);
+        $new = Product::factory()->create(['manage_stock' => false, 'base_price' => 20, 'sale_price' => null]);
 
         $this->update($order, [
             'delivery_fee' => 5,
@@ -332,7 +334,7 @@ class OrderPagesTest extends DatabaseTestCase
     {
         $order = $this->order();
         $line = $order->items()->create(['product_id' => $this->product->id, 'price' => 75, 'quantity' => 1, 'total_price' => 75]);
-        $new = Product::factory()->create(['base_price' => 20, 'sale_price' => null]);
+        $new = Product::factory()->create(['manage_stock' => false, 'base_price' => 20, 'sale_price' => null]);
 
         $this->update($order, ['items' => [['id' => $line->id, 'product_id' => $new->id, 'quantity' => 1]]])->assertSessionHasNoErrors();
 
@@ -352,7 +354,7 @@ class OrderPagesTest extends DatabaseTestCase
 
     public function test_a_line_whose_product_was_deleted_stays_editable(): void
     {
-        $gone = Product::factory()->create(['base_price' => 40]);
+        $gone = Product::factory()->create(['manage_stock' => false, 'base_price' => 40]);
         $order = $this->order();
         $line = $order->items()->create(['product_id' => $gone->id, 'price' => 40, 'quantity' => 1, 'total_price' => 40]);
         $gone->forceDelete();
@@ -491,12 +493,37 @@ class OrderPagesTest extends DatabaseTestCase
         $this->actingAs($this->staff)->getJson($this->url('/orders/lookup/nonsense'))->assertNotFound();
     }
 
-    public function test_the_lookup_leaves_out_variations(): void
+    public function test_the_lookup_offers_each_variant_instead_of_its_parent(): void
     {
         $parent = Product::factory()->create(['name' => 'Parent']);
-        Product::factory()->variationOf($parent)->create(['name' => 'Parent Red']);
+        $red = Product::factory()->variationOf($parent)->create(['name' => 'Parent Red']);
+        $blue = Product::factory()->variationOf($parent)->create(['name' => 'Parent Blue']);
 
-        $this->actingAs($this->staff)->getJson($this->url('/orders/lookup/products?q=parent'))->assertOk()->assertJsonCount(1);
+        $this->actingAs($this->staff)->getJson($this->url('/orders/lookup/products?q=parent'))
+            ->assertOk()
+            ->assertJsonCount(2)
+            ->assertJsonPath('0.value', $red->id)
+            ->assertJsonPath('0.label', 'Parent Red')
+            ->assertJsonPath('1.value', $blue->id);
+    }
+
+    public function test_a_variant_is_found_by_its_parents_name_and_by_its_sku(): void
+    {
+        $parent = Product::factory()->create(['name' => 'Linen Shirt']);
+        $variant = Product::factory()->variationOf($parent)->create(['name' => 'Black L', 'sku' => 'LIN-BLK-L']);
+
+        $this->actingAs($this->staff)->getJson($this->url('/orders/lookup/products?q=linen'))
+            ->assertOk()->assertJsonCount(1)->assertJsonPath('0.value', $variant->id);
+        $this->actingAs($this->staff)->getJson($this->url('/orders/lookup/products?q=blk-l'))
+            ->assertOk()->assertJsonCount(1)->assertJsonPath('0.value', $variant->id);
+    }
+
+    public function test_a_product_without_variants_is_offered_itself(): void
+    {
+        $single = Product::factory()->create(['name' => 'Single Belt']);
+
+        $this->actingAs($this->staff)->getJson($this->url('/orders/lookup/products?q=belt'))
+            ->assertOk()->assertJsonCount(1)->assertJsonPath('0.value', $single->id);
     }
 
     // ---------------------------------------------------------------- delete, info, permissions

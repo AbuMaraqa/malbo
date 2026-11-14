@@ -30,5 +30,6 @@ class CategoryTranslation extends Model
         'locale',
         'name',
         'description',
+        'size_guide',
     ];
 }

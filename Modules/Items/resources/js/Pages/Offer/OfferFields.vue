@@ -91,7 +91,15 @@ const branchError = computed(() => {
                 <MultiSelect v-if="form.offerable_model" v-model="form.offerable_id" single :label="t('Offerable ID')" required :options="targets" :error="form.errors.offerable_id" />
                 <SelectInput v-model="form.type" :label="t('Type')" required :options="types" :error="form.errors.type" />
                 <TextInput v-model="form.value" :label="t('Value')" type="number" step="0.01" min="0" required :error="form.errors.value" />
-                <TextInput v-model="form.code" class="md:col-span-2" :label="t('Code')" dir="ltr" :maxlength="50" :error="form.errors.code" />
+                <TextInput
+                    v-model="form.code"
+                    class="md:col-span-2"
+                    :label="t('Code')"
+                    dir="ltr"
+                    :maxlength="50"
+                    :hint="t('A code makes this a coupon at checkout, for the selected product or category.')"
+                    :error="form.errors.code"
+                />
                 <TextInput v-model="form.min_purchase_amount" class="md:col-span-2" :label="t('Min Purchase Amount')" type="number" step="0.01" min="0" required :error="form.errors.min_purchase_amount" />
                 <TextInput v-model="form.usage_limit" :label="t('Usage Limit')" type="number" min="1" required :error="form.errors.usage_limit" />
                 <TextInput v-model="form.usage_limit_per_user" :label="t('Usage Limit Per User')" type="number" min="1" required :error="form.errors.usage_limit_per_user" />

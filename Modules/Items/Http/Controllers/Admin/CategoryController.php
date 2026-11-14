@@ -23,7 +23,7 @@ use Spatie\QueryBuilder\AllowedSort;
 
 class CategoryController extends Controller
 {
-    private const TRANSLATED = ['name', 'description'];
+    private const TRANSLATED = ['name', 'description', 'size_guide'];
 
     public function __construct(
         private readonly CategoryRepositoryInterface $categories,
@@ -98,6 +98,7 @@ class CategoryController extends Controller
                 'id' => $model->id,
                 'name' => $model->translate(app()->getLocale(), false)?->name ?? '',
                 'description' => $model->translate(app()->getLocale(), false)?->description ?? '',
+                'size_guide' => $model->translate(app()->getLocale(), false)?->size_guide ?? '',
                 'slug' => $model->slug,
                 'parent_id' => $model->parent_id,
                 'status' => $model->status === CategoryStatus::ACTIVE,

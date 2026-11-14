@@ -229,8 +229,25 @@ class ProductPageTest extends StorefrontTestCase
     {
         $json = json_encode($this->page());
 
-        foreach (['cost', 'wholesale', 'stock_quantity'] as $column) {
+        // Columns, not words: the layout links to the merchant portal (`/{locale}/wholesale`) on purpose.
+        foreach (['cost', 'wholesale_price', 'stock_quantity'] as $column) {
             $this->assertStringNotContainsString($column, $json);
+        }
+        $this->assertStringNotContainsString('store.wholesale.', $json, 'no portal route names on store pages');
+    }
+
+    public function test_no_cost_wholesale_or_tier_price_value_reaches_the_page(): void
+    {
+        $this->shirt->update(['wholesale_price' => 43.21, 'cost_price' => 27.65]);
+        $tier = \Modules\Wholesale\Entities\Tier::query()->create(['discount_percent' => 0, 'is_default' => false, 'sort_order' => 0]);
+        \Modules\Wholesale\Entities\TierPrice::query()->create(['product_id' => $this->shirt->id, 'tier_id' => $tier->id, 'price' => 38.17]);
+
+        $json = json_encode($this->page(), JSON_UNESCAPED_UNICODE);
+        $html = (string) $this->get($this->siteUrl('/ar/product/linen-shirt'))->getContent();
+
+        foreach (['43.21', '27.65', '38.17'] as $value) {
+            $this->assertStringNotContainsString($value, $json, $value);
+            $this->assertStringNotContainsString($value, $html, $value);
         }
     }
 

@@ -42,6 +42,7 @@ class AttributeController extends Controller
                     'slug' => $attribute->slug,
                     'description' => $attribute->description,
                     'type' => AttributeType::tryFrom((int) $attribute->type)?->label(),
+                    'is_filterable' => (bool) $attribute->is_filterable,
                     'locales' => $attribute->translations->pluck('locale'),
                 ]),
             'types' => $this->types(),
@@ -74,6 +75,8 @@ class AttributeController extends Controller
                 'name' => $model->translate($locale, false)?->name ?? '',
                 'slug' => $model->slug,
                 'type' => (int) $model->type,
+                'is_filterable' => (bool) $model->is_filterable,
+                'is_size' => (bool) $model->is_size,
                 'description' => $model->translate($locale, false)?->description ?? '',
                 'values' => $model->attributeValues->map(function (AttributeValue $value) use ($locale) {
                     // A value not translated yet opens with its first translation, to edit from.

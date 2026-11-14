@@ -3,6 +3,11 @@ import type { Option } from '@/Components/form/SelectInput.vue';
 
 export type ErrorOf = (field: string) => string | undefined;
 
+/** A saved gallery image and the color it shows (an attribute value id). */
+export interface GalleryImage extends ExistingImage {
+    color?: number | null;
+}
+
 /** What a product and a variation have alike. Numbers stay as typed: the server validates them. */
 export interface ProductRowFields {
     name: string;
@@ -24,6 +29,10 @@ export interface ProductRowFields {
     discount_end_date: string | null;
     manage_stock: boolean;
     stock_quantity: number | string | null;
+    /** The stock the page was opened with; absent on a new row. */
+    stock_quantity_loaded?: number | null;
+    /** Pieces on their way (shown only; never sent back). */
+    incoming_quantity?: number;
     low_stock_threshold: number | string | null;
     stock_status: string | null;
     allow_backorder: boolean;
@@ -32,12 +41,20 @@ export interface ProductRowFields {
     meta_title: string | null;
     meta_description: string | null;
     meta_keywords: string | null;
+    fabric: string | null;
+    composition: string | null;
+    fit: string | null;
+    care: string | null;
+    /** The model in the photos: centimetres, kilograms, the size worn. */
+    model_height: number | string | null;
+    model_weight: number | string | null;
+    model_size: string | null;
     /** New files. */
     image: File | File[] | null;
     gallery: File | File[] | null;
     /** Saved images, shown only: the server ignores them. */
     images: ExistingImage[];
-    gallery_images: ExistingImage[];
+    gallery_images: GalleryImage[];
     removed_image: (number | string)[];
     removed_gallery: (number | string)[];
     gallery_order: (number | string)[];
@@ -65,6 +82,13 @@ export interface AddonRow {
 
 export interface ProductForm extends ProductRowFields {
     status: number;
+    is_new: boolean;
+    is_best_seller: boolean;
+    video_url: string | null;
+    /** Saved gallery image id => color value id. */
+    gallery_colors: Record<string, number | null>;
+    /** The color of each new gallery file, in the order of `gallery`. */
+    gallery_new_colors: (number | null)[];
     brand_id: number | string | null;
     tags: string[];
     labels: string[];
@@ -78,6 +102,8 @@ export interface ProductForm extends ProductRowFields {
 export interface AttributeChoice {
     id: number;
     name: string;
+    /** A COLOR attribute: its values can be tied to gallery images. */
+    swatch: boolean;
     values: { id: number; name: string; color: string | null }[];
 }
 

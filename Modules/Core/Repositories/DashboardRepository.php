@@ -10,6 +10,10 @@ use Modules\Core\Enums\UserRole;
 use Modules\Core\Repositories\Contracts\DashboardRepositoryInterface;
 use Modules\Items\Entities\Order;
 use Modules\Items\Entities\Product;
+use Modules\Items\Entities\ReturnRequest;
+use Modules\Items\Enums\OrderStatus;
+use Modules\Items\Enums\ReturnRequestStatus;
+use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
 use Spatie\Permission\Models\Role;
 
 class DashboardRepository implements DashboardRepositoryInterface
@@ -32,6 +36,23 @@ class DashboardRepository implements DashboardRepositoryInterface
     public function ordersCount(): int
     {
         return Order::query()->count();
+    }
+
+    public function awaitingConfirmationCount(): int
+    {
+        return Order::query()->where('status', OrderStatus::AWAITING_CONFIRMATION->value)->count();
+    }
+
+    public function lowStockCount(): int
+    {
+        return app(ProductRepositoryInterface::class)->lowStockQuery()->count();
+    }
+
+    public function openReturnRequestsCount(): int
+    {
+        return ReturnRequest::query()
+            ->whereIn('status', array_map(fn (ReturnRequestStatus $status) => $status->value, ReturnRequestStatus::open()))
+            ->count();
     }
 
     public function ordersByMonth(Carbon $from): Collection

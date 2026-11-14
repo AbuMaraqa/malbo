@@ -7,7 +7,10 @@ use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Entities\User;
 use Modules\Items\Entities\Order;
+use Modules\Items\Entities\Product;
+use Modules\Items\Entities\ReturnRequest;
 use Modules\Items\Enums\OrderStatus;
+use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
 use Spatie\Permission\Models\Role;
 use Tests\DatabaseTestCase;
 
@@ -107,6 +110,15 @@ class DashboardPageTest extends DatabaseTestCase
                 ->where('recentOrders.rows.2.total', '10.00'));
     }
 
+    public function test_a_guest_order_shows_the_buyers_name(): void
+    {
+        $this->makeOrder('G-1')->forceFill(['customer_name' => 'Guest Buyer'])->save();
+
+        $this->actingAs($this->admin)
+            ->get($this->siteUrl('/ar/admin'))
+            ->assertInertia(fn (Assert $page) => $page->where('recentOrders.rows.0.customer', 'Guest Buyer'));
+    }
+
     public function test_recent_orders_keeps_only_the_last_five(): void
     {
         foreach (range(1, 7) as $number) {
@@ -181,6 +193,44 @@ class DashboardPageTest extends DatabaseTestCase
         $this->actingAs($this->makeUser('c@example.com')->assignRole('Customer'))
             ->get($this->siteUrl('/ar/admin'))
             ->assertRedirect();
+    }
+
+    public function test_alerts_count_what_needs_attention_and_link_to_it(): void
+    {
+        $this->makeOrder('AW-1', status: OrderStatus::AWAITING_CONFIRMATION);
+        $this->makeOrder('AW-2', status: OrderStatus::AWAITING_CONFIRMATION);
+        $this->makeOrder('NEW-1');
+        Product::factory()->create(['manage_stock' => true, 'stock_quantity' => 0, 'low_stock_threshold' => 1]);
+        Product::factory()->create(['manage_stock' => true, 'stock_quantity' => 50, 'low_stock_threshold' => 1]);
+        $open = $this->makeOrder('RET-1', status: OrderStatus::DELIVERED);
+        $done = $this->makeOrder('RET-2', status: OrderStatus::DELIVERED);
+        foreach ([[$open, 'requested'], [$done, 'completed']] as [$order, $status]) {
+            ReturnRequest::query()->create(['order_id' => $order->id, 'type' => 'return', 'status' => $status, 'reason' => 'wrong_size']);
+        }
+        $lowStock = app(ProductRepositoryInterface::class)->lowStockQuery()->count();
+
+        $this->actingAs($this->admin)
+            ->get($this->siteUrl('/ar/admin'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('alerts', fn ($alerts) => collect($alerts)->pluck('value', 'key')->all() === ['awaiting_confirmation' => 2, 'low_stock' => $lowStock, 'open_returns' => 1])
+                ->where('alerts.0.url', route('orders.index', ['filter' => ['awaiting_confirmation' => 1]]))
+                ->where('alerts.1.url', route('stock.low'))
+                ->where('alerts.2.url', route('return-requests.index', ['filter' => ['open' => 1]])));
+        $this->assertGreaterThanOrEqual(1, $lowStock);
+    }
+
+    public function test_alerts_follow_permissions(): void
+    {
+        $onlyOrders = $this->makeUser('orders@example.com')->givePermissionTo('Order View List');
+        $this->actingAs($onlyOrders)->get($this->siteUrl('/ar/admin'))
+            ->assertInertia(fn (Assert $page) => $page->where('alerts', fn ($alerts) => collect($alerts)->pluck('key')->all() === ['awaiting_confirmation']));
+
+        $onlyStock = $this->makeUser('stock@example.com')->givePermissionTo('Stock View List');
+        $this->actingAs($onlyStock)->get($this->siteUrl('/ar/admin'))
+            ->assertInertia(fn (Assert $page) => $page->where('alerts', fn ($alerts) => collect($alerts)->pluck('key')->all() === ['low_stock']));
+
+        $none = $this->makeUser('none@example.com')->givePermissionTo('Currency View List');
+        $this->actingAs($none)->get($this->siteUrl('/ar/admin'))->assertInertia(fn (Assert $page) => $page->where('alerts', []));
     }
 
     private function makeUser(string $email, string $name = 'Someone'): User

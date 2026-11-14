@@ -3,8 +3,11 @@
 namespace Tests\Feature\Store;
 
 use Illuminate\Support\Facades\DB;
+use Modules\Items\Entities\Attribute;
+use Modules\Items\Entities\AttributeValue;
 use Modules\Items\Entities\Category;
 use Modules\Items\Entities\Product;
+use Modules\Items\Enums\AttributeType;
 use Modules\Items\Enums\CategoryStatus;
 use Modules\Items\Enums\ProductStatus;
 use Modules\Items\Repositories\Contracts\CategoryRepositoryInterface;
@@ -142,6 +145,54 @@ class StorefrontReadsTest extends DatabaseTestCase
         $this->assertContains($other->id, $related); // filled with newest when the category is small
     }
 
+    public function test_related_prefers_a_shared_filterable_value(): void
+    {
+        $category = Category::factory()->create();
+        $color = Attribute::factory()->create(['type' => AttributeType::COLOR->value, 'is_filterable' => true]);
+        $fabric = Attribute::factory()->create(['is_filterable' => false]);
+        [$black, $white] = AttributeValue::factory()->count(2)->create(['attribute_id' => $color->id, 'is_active' => true])->all();
+        $cotton = AttributeValue::factory()->create(['attribute_id' => $fabric->id, 'is_active' => true]);
+
+        $product = $this->productIn($category);
+        $this->variantWith($product, [$black, $cotton]);
+        $sharesBlack = $this->productIn($category);
+        $this->variantWith($sharesBlack, [$black]);
+        $sharesFabricOnly = $this->productIn($category);
+        $this->variantWith($sharesFabricOnly, [$white, $cotton]);
+        $this->age($sharesBlack, 5); // the oldest: the shared value wins over newest
+
+        $related = $this->products->relatedForStorefront($product, 4)->pluck('id')->all();
+
+        $this->assertSame([$sharesBlack->id, $sharesFabricOnly->id], array_slice($related, 0, 2));
+    }
+
+    public function test_related_ranks_by_shared_values_then_the_deepest_category(): void
+    {
+        $root = Category::factory()->create();
+        $child = Category::factory()->create(['parent_id' => $root->id]);
+        $color = Attribute::factory()->create(['type' => AttributeType::COLOR->value, 'is_filterable' => true]);
+        $size = Attribute::factory()->create(['is_filterable' => true]);
+        $black = AttributeValue::factory()->create(['attribute_id' => $color->id, 'is_active' => true]);
+        $large = AttributeValue::factory()->create(['attribute_id' => $size->id, 'is_active' => true]);
+
+        $product = $this->productIn($root);
+        $product->categories()->attach($child->id);
+        $this->variantWith($product, [$black, $large]);
+
+        $sharesBoth = $this->productIn($root);
+        $this->variantWith($sharesBoth, [$black, $large]);
+        $sameChild = $this->productIn($child);
+        $this->variantWith($sameChild, [$black]);
+        $rootOnly = $this->productIn($root);
+        $this->variantWith($rootOnly, [$black]);
+        $this->age($sharesBoth, 9);
+        $this->age($sameChild, 8); // older than $rootOnly: the deepest category wins over the date
+
+        $related = $this->products->relatedForStorefront($product->fresh(['categories']), 4)->pluck('id')->all();
+
+        $this->assertSame([$sharesBoth->id, $sameChild->id, $rootOnly->id], array_slice($related, 0, 3));
+    }
+
     public function test_find_active_category_by_slug(): void
     {
         Category::factory()->create(['slug' => 'shoes']);
@@ -159,6 +210,14 @@ class StorefrontReadsTest extends DatabaseTestCase
         $product->categories()->attach($category->id);
 
         return $product;
+    }
+
+    /**
+     * @param  list<AttributeValue>  $values
+     */
+    private function variantWith(Product $product, array $values): void
+    {
+        Product::factory()->variationOf($product)->create()->attributeValues()->attach(array_map(fn (AttributeValue $value) => $value->id, $values));
     }
 
     private function age(Product $product, int $days): void

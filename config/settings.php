@@ -10,6 +10,10 @@ return [
         \Modules\Core\Settings\GeneralSettings::class,
         \Modules\Store\Settings\StoreAppearanceSettings::class,
         \Modules\Store\Settings\StoreContactSettings::class,
+        \Modules\Store\Settings\StoreShippingSettings::class,
+        \Modules\Store\Settings\StoreReturnSettings::class,
+        \Modules\Store\Settings\MarketingSettings::class,
+        \Modules\Wholesale\Settings\WholesaleSettings::class,
     ],
 
     /*

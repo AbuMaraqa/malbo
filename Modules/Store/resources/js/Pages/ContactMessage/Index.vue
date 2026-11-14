@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import RowMenu from '@/Components/table/RowMenu.vue';
+import DropdownItem from '@/Components/ui/DropdownItem.vue';
+import DropdownSeparator from '@/Components/ui/DropdownSeparator.vue';
 import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
@@ -103,9 +106,12 @@ async function remove(row: ContactMessageRow): Promise<void> {
             <span class="whitespace-nowrap text-muted" :title="row.received_at ?? undefined">{{ row.received }}</span>
         </template>
         <template #actions="{ row }">
-            <Button v-if="can('Contact Message View')" variant="ghost" size="icon" :aria-label="t('View')" @click="open(row)"><Eye class="size-4" /></Button>
-            <Button v-if="row.is_read && can('Contact Message Update')" variant="ghost" size="icon" :aria-label="t('Mark as unread')" @click="unread(row)"><EnvelopeUnread class="size-4" /></Button>
-            <Button v-if="can('Contact Message Delete')" variant="ghost" size="icon" :aria-label="t('Delete')" @click="remove(row)"><Trash2 class="size-4" /></Button>
+            <RowMenu>
+                <DropdownItem v-if="can('Contact Message View')" @select="open(row)"><Eye />{{ t('View') }}</DropdownItem>
+                <DropdownItem v-if="row.is_read && can('Contact Message Update')" @select="unread(row)"><EnvelopeUnread />{{ t('Mark as unread') }}</DropdownItem>
+                <DropdownSeparator v-if="can('Contact Message Delete')" />
+                <DropdownItem v-if="can('Contact Message Delete')" destructive @select="remove(row)"><Trash2 />{{ t('Delete') }}</DropdownItem>
+            </RowMenu>
         </template>
         <template #bulk="{ selected }">
             <Button size="sm" @click="markRead(selected)"><CheckRead class="size-4" />{{ t('Mark as read') }}</Button>

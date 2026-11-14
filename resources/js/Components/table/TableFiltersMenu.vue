@@ -27,7 +27,7 @@ const emit = defineEmits<{ change: [key: string, value: string]; reset: [] }>();
             </Button>
         </PopoverTrigger>
         <PopoverPortal>
-            <PopoverContent align="end" :side-offset="6" :collision-padding="12" class="z-[70] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-line bg-card shadow-lg">
+            <PopoverContent align="end" :side-offset="6" :collision-padding="12" class="z-[70] w-80 max-w-[calc(100vw-1.5rem)] rounded-xl border border-line bg-card shadow-theme-lg">
                 <header class="flex items-center justify-between border-b border-line px-4 py-3">
                     <h3 class="text-sm font-semibold">{{ t('Filters') }}</h3>
                     <button v-if="activeCount" type="button" class="text-sm text-danger hover:underline" @click="emit('reset')">{{ t('Reset') }}</button>

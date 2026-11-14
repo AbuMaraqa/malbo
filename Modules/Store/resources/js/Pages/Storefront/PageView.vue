@@ -32,7 +32,7 @@ defineProps<{
                 <article v-else-if="body" class="max-w-3xl" :class="[prose, proseSections]" v-html="body"></article>
             </div>
 
-            <aside class="space-y-5 lg:sticky lg:top-28 lg:self-start">
+            <aside class="space-y-5 lg:sticky lg:top-36 lg:self-start">
                 <PageOutlineMenu v-if="toc.length" :toc="toc" variant="card" />
                 <HelpMenu :help="help" :whatsapp="whatsapp" />
             </aside>

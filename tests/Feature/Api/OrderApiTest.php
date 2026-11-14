@@ -12,8 +12,12 @@ use Modules\Items\Entities\AddonOption;
 use Modules\Items\Entities\Offer;
 use Modules\Items\Entities\Order;
 use Modules\Items\Entities\Product;
+use Modules\Items\Entities\StockMovement;
 use Modules\Items\Enums\OfferType;
+use Modules\Items\Enums\OrderStatus;
+use Modules\Items\Enums\PaymentMethod;
 use Modules\Items\Enums\ProductStatus;
+use Modules\Items\Enums\StockMovementType;
 use Tests\DatabaseTestCase;
 
 /**
@@ -35,7 +39,7 @@ class OrderApiTest extends DatabaseTestCase
 
     public function test_the_total_is_computed_on_the_server(): void
     {
-        $product = Product::factory()->create(['base_price' => 100]);
+        $product = Product::factory()->create(['manage_stock' => false, 'base_price' => 100]);
 
         $response = $this->place([['product_id' => $product->id, 'quantity' => 2, 'price' => 0.01, 'total_price' => 0.01]], [
             'total' => 0.01,
@@ -64,7 +68,7 @@ class OrderApiTest extends DatabaseTestCase
 
     public function test_a_percentage_offer_lowers_the_price(): void
     {
-        $product = Product::factory()->create(['base_price' => 200]);
+        $product = Product::factory()->create(['manage_stock' => false, 'base_price' => 200]);
         $this->offer($product, OfferType::PERCENTAGE, 25);
 
         $this->assertEquals(150, $this->totalOf($product));
@@ -72,18 +76,18 @@ class OrderApiTest extends DatabaseTestCase
 
     public function test_a_fixed_offer_lowers_the_price_and_never_below_zero(): void
     {
-        $product = Product::factory()->create(['base_price' => 200]);
+        $product = Product::factory()->create(['manage_stock' => false, 'base_price' => 200]);
         $this->offer($product, OfferType::FIXED, 30);
         $this->assertEquals(170, $this->totalOf($product));
 
-        $cheap = Product::factory()->create(['base_price' => 10]);
+        $cheap = Product::factory()->create(['manage_stock' => false, 'base_price' => 10]);
         $this->offer($cheap, OfferType::FIXED, 30);
         $this->assertEquals(0, $this->totalOf($cheap));
     }
 
     public function test_a_free_shipping_offer_does_not_change_the_price(): void
     {
-        $product = Product::factory()->create(['base_price' => 200]);
+        $product = Product::factory()->create(['manage_stock' => false, 'base_price' => 200]);
         $this->offer($product, OfferType::FREE_SHIPPING, 50);
 
         $this->assertEquals(200, $this->totalOf($product));
@@ -91,7 +95,7 @@ class OrderApiTest extends DatabaseTestCase
 
     public function test_an_offer_of_another_branch_or_out_of_date_does_not_apply(): void
     {
-        $product = Product::factory()->create(['base_price' => 200]);
+        $product = Product::factory()->create(['manage_stock' => false, 'base_price' => 200]);
         $this->offer($product, OfferType::PERCENTAGE, 50, ['branch_id' => Branch::factory()->create()->id]);
         $this->offer($product, OfferType::PERCENTAGE, 50, ['end_date' => now()->subDay()]);
         $this->offer($product, OfferType::PERCENTAGE, 50, ['is_active' => false]);
@@ -101,7 +105,7 @@ class OrderApiTest extends DatabaseTestCase
 
     public function test_an_offer_of_this_branch_applies(): void
     {
-        $product = Product::factory()->create(['base_price' => 200]);
+        $product = Product::factory()->create(['manage_stock' => false, 'base_price' => 200]);
         $this->offer($product, OfferType::PERCENTAGE, 50, ['branch_id' => $this->branch->id]);
 
         $this->assertEquals(100, $this->totalOf($product));
@@ -109,7 +113,7 @@ class OrderApiTest extends DatabaseTestCase
 
     public function test_addons_are_priced_from_the_database_with_the_custom_price_of_the_product(): void
     {
-        $product = Product::factory()->create(['base_price' => 100]);
+        $product = Product::factory()->create(['manage_stock' => false, 'base_price' => 100]);
         $addon = Addon::factory()->create();
         $plain = AddonOption::factory()->for($addon)->create(['price' => 5]);
         $custom = AddonOption::factory()->for($addon)->create(['price' => 5]);
@@ -129,7 +133,7 @@ class OrderApiTest extends DatabaseTestCase
 
     public function test_an_option_the_product_does_not_offer_is_refused(): void
     {
-        $product = Product::factory()->create(['base_price' => 100]);
+        $product = Product::factory()->create(['manage_stock' => false, 'base_price' => 100]);
         $foreign = AddonOption::factory()->for(Addon::factory()->create())->create(['price' => 1]);
 
         $this->place([['product_id' => $product->id, 'quantity' => 1, 'addons' => [['addon_option_id' => $foreign->id, 'quantity' => 1]]]])
@@ -141,7 +145,7 @@ class OrderApiTest extends DatabaseTestCase
     public function test_a_product_that_is_not_for_sale_is_refused(): void
     {
         foreach ([['status' => ProductStatus::DRAFT], ['is_active' => 0]] as $state) {
-            $product = Product::factory()->create(['base_price' => 100, ...$state]);
+            $product = Product::factory()->create(['manage_stock' => false, 'base_price' => 100, ...$state]);
 
             $this->place([['product_id' => $product->id, 'quantity' => 1]])->assertStatus(422);
         }
@@ -159,7 +163,7 @@ class OrderApiTest extends DatabaseTestCase
 
     public function test_bad_references_and_quantities_are_a_422(): void
     {
-        $product = Product::factory()->create();
+        $product = Product::factory()->create(['manage_stock' => false]);
 
         $this->place([['product_id' => 99999999, 'quantity' => 1]])->assertStatus(422);
         $this->app['auth']->forgetGuards();
@@ -170,7 +174,7 @@ class OrderApiTest extends DatabaseTestCase
 
     public function test_the_buyer_is_notified_in_the_database(): void
     {
-        $product = Product::factory()->create();
+        $product = Product::factory()->create(['manage_stock' => false]);
 
         $this->place([['product_id' => $product->id, 'quantity' => 1]])->assertCreated();
 
@@ -182,7 +186,7 @@ class OrderApiTest extends DatabaseTestCase
      */
     private function assertTotal(float $expected, array $state): void
     {
-        $this->assertEquals($expected, $this->totalOf(Product::factory()->create($state)));
+        $this->assertEquals($expected, $this->totalOf(Product::factory()->create(['manage_stock' => false, ...$state])));
     }
 
     private function totalOf(Product $product): float
@@ -245,5 +249,89 @@ class OrderApiTest extends DatabaseTestCase
                 'created_at' => now(), 'updated_at' => now(),
             ]);
         }
+    }
+
+    // ---------------------------------------------------------------- stock and status (MALBO)
+
+    public function test_a_cash_order_waits_for_confirmation(): void
+    {
+        $product = Product::factory()->create(['base_price' => 100, 'manage_stock' => true, 'stock_quantity' => 5]);
+
+        $id = $this->place([['product_id' => $product->id, 'quantity' => 1]], ['payment_method' => PaymentMethod::CASH->value])
+            ->assertCreated()->json('data.id');
+
+        $this->assertSame(OrderStatus::AWAITING_CONFIRMATION, Order::findOrFail($id)->status);
+    }
+
+    public function test_a_card_order_starts_as_new(): void
+    {
+        $product = Product::factory()->create(['base_price' => 100, 'manage_stock' => true, 'stock_quantity' => 5]);
+
+        $id = $this->place([['product_id' => $product->id, 'quantity' => 1]], ['payment_method' => PaymentMethod::CREDIT_CARD->value])
+            ->assertCreated()->json('data.id');
+
+        $this->assertSame(OrderStatus::PENDING, Order::findOrFail($id)->status);
+    }
+
+    public function test_an_api_order_takes_stock_and_keeps_a_snapshot(): void
+    {
+        $product = Product::factory()->create(['base_price' => 100, 'sku' => 'API-SKU', 'manage_stock' => true, 'stock_quantity' => 5]);
+
+        $id = $this->place([['product_id' => $product->id, 'quantity' => 2]])->assertCreated()->json('data.id');
+
+        $this->assertSame(3, $product->fresh()->stock_quantity);
+        $this->assertSame('API-SKU', Order::findOrFail($id)->items()->firstOrFail()->sku);
+        $this->assertSame(1, StockMovement::query()->where('order_id', $id)->count());
+    }
+
+    public function test_an_api_order_beyond_stock_is_refused(): void
+    {
+        $product = Product::factory()->create(['base_price' => 100, 'manage_stock' => true, 'stock_quantity' => 1]);
+
+        $this->place([['product_id' => $product->id, 'quantity' => 2]])->assertUnprocessable()->assertJsonPath('status', false);
+
+        $this->assertSame(0, Order::query()->count());
+        $this->assertSame(1, $product->fresh()->stock_quantity);
+    }
+
+    public function test_the_api_refuses_an_unreachable_status(): void
+    {
+        $order = $this->placedOrder(2);
+
+        $this->changeStatus($order, OrderStatus::DELIVERED)->assertUnprocessable();
+
+        $this->assertSame(OrderStatus::AWAITING_CONFIRMATION, $order->fresh()->status);
+    }
+
+    public function test_the_api_cancel_gives_stock_back(): void
+    {
+        $order = $this->placedOrder(2);
+        $product = $order->items()->firstOrFail()->product;
+        $this->assertSame(3, $product->fresh()->stock_quantity);
+
+        $this->changeStatus($order, OrderStatus::CANCELLED)->assertOk();
+
+        $this->assertSame(OrderStatus::CANCELLED, $order->fresh()->status);
+        $this->assertSame(5, $product->fresh()->stock_quantity);
+        $this->assertSame(StockMovementType::CANCEL, StockMovement::query()->latest('id')->firstOrFail()->type);
+    }
+
+    private function placedOrder(int $quantity): Order
+    {
+        $product = Product::factory()->create(['base_price' => 100, 'manage_stock' => true, 'stock_quantity' => 5]);
+        $id = $this->place([['product_id' => $product->id, 'quantity' => $quantity]])->assertCreated()->json('data.id');
+
+        return Order::findOrFail($id);
+    }
+
+    private function changeStatus(Order $order, OrderStatus $status): TestResponse
+    {
+        $staff = User::forceCreate(['name' => 'Staff', 'email' => 'staff-'.Str::lower(Str::random(8)).'@orders.test', 'password' => 'password'])
+            ->assignRole('Super Admin');
+        $this->app['auth']->forgetGuards();
+
+        return $this->patchJson($this->siteUrl('/api/v1/items/orders/'.$order->id.'/status'), ['status' => $status->value], [
+            'Authorization' => 'Bearer '.$staff->createToken('test')->plainTextToken,
+        ]);
     }
 }

@@ -36,6 +36,28 @@ class OrderItem extends Model
         'total_price',
         'notes',
         'created_by',
+        'sku',
+        'product_name',
+        'options',
+        'preorder_quantity',
+        'bundle_product_id',
+        'bundle_group',
+        'bundle',
+    ];
+
+    /**
+     * product_name: {locale: name}. options: list<{name: {locale: string}, value: {locale: string}}>.
+     * What was sold, whatever happens to the product later.
+     */
+    protected $casts = [
+        'product_name' => 'array',
+        'options' => 'array',
+        // Pieces of the line reserved from incoming goods (a B2B pre-order); null: none.
+        'preorder_quantity' => 'integer',
+        // A piece of a set or bundle: the set it was sold in (type, sku, name per locale, how many
+        // sets, the set's unit price), shared by its pieces (`bundle_group`). Null otherwise.
+        'bundle' => 'array',
+        'bundle_product_id' => 'integer',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -56,6 +78,14 @@ class OrderItem extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * The set or bundle this piece was sold in, if any.
+     */
+    public function bundleProduct(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'bundle_product_id');
     }
 
     public function product(): BelongsTo

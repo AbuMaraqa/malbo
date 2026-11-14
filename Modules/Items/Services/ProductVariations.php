@@ -24,7 +24,10 @@ class ProductVariations
         'category_id', 'id', 'locale', 'meta_title', 'meta_description', 'meta_keywords',
     ];
 
-    public function __construct(private ProductRepositoryInterface $products) {}
+    public function __construct(
+        private ProductRepositoryInterface $products,
+        private InventoryService $inventory,
+    ) {}
 
     /**
      * @param  array<int|string, array<string, mixed>>  $variations  the form's repeater items
@@ -49,7 +52,7 @@ class ProductVariations
                 $variation = $this->products->query()->getModel()->newInstance(['created_by' => $userId]);
             }
 
-            $this->save($variation, $fields, $locale);
+            $this->save($variation, $fields, $locale, $userId);
             $kept[] = $variation->id;
 
             if ($valueIds !== []) {
@@ -92,9 +95,15 @@ class ProductVariations
         return $fields;
     }
 
-    private function save(Product $variation, array $fields, string $locale): void
+    private function save(Product $variation, array $fields, string $locale, int $userId): void
     {
         $translated = $variation->translatedAttributes;
+
+        // Stock changes only through the inventory ledger, from what the form showed.
+        $stock = isset($fields['stock_quantity']) ? (int) $fields['stock_quantity'] : null;
+        $loaded = isset($fields['stock_quantity_loaded']) ? (int) $fields['stock_quantity_loaded'] : null;
+        unset($fields['stock_quantity'], $fields['stock_quantity_loaded']);
+        $isNew = ! $variation->exists;
 
         Translations::fill($variation, Translations::fromForm(
             $fields,
@@ -102,6 +111,8 @@ class ProductVariations
             array_values(array_filter($translated, fn (string $field) => array_key_exists($field, $fields))),
         ));
         $variation->fill(Arr::except($fields, $translated))->save();
+
+        $this->inventory->fromForm($variation, $stock, $loaded, $isNew, $userId);
     }
 
     private function name(Product $parent, array $valueIds): string

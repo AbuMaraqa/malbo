@@ -10,7 +10,7 @@ use Symfony\Component\Finder\Finder;
  */
 class InertiaPagesExistTest extends TestCase
 {
-    private const MODULES = ['Core', 'Items', 'GeoLocation', 'Branch', 'Store'];
+    private const MODULES = ['Core', 'Items', 'GeoLocation', 'Branch', 'Store', 'Wholesale', 'Reports'];
 
     public function test_every_rendered_page_has_a_vue_file(): void
     {

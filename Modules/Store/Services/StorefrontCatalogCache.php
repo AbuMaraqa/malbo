@@ -20,11 +20,12 @@ class StorefrontCatalogCache
      * @template T
      *
      * @param  Closure(): T  $read
+     * @param  int|null  $ttlSeconds  how long at most (the version still ends it sooner)
      * @return T
      */
-    public function remember(string $key, Closure $read): mixed
+    public function remember(string $key, Closure $read, ?int $ttlSeconds = null): mixed
     {
-        return Cache::remember(self::key($this->version().'.'.$key), self::TTL_SECONDS, $read);
+        return Cache::remember(self::key($this->version().'.'.$key), $ttlSeconds ?? self::TTL_SECONDS, $read);
     }
 
     /**

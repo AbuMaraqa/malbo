@@ -12,7 +12,7 @@ use Modules\Store\Theme\FontCatalog;
  */
 final class DashboardTheme
 {
-    public const DEFAULT_COLOR = '#465FFF';
+    public const DEFAULT_COLOR = '#1570EF';
 
     public const FONTS = ['tajawal', 'ibm-plex-sans-arabic'];
 

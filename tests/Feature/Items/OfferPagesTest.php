@@ -171,6 +171,19 @@ class OfferPagesTest extends DatabaseTestCase
         $this->assertSame(0, Offer::query()->count());
     }
 
+    public function test_a_code_is_unique_in_any_letter_case(): void
+    {
+        $saved = $this->offer(['code' => 'SAVE10']);
+
+        // Checkout matches codes in any letter case: two offers must never share one.
+        $this->store(['code' => 'save10'])->assertSessionHasErrors('code');
+        $this->assertSame(1, Offer::query()->count());
+
+        // Its own code, in another case, is not a clash.
+        $this->update($saved, ['code' => 'Save10', 'image' => UploadedFile::fake()->image('offer.jpg')])->assertSessionHasNoErrors();
+        $this->assertSame('Save10', $saved->fresh()->code);
+    }
+
     public function test_date_window(): void
     {
         $this->store(['start_date' => '2026-11-30T10:00', 'end_date' => '2026-11-01T10:00'])->assertSessionHasErrors('end_date');

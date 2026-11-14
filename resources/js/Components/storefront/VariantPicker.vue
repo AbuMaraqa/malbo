@@ -4,18 +4,21 @@ import { computed } from 'vue';
 import { chip } from './styles';
 import type { ProductAttribute } from './types';
 
-/** One attribute's values: color swatches for a color attribute, chips for the rest. */
-const props = defineProps<{ attribute: ProductAttribute }>();
+/**
+ * One attribute's values: color swatches for a color attribute, chips for the rest. `name` keeps two
+ * pickers of the same attribute on one page apart (the pieces of a set).
+ */
+const props = defineProps<{ attribute: ProductAttribute; name?: string }>();
 
 const model = defineModel<number | undefined>();
 
 const chosen = computed(() => props.attribute.values.find((value) => value.id === model.value));
-const groupName = computed(() => `attribute-${props.attribute.id}`);
+const groupName = computed(() => props.name ?? `attribute-${props.attribute.id}`);
 </script>
 
 <template>
     <fieldset>
-        <legend class="mb-3 font-bold">
+        <legend class="mb-3 font-semibold">
             {{ attribute.name }}
             <span v-if="chosen" class="font-normal text-muted">: {{ chosen.name }}</span>
         </legend>
@@ -24,12 +27,12 @@ const groupName = computed(() => `attribute-${props.attribute.id}`);
                 <input v-model="model" type="radio" class="peer sr-only" :name="groupName" :value="value.id" />
                 <span
                     v-if="attribute.swatch && value.color"
-                    class="block size-11 rounded-full border border-line p-1 peer-checked:border-2 peer-checked:border-ink peer-focus-visible:outline-2 peer-focus-visible:outline-store"
+                    class="block size-11 rounded-full border border-line p-1 peer-checked:border-2 peer-checked:border-store peer-focus-visible:outline-2 peer-focus-visible:outline-store"
                 >
                     <span class="block size-full rounded-full" :style="{ backgroundColor: value.color }"></span>
                     <span class="sr-only">{{ value.name }}</span>
                 </span>
-                <span v-else :class="chip" class="peer-checked:border-ink peer-checked:font-bold peer-focus-visible:outline-2 peer-focus-visible:outline-store">{{ value.name }}</span>
+                <span v-else :class="chip" class="peer-checked:border-store peer-checked:bg-store-50 peer-checked:font-semibold peer-checked:text-store-700 peer-focus-visible:outline-2 peer-focus-visible:outline-store">{{ value.name }}</span>
             </label>
         </div>
     </fieldset>

@@ -11,6 +11,8 @@ import Tabs from '@/Components/ui/Tabs.vue';
 import { t } from '@/lib/i18n';
 
 import AddonsTab from './parts/AddonsTab.vue';
+import DetailsTab from './parts/DetailsTab.vue';
+import GalleryColors from './parts/GalleryColors.vue';
 import { tabsWithError } from './parts/fieldTabs';
 import GeneralInfoCard from './parts/GeneralInfoCard.vue';
 import GeneralTab from './parts/GeneralTab.vue';
@@ -30,6 +32,7 @@ const withErrors = computed(() => tabsWithError(Object.keys(errors.value)));
 const tabs = computed(() =>
     [
         { value: 'general', label: t('General') },
+        { value: 'details', label: t('Details') },
         { value: 'price', label: t('Price') },
         { value: 'inventory', label: t('Inventory') },
         { value: 'addons', label: t('Addons') },
@@ -38,6 +41,15 @@ const tabs = computed(() =>
         { value: 'seo', label: t('Meta Information') },
     ].map((tab) => ({ ...tab, hasError: withErrors.value.has(tab.value) })),
 );
+
+/** The values of the color attributes, which a gallery image can show. */
+const colorOptions = computed(() => {
+    const swatches = props.options.attributes.filter((attribute) => attribute.swatch);
+
+    return swatches.flatMap((attribute) =>
+        attribute.values.map((value) => ({ value: value.id, label: swatches.length > 1 ? `${attribute.name}: ${value.name}` : value.name })),
+    );
+});
 
 const active = ref('general');
 const root = ref<HTMLElement>();
@@ -59,12 +71,16 @@ watch(errors, async () => {
         <GeneralInfoCard :form="form" :options="options" />
         <Card>
             <Tabs v-model="active" :tabs="tabs">
-                <template #general><GeneralTab :row="form" :error="error" :statuses="options.statuses" /></template>
+                <template #general><GeneralTab :row="form" :error="error" :statuses="options.statuses" flags /></template>
+                <template #details><DetailsTab :row="form" :error="error" /></template>
                 <template #price><PriceTab :row="form" :error="error" /></template>
                 <template #inventory><InventoryTab :row="form" :error="error" /></template>
                 <template #addons><AddonsTab :form="form" :addons="options.addons" :collapsed="collapsed" /></template>
                 <template #variations><VariationsTab :form="form" :attributes="options.attributes" :categories="options.categories" /></template>
-                <template #images><MediaTab :row="form" :error="error" :image-required="imageRequired" /></template>
+                <template #images>
+                    <MediaTab :row="form" :error="error" :image-required="imageRequired" video />
+                    <GalleryColors class="mt-6" :row="form" :colors="colorOptions" :error="error" />
+                </template>
                 <template #seo><SeoTab :row="form" :error="error" /></template>
             </Tabs>
         </Card>

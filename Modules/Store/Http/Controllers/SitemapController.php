@@ -5,6 +5,7 @@ namespace Modules\Store\Http\Controllers;
 use Illuminate\Http\Response;
 use Modules\Items\Repositories\Contracts\CategoryRepositoryInterface;
 use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
+use Modules\Store\Repositories\Contracts\CampaignPageRepositoryInterface;
 use Modules\Store\Repositories\Contracts\PageRepositoryInterface;
 
 /**
@@ -19,10 +20,12 @@ class SitemapController
         ProductRepositoryInterface $products,
         CategoryRepositoryInterface $categories,
         PageRepositoryInterface $pages,
+        CampaignPageRepositoryInterface $campaigns,
     ): Response {
         $entries = [
             ['home', [], null],
             ['store.shop', [], null],
+            ['store.categories', [], null],
             ['store.contact', [], null],
         ];
         foreach ($categories->activeSlugs() as $slug) {
@@ -33,6 +36,10 @@ class SitemapController
         }
         foreach ($pages->published() as $page) {
             $entries[] = ['store.page', ['slug' => $page->slug], $page->updated_at?->toDateTimeString()];
+        }
+        // Campaign pages live now (published, inside their dates).
+        foreach ($campaigns->liveSlugs() as $campaign) {
+            $entries[] = ['store.campaign', ['slug' => $campaign->slug], $campaign->updated_at];
         }
 
         $urls = collect($entries)->map(fn (array $entry) => [

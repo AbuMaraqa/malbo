@@ -1,0 +1,11 @@
+{
+    "name": "Wholesale",
+    "alias": "wholesale",
+    "description": "The B2B portal: merchants, price tiers, the wholesale cart and checkout.",
+    "keywords": [],
+    "priority": -1,
+    "providers": [
+        "Modules\\Wholesale\\Providers\\WholesaleServiceProvider"
+    ],
+    "files": []
+}

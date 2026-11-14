@@ -8,6 +8,8 @@ enum PaymentMethod: int
     case CASH               = 1;
     case CREDIT_CARD        = 2;
     case BANK_TRANSFER      = 3;
+    // On the merchant's account (wholesale credit terms): paid later, against its credit limit.
+    case ON_ACCOUNT         = 4;
 
     /**
      * لتجهيز قائمة الخيارات للاستمارات (Forms)
@@ -28,6 +30,7 @@ enum PaymentMethod: int
             self::CASH                      => __('الدفع عند الاستلام'),
             self::CREDIT_CARD               => __('بطاقة ائتمانية'),
             self::BANK_TRANSFER             => __('تحويل بنكي'),
+            self::ON_ACCOUNT                => __('آجل (على الحساب)'),
         };
     }
 
@@ -40,6 +43,7 @@ enum PaymentMethod: int
             self::CASH          => 'info',    // أزرق فاتح
             self::CREDIT_CARD   => 'primary', // اللون الأساسي
             self::BANK_TRANSFER => 'success', // أخضر
+            self::ON_ACCOUNT    => 'warning',
         };
     }
 }

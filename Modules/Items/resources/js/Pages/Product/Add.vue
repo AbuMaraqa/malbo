@@ -20,6 +20,11 @@ const PUBLISHED = 2;
 const form = useForm<ProductForm>({
     ...emptyRow(),
     status: PUBLISHED,
+    is_new: false,
+    is_best_seller: false,
+    video_url: '',
+    gallery_colors: {},
+    gallery_new_colors: [],
     brand_id: null,
     tags: [],
     labels: [],

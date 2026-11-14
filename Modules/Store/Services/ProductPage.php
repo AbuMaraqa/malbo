@@ -3,10 +3,15 @@
 namespace Modules\Store\Services;
 
 use Modules\Core\Settings\GeneralSettings;
+use Modules\Core\Support\RichText;
 use Modules\Items\Entities\Product;
+use Modules\Items\Enums\CategoryStatus;
+use Modules\Items\Repositories\Contracts\CategoryRepositoryInterface;
+use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
 use Modules\Store\Settings\StoreContactSettings;
 use Modules\Store\Support\Price;
 use Modules\Store\Support\WhatsAppOrder;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * The product page's data. `options()` is what the pickers show, with each variation's own price,
@@ -18,7 +23,68 @@ use Modules\Store\Support\WhatsAppOrder;
  */
 class ProductPage
 {
-    public function __construct(private ProductConfigurator $configurator) {}
+    public function __construct(
+        private ProductConfigurator $configurator,
+        private ProductBadges $badges,
+        private CategoryRepositoryInterface $categories,
+        private ProductRepositoryInterface $products,
+    ) {}
+
+    /** How far up the category tree the size guide is looked for: the tree can never loop forever. */
+    private const MAX_CATEGORY_DEPTH = 10;
+
+    /**
+     * Whether the cart can hold this product. The cart carries no addons: a product that offers
+     * some is ordered on WhatsApp (CartService refuses it too).
+     */
+    public function canAddToCart(Product $product): bool
+    {
+        return $product->addons->isEmpty();
+    }
+
+    /**
+     * "Complete the look": the products staff put next to this one, each with its price and the
+     * variants a buyer can add straight from here (their colour and size, and whether they can be
+     * ordered). None set: an empty list (the page shows nothing; "You may also like" stays).
+     *
+     * @return list<array{id: int, name: string, url: string, image: ?string, price: array<string, mixed>, in_stock: bool, variants: list<array{id: int, label: string, in_stock: bool}>}>
+     */
+    public function look(Product $product): array
+    {
+        return $this->products->completeTheLook($product)->map(function (Product $item): array {
+            // In the values' own order (S, M, L...), then as the variants were added.
+            $variants = $item->variations->filter(fn (Product $variation) => ProductConfigurator::visible($variation) && $variation->attributeValues->isNotEmpty())
+                ->sortBy([
+                    fn (Product $a, Product $b) => $a->attributeValues->sortBy('attribute_id')->pluck('sort_order')->all() <=> $b->attributeValues->sortBy('attribute_id')->pluck('sort_order')->all(),
+                    fn (Product $a, Product $b) => $a->id <=> $b->id,
+                ])
+                ->map(fn (Product $variation) => [
+                    'id' => (int) $variation->id,
+                    'label' => $variation->attributeValues->sortBy('attribute_id')->map(fn ($value) => (string) $value->name)->filter()->implode(' / '),
+                    'in_stock' => ProductConfigurator::available($variation),
+                ])->values()->all();
+
+            return [
+                'id' => (int) $item->id,
+                'name' => (string) $item->name,
+                'url' => route('store.product', ['slug' => $item->slug]),
+                'image' => $item->getFirstMediaUrl('product') ?: null,
+                'price' => $this->configurator->price($item)->toArray(),
+                'in_stock' => $item->variations->isEmpty() ? ProductConfigurator::available($item) : collect($variants)->contains('in_stock', true),
+                'variants' => $variants,
+            ];
+        })->values()->all();
+    }
+
+    /**
+     * The same badges as the product's card.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function badges(Product $product): array
+    {
+        return $this->badges->for(ProductBadges::facts($product), $this->configurator->price($product));
+    }
 
     /**
      * @return array{attributes: list<array<string, mixed>>, variants: list<array<string, mixed>>, addons: list<array<string, mixed>>}
@@ -36,16 +102,19 @@ class ProductPage
                     'color' => preg_match('/^#[0-9A-Fa-f]{3,8}$/', (string) $value['color']) ? $value['color'] : null,
                 ], $attribute['values'])),
             ], $options['attributes'])),
-            'variants' => array_map(function (int $id) use ($options, $variations) {
+            'variants' => array_map(function (int $id) use ($product, $options, $variations) {
                 $variation = $variations[$id];
 
                 return [
                     'id' => $id,
                     'values' => (object) $options['variants'][$id],
-                    'price' => $this->configurator->price($variation)->toArray(),
+                    'price' => ($price = $this->configurator->price($variation))->toArray(),
+                    // The offer badge follows the chosen variation's price.
+                    'on_offer' => $price->discounted(),
                     'image' => $variation->getFirstMediaUrl('product') ?: null,
                     'in_stock' => $this->configurator->inStock($variation),
                     'max_quantity' => $this->configurator->maxQuantity($variation),
+                    'details' => $this->details($product, $variation),
                 ];
             }, array_keys($options['variants'])),
             'addons' => array_values(array_map(fn (array $addon) => [
@@ -106,25 +175,105 @@ class ProductPage
     }
 
     /**
-     * The product's image first, then its gallery. A variation's image is sent with its variation.
+     * Fabric, composition, fit, care and the model in the photos, as label and text. A variation's
+     * own value wins; what it leaves empty comes from the product. Fields with no value are left out.
      *
-     * @return list<string>
+     * @return list<array{key: string, label: string, value: string}>
+     */
+    public function details(Product $product, ?Product $variation = null): array
+    {
+        $value = function (string $field) use ($product, $variation): string {
+            $own = $variation ? trim((string) $variation->{$field}) : '';
+
+            return $own !== '' ? $own : trim((string) $product->{$field});
+        };
+
+        $details = [];
+
+        foreach (['fabric' => __('Fabric'), 'composition' => __('Composition'), 'fit' => __('Fit'), 'care' => __('Care')] as $key => $label) {
+            if (($text = $value($key)) !== '') {
+                $details[] = ['key' => $key, 'label' => $label, 'value' => $text];
+            }
+        }
+
+        $model = array_filter([
+            filled($height = $value('model_height')) ? __('Height :value cm', ['value' => $height]) : null,
+            filled($weight = $value('model_weight')) ? __('Weight :value kg', ['value' => $weight]) : null,
+            filled($size = $value('model_size')) ? __('Wears size :value', ['value' => $size]) : null,
+        ]);
+
+        if ($model !== []) {
+            $details[] = ['key' => 'model', 'label' => __('The model'), 'value' => implode(' · ', $model)];
+        }
+
+        return $details;
+    }
+
+    /**
+     * The size guide of the product's first category (in the order they were given) that has one;
+     * when none has, the nearest parent category's, one level up at a time. Made safe again on the
+     * way out. An inactive parent is walked through but its own guide is not shown.
+     *
+     * @return array{title: string, html: string}|null
+     */
+    public function sizeGuide(Product $product): ?array
+    {
+        $level = $product->categories->values();
+        $seen = [];
+
+        for ($depth = 0; $level->isNotEmpty() && $depth < self::MAX_CATEGORY_DEPTH; $depth++) {
+            foreach ($level as $category) {
+                $seen[$category->id] = true;
+                $html = RichText::make((string) $category->size_guide)->toHtml();
+
+                if ($category->status === CategoryStatus::ACTIVE && trim(strip_tags($html, '<img><table>')) !== '') {
+                    return ['title' => (string) $category->name, 'html' => $html];
+                }
+            }
+
+            $parentIds = $level->pluck('parent_id')->filter()->map(fn ($id) => (int) $id)
+                ->reject(fn (int $id) => isset($seen[$id]))->unique()->values()->all();
+
+            if ($parentIds === []) {
+                break;
+            }
+
+            $parents = $this->categories->withTranslations($parentIds);
+            $level = collect($parentIds)->map(fn (int $id) => $parents->get($id))->filter()->values();
+        }
+
+        return null;
+    }
+
+    /**
+     * The product's image first, then its gallery, each with the color it shows (an attribute value
+     * id) or null. A variation's image is sent with its variation.
+     *
+     * @return list<array{url: string, color: ?int}>
      */
     public function images(Product $product): array
     {
+        $main = $product->getFirstMedia('product');
+
         return collect([
-            $product->getFirstMediaUrl('product'),
-            ...$product->getMedia('product_gallery')->map->getUrl(),
-        ])->filter()->unique()->values()->all();
+            ['url' => $main?->getUrl() ?? '', 'color' => null],
+            ...$product->getMedia('product_gallery')->map(fn (Media $media) => [
+                'url' => $media->getUrl(),
+                'color' => is_numeric($color = $media->getCustomProperty('attribute_value_id')) ? (int) $color : null,
+            ]),
+        ])->filter(fn (array $image) => $image['url'] !== '')->unique('url')->values()->all();
     }
 
     /**
      * schema.org Product for search results: name, images, price and availability.
      *
+     * With approved reviews, their average as `aggregateRating` ($rating: ProductReviews::summary).
+     *
      * @param  list<string>  $images
+     * @param  array{average: ?float, count: int}|null  $rating
      * @return array<string, mixed>
      */
-    public function structuredData(Product $product, array $images): array
+    public function structuredData(Product $product, array $images, ?array $rating = null): array
     {
         $variations = $product->variations->whereIn('id', array_keys($this->configurator->options($product)['variants']));
         $items = $variations->isEmpty() ? collect([$product]) : $variations;
@@ -148,6 +297,13 @@ class ProductPage
                     : 'https://schema.org/OutOfStock',
                 'url' => route('store.product', ['slug' => $product->slug]),
             ],
+            'aggregateRating' => ($rating['count'] ?? 0) > 0 ? [
+                '@type' => 'AggregateRating',
+                'ratingValue' => number_format((float) $rating['average'], 1, '.', ''),
+                'reviewCount' => (int) $rating['count'],
+                'bestRating' => 5,
+                'worstRating' => 1,
+            ] : null,
         ], fn ($value) => $value !== null);
     }
 

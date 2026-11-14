@@ -4,6 +4,9 @@ namespace Modules\Items\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\Items\Entities\AttributeValue;
+use Modules\Items\Entities\Product;
+use Modules\Items\Services\BundleService;
 use Modules\Items\Services\ItemsPdfService;
 use Nwidart\Modules\Facades\Module;
 use Nwidart\Modules\Traits\PathNamespace;
@@ -32,6 +35,37 @@ class ItemsServiceProvider extends ServiceProvider
         $this->app->singleton(ItemsPdfService::class, function () {
             return new ItemsPdfService();
         });
+
+        $this->refreshBundlePrices();
+    }
+
+    /**
+     * A bundle priced as a percentage off its components follows their regular prices (stored, so
+     * the shop can sort and filter by it in SQL): a product or variant whose price or activity
+     * changes, that is added, deleted or restored, or a value hidden or shown (which hides or shows
+     * its variants), brings those bundles up to date, in the same transaction.
+     */
+    private function refreshBundlePrices(): void
+    {
+        $refresh = fn (Product $product) => $product->bundle_type === null
+            ? $this->app->make(BundleService::class)->refreshPrices(array_values(array_filter([(int) $product->id, (int) $product->parent_id])))
+            : null;
+
+        Product::updated(function (Product $product) use ($refresh): void {
+            if ($product->wasChanged(['base_price', 'sale_price', 'is_active'])) {
+                $refresh($product);
+            }
+        });
+
+        foreach (['created', 'deleted', 'restored', 'forceDeleted'] as $event) {
+            Product::{$event}($refresh);
+        }
+
+        AttributeValue::updated(function (AttributeValue $value): void {
+            if ($value->wasChanged('is_active')) {
+                $this->app->make(BundleService::class)->refreshForValue((int) $value->id);
+            }
+        });
     }
 
     /**
@@ -50,7 +84,7 @@ class ItemsServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        // $this->commands([]);
+        $this->commands([\Modules\Items\Console\RecountSales::class]);
     }
 
     /**

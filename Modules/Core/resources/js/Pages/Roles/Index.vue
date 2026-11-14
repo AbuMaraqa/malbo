@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import RowMenu from '@/Components/table/RowMenu.vue';
+import DropdownItem from '@/Components/ui/DropdownItem.vue';
+import DropdownSeparator from '@/Components/ui/DropdownSeparator.vue';
 import { router } from '@inertiajs/vue3';
 import { Pencil, ShieldCheck, Trash2 } from '@/lib/icons';
 import { computed, ref } from 'vue';
@@ -57,7 +60,7 @@ async function remove(row: RoleRow): Promise<void> {
 </script>
 
 <template>
-    <PageHeader :title="t('Roles And Permissions')">
+    <PageHeader :title="t('Roles And Permissions')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('Roles And Permissions Create')" variant="primary" @click="openForm(null)">{{ t('Create Role') }}</Button>
         </template>
@@ -68,9 +71,12 @@ async function remove(row: RoleRow): Promise<void> {
             <RoleSummaryCell :summary="row.summary" />
         </template>
         <template #actions="{ row }">
-            <Button variant="ghost" size="icon" :aria-label="t('View Permissions')" @click="viewing = row"><ShieldCheck class="size-4" /></Button>
-            <Button v-if="can('Roles And Permissions Update') && row.editable" variant="ghost" size="icon" :aria-label="t('Edit')" @click="openForm(row)"><Pencil class="size-4" /></Button>
-            <Button v-if="can('Roles And Permissions Delete') && !row.protected" variant="ghost" size="icon" :aria-label="t('Delete')" @click="remove(row)"><Trash2 class="size-4" /></Button>
+            <RowMenu>
+                <DropdownItem @select="viewing = row"><ShieldCheck />{{ t('View Permissions') }}</DropdownItem>
+                <DropdownItem v-if="can('Roles And Permissions Update') && row.editable" @select="openForm(row)"><Pencil />{{ t('Edit') }}</DropdownItem>
+                <DropdownSeparator v-if="can('Roles And Permissions Delete') && !row.protected" />
+                <DropdownItem v-if="can('Roles And Permissions Delete') && !row.protected" destructive @select="remove(row)"><Trash2 />{{ t('Delete') }}</DropdownItem>
+            </RowMenu>
         </template>
     </DataTable>
 

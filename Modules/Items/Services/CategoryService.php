@@ -4,13 +4,15 @@ namespace Modules\Items\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Modules\Core\Support\RichText;
 use Modules\Core\Support\Translations;
 use Modules\Items\Entities\Category;
 use Modules\Items\Enums\CategoryStatus;
 use Modules\Items\Repositories\Contracts\CategoryRepositoryInterface;
 
 /**
- * Writes categories: attributes, translations (explicit, per locale) and the image, together.
+ * Writes categories: attributes, translations (explicit, per locale) and the image, together. The
+ * size guide is the editor's HTML, made safe before it is saved.
  */
 class CategoryService
 {
@@ -27,7 +29,7 @@ class CategoryService
             /** @var Category $category */
             $category = $this->categories->create([...$attributes, 'created_by' => $createdBy]);
 
-            Translations::fill($category, $translations);
+            Translations::fill($category, self::safe($translations));
             $category->save();
 
             if ($image) {
@@ -46,7 +48,7 @@ class CategoryService
         unset($attributes['created_by']);
 
         return DB::transaction(function () use ($category, $attributes, $translations, $image) {
-            Translations::fill($category, $translations);
+            Translations::fill($category, self::safe($translations));
             $this->categories->update($category, $attributes);
 
             if ($image) {
@@ -93,5 +95,21 @@ class CategoryService
     public function deleteMany(Collection $categories): void
     {
         DB::transaction(fn () => $categories->each(fn (Category $category) => $this->categories->delete($category)));
+    }
+
+    /**
+     * @param  array<string, array<string, mixed>>  $translations
+     * @return array<string, array<string, mixed>>
+     */
+    private static function safe(array $translations): array
+    {
+        foreach ($translations as $locale => $fields) {
+            if (array_key_exists('size_guide', $fields)) {
+                $html = RichText::make($fields['size_guide'])->toHtml();
+                $translations[$locale]['size_guide'] = $html === '' ? null : $html;
+            }
+        }
+
+        return $translations;
     }
 }

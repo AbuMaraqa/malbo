@@ -21,16 +21,21 @@ use Modules\GeoLocation\Repositories\Contracts\DistrictRepositoryInterface;
 use Modules\Items\Entities\AddonOption;
 use Modules\Items\Entities\Order;
 use Modules\Items\Entities\OrderItem;
+use Modules\Items\Entities\OrderStatusHistory;
 use Modules\Items\Entities\Product;
 use Modules\Items\Enums\DeliveryType;
+use Modules\Items\Enums\OrderChannel;
 use Modules\Items\Enums\OrderStatus;
 use Modules\Items\Enums\PaymentMethod;
 use Modules\Items\Enums\PaymentStatus;
 use Modules\Items\Http\Requests\Admin\OrderRequest;
 use Modules\Items\Repositories\Contracts\OrderRepositoryInterface;
 use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
+use Modules\Items\Repositories\Contracts\ShipmentRepositoryInterface;
 use Modules\Items\Services\OrderService;
+use Modules\Items\Support\ShipmentPresenter;
 use Modules\Items\Support\IntegerFilter;
+use Modules\Items\Support\OrderBundles;
 use Modules\Items\Support\RecordInfo;
 use Modules\Items\Support\SubmitOnce;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -45,6 +50,8 @@ class OrderController extends Controller
         private readonly BranchRepositoryInterface $branches,
         private readonly CityRepositoryInterface $cities,
         private readonly DistrictRepositoryInterface $districts,
+        private readonly ShipmentRepositoryInterface $shipments,
+        private readonly ShipmentPresenter $shipmentPresenter,
     ) {}
 
     public function index(): Response
@@ -58,11 +65,17 @@ class OrderController extends Controller
                         $query->where(fn (Builder $query) => $query
                             ->whereLike('order_number', $term)
                             ->orWhereLike('contact_phone', $term)
+                            ->orWhereLike('customer_name', $term)
                             ->orWhereHas('user', fn (Builder $users) => $users->whereLike('name', $term)));
                     }),
                     AdminFilter::text('order_number'),
                     AllowedFilter::callback('customer', fn (Builder $query, mixed $value) => $query->whereHas('user', fn (Builder $users) => $users->whereLike('name', self::likeTerm($value)))),
                     IntegerFilter::make('status'),
+                    // Cash orders from the store wait here until someone calls the buyer.
+                    AllowedFilter::callback('awaiting_confirmation', fn (Builder $query, mixed $value) => filter_var($value, FILTER_VALIDATE_BOOLEAN)
+                        ? $query->where('status', OrderStatus::AWAITING_CONFIRMATION->value)
+                        : $query->where('status', '!=', OrderStatus::AWAITING_CONFIRMATION->value)),
+                    AdminFilter::exact('channel'),
                     IntegerFilter::make('payment_status'),
                     IntegerFilter::make('payment_method'),
                     IntegerFilter::make('delivery_type'),
@@ -74,7 +87,11 @@ class OrderController extends Controller
                 ->rows(fn (Order $order) => [
                     'id' => $order->id,
                     'order_number' => $order->order_number,
-                    'customer' => $order->user?->name,
+                    // A wholesale order is the shop's: its name, as saved on the order.
+                    'customer' => $order->channel === OrderChannel::B2B && filled($order->customer_name) ? $order->customer_name : ($order->user?->name ?? $order->customer_name),
+                    'customer_name' => $order->customer_name,
+                    'channel' => $order->channel->value,
+                    'channel_label' => $order->channel->getLabel(),
                     'branch' => $order->branch?->name,
                     'sub_total' => $order->sub_total,
                     'discount' => $order->discount,
@@ -97,6 +114,7 @@ class OrderController extends Controller
                     ])->values(),
                 ]),
             'statuses' => self::options(OrderStatus::cases()),
+            'channels' => array_map(fn (OrderChannel $channel) => ['value' => $channel->value, 'label' => $channel->getLabel()], OrderChannel::cases()),
             'paymentStatuses' => self::options(PaymentStatus::cases()),
             'paymentMethods' => self::options(PaymentMethod::cases()),
             'deliveryTypes' => self::options(DeliveryType::cases()),
@@ -109,6 +127,7 @@ class OrderController extends Controller
         return Inertia::render('Items/Order/Add', [
             ...$this->formProps(),
             'statuses' => self::options(OrderService::reachableFrom(OrderStatus::PENDING)),
+            'required' => OrderRequest::requiredFor(null),
             'submitToken' => (string) Str::uuid(),
         ]);
     }
@@ -122,9 +141,13 @@ class OrderController extends Controller
         return to_route('orders.index')->with('success', $created ? __('Order added successfully') : __('This form was already saved'));
     }
 
-    public function edit(int $order): Response
+    public function edit(Request $request, int $order): Response
     {
         $model = $this->orders->findForForm($order);
+        // The shipment card, for those who may see shipments.
+        $shipment = $request->user()->can('Shipment View List')
+            ? $this->shipmentPresenter->card($this->shipments->forOrderPage($model->id), $model)
+            : null;
 
         return Inertia::render('Items/Order/Edit', [
             ...$this->formProps(),
@@ -147,6 +170,11 @@ class OrderController extends Controller
                 'delivery_address' => $model->delivery_address,
                 'contact_phone' => $model->contact_phone,
                 'notes' => $model->notes,
+                'internal_notes' => $model->internal_notes,
+                'customer_name' => $model->customer_name,
+                'customer_email' => $model->customer_email,
+                'channel' => $model->channel->value,
+                'coupon_code' => $model->coupon_code,
                 'latitude' => $model->latitude,
                 'longitude' => $model->longitude,
                 'items' => $model->items->map(fn (OrderItem $item) => [
@@ -155,8 +183,32 @@ class OrderController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->price,
                     'addons_total' => $item->addonOptions->sum(fn (AddonOption $option) => $option->pivot->price * $option->pivot->quantity),
+                    // As sold: a set's pieces are shown under their set, and kept or removed with it.
+                    'name' => self::lineName($item),
+                    'total' => $item->total_price,
+                    'bundle' => $item->bundle_group === null ? null : [
+                        'key' => $item->bundle_group,
+                        'name' => OrderBundles::name($item, app()->getLocale()),
+                        'quantity' => OrderBundles::quantity($item),
+                        'unit_price' => OrderBundles::unitPrice($item),
+                    ],
                 ])->values(),
             ],
+            'required' => OrderRequest::requiredFor($model),
+            'canConfirm' => $model->status === OrderStatus::AWAITING_CONFIRMATION,
+            // A delivered order can be returned or exchanged (Return requests → Add).
+            'canRequestReturn' => $model->status === OrderStatus::DELIVERED,
+            // Delivered (or later) or with a return request: the lines are shown, not edited.
+            'linesLocked' => $this->orderService->linesLocked($model),
+            'couponNoLongerApplies' => ! $this->orderService->couponStillApplies($model),
+            'history' => $model->statusHistory->map(fn (OrderStatusHistory $row) => [
+                'id' => $row->id,
+                'status' => $row->status->getLabel(),
+                'tone' => self::tone($row->status->getColor()),
+                'at' => $row->created_at?->format('Y-m-d H:i'),
+                'by' => $row->createdBy?->name,
+            ])->values(),
+            'shipment' => $shipment,
             'selectedCustomer' => $model->user ? ['value' => $model->user->id, 'label' => $model->user->name] : null,
             'selectedProducts' => $model->items->map(fn (OrderItem $item) => $item->product)->filter()->unique('id')
                 ->map(fn (Product $product) => $this->productOption($product))->values(),
@@ -165,17 +217,30 @@ class OrderController extends Controller
 
     public function update(OrderRequest $request, int $order): RedirectResponse
     {
-        $this->orderService->update($order, $request->validated());
+        $this->orderService->update($order, $request->validated(), $request->user()->id);
 
         return to_route('orders.index')->with('success', __('Order updated successfully'));
     }
 
-    public function destroy(int $order): RedirectResponse
+    /**
+     * One click for a cash order awaiting confirmation: MALBO called the buyer and it goes ahead.
+     */
+    public function confirm(Request $request, int $order): RedirectResponse
     {
         /** @var Order $model */
         $model = $this->orders->findOrFail($order);
 
-        $this->orderService->delete($model);
+        $this->orderService->changeStatus($model, OrderStatus::CONFIRMED, $request->user()->id);
+
+        return back()->with('success', __('Order confirmed'));
+    }
+
+    public function destroy(Request $request, int $order): RedirectResponse
+    {
+        /** @var Order $model */
+        $model = $this->orders->findOrFail($order);
+
+        $this->orderService->delete($model, $request->user()?->id);
 
         return back()->with('success', __('Order deleted successfully'));
     }
@@ -184,7 +249,7 @@ class OrderController extends Controller
     {
         $ids = $request->validate(['ids' => ['required', 'array'], 'ids.*' => ['integer']])['ids'];
 
-        $this->orderService->deleteMany($ids);
+        $this->orderService->deleteMany($ids, $request->user()?->id);
 
         return back()->with('success', __('Orders deleted successfully'));
     }
@@ -206,7 +271,7 @@ class OrderController extends Controller
                 ->when($term !== '', fn (Builder $query) => $query->whereLike('name', self::likeTerm($term)))
                 ->orderBy('name')->limit(50)->get()
                 ->map(fn (User $user) => ['value' => $user->id, 'label' => $user->name])->values(),
-            'products' => $this->products->searchParents($term)
+            'products' => $this->products->searchSellable($term)
                 ->map(fn (Product $product) => $this->productOption($product))->values(),
         });
     }
@@ -227,6 +292,19 @@ class OrderController extends Controller
             'districts' => $this->districts->query()->with('translations')->orderBy('id')->get()
                 ->map(fn (District $district) => ['value' => $district->id, 'label' => (string) $district->name, 'city_id' => $district->city_id])->values(),
         ];
+    }
+
+    /**
+     * A line's product as it was sold, with its options ("Shirt — M / Black").
+     */
+    private static function lineName(OrderItem $item): string
+    {
+        $locale = app()->getLocale();
+        $text = fn (?array $values) => (string) ($values[$locale] ?? collect($values ?? [])->first(fn ($value) => filled($value)) ?? '');
+        $values = collect($item->options ?? [])->map(fn (array $option) => $text($option['value'] ?? null))->filter()->implode(' / ');
+        $name = $text($item->product_name) ?: __('Deleted product');
+
+        return $values !== '' ? $name.' — '.$values : $name;
     }
 
     /**

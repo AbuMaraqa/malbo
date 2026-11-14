@@ -3,11 +3,18 @@
 namespace Modules\Store\Support;
 
 use App\Support\Locales;
+use Closure;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Modules\Branch\Entities\Branch;
+use Modules\Core\Enums\UserRole;
 use Modules\Core\Settings\GeneralSettings;
 use Modules\Store\Entities\Page;
 use Modules\Store\Repositories\Contracts\PageRepositoryInterface;
+use Modules\Store\Repositories\Contracts\WishlistRepositoryInterface;
+use Modules\Store\Services\CartService;
+use Modules\Store\Services\Marketing\MetaEvents;
+use Modules\Store\Services\StorefrontCatalog;
 use Modules\Store\Services\StorefrontContact;
 use Modules\Store\Settings\StoreAppearanceSettings;
 use Modules\Store\Settings\StoreContactSettings;
@@ -24,17 +31,26 @@ class StorefrontLayout
     public function __construct(
         private StorefrontContact $contact,
         private PageRepositoryInterface $pages,
+        private StorefrontCatalog $catalog,
+        private CartService $cart,
+        private WishlistRepositoryInterface $wishlist,
+        private MetaEvents $metaEvents,
     ) {}
 
     /**
+     * `marketing` is the Meta Pixel's prop (MetaEvents::props): $events builds the page's own events
+     * (ViewContent...), only when the prop is sent, so a partial reload of another prop builds none.
+     *
      * @param  array{title?: ?string, description?: ?string, noindex?: bool, og_type?: string, og_image?: ?string, json_ld?: list<array<string, mixed>>}  $meta
-     * @return array{store: \Closure, seo: \Closure}
+     * @param  (Closure(): list<array<string, mixed>|null>)|null  $events
+     * @return array{store: Closure, seo: Closure, marketing: Closure}
      */
-    public function props(array $meta = []): array
+    public function props(array $meta = [], ?Closure $events = null): array
     {
         return [
             'store' => fn () => $this->store(),
             'seo' => fn () => $this->seo($meta),
+            'marketing' => fn () => $this->metaEvents->props(request(), $events),
         ];
     }
 
@@ -116,7 +132,69 @@ class StorefrontLayout
             'branches' => $this->branches(),
             'footer_pages' => $storePages->map(self::pageLink(...))->values()->all(),
             'policy_pages' => $policyPages->map(self::pageLink(...))->values()->all(),
+            // The header's category menu and the footer's shop column: active root categories.
+            'categories' => array_map(fn (array $category) => [
+                'id' => $category['id'],
+                'name' => $category['name'],
+                'image' => $category['image'],
+                'url' => route('store.category', ['slug' => $category['slug']]),
+            ], $this->catalog->categoryList()),
+            // The categories page, linked from the menu and the footer once there is one to show.
+            'categories_url' => $this->catalog->categoryList() !== [] ? route('store.categories') : null,
+            // The footer's invitation to the members circle, while the store takes members.
+            'members_url' => $appearance->membership_enabled ? route('store.members') : null,
+            // The header's cart button: pieces in this browser's cart.
+            'cart_count' => $this->cart->count(request()),
+            'cart_url' => route('store.cart'),
+            // The header's account menu, or its sign-in link.
+            'account' => $this->account(),
+            // What the hearts on product cards show: the products on this account's wishlist.
+            'wishlist' => ($user = request()->user()) ? $this->wishlist->productIds((int) $user->id) : [],
+            // The way into the wholesale portal from the store's header, footer and home.
+            'wholesale' => $this->wholesale(),
             'year' => (int) now()->year,
+        ];
+    }
+
+    /**
+     * Who is signed in (a buyer or a staff member) and where the account's pages are.
+     *
+     * @return array{signed_in: bool, name: ?string, login_url: string, register_url: string, account_url: string, orders_url: string, wishlist_url: string, logout_url: string}
+     */
+    public function account(): array
+    {
+        $user = request()->user();
+
+        return [
+            'signed_in' => $user !== null,
+            'name' => $user?->name,
+            'login_url' => route('store.account.login'),
+            'register_url' => route('store.account.register'),
+            'account_url' => route('store.account'),
+            'orders_url' => route('store.account.orders'),
+            'wishlist_url' => route('store.account.wishlist'),
+            'logout_url' => route('store.account.logout'),
+        ];
+    }
+
+    /**
+     * The wholesale portal's links, or null while no module serves it. Store does not depend on
+     * the Wholesale module: it only links to its pages when their routes exist. A merchant (any
+     * status) goes to the portal, whose account page says where the application stands; anyone
+     * else is invited to apply. Never a price.
+     *
+     * @return array{merchant: bool, portal_url: string, apply_url: string}|null
+     */
+    public function wholesale(): ?array
+    {
+        if (! Route::has('store.wholesale.apply') || ! Route::has('store.wholesale.catalog')) {
+            return null;
+        }
+
+        return [
+            'merchant' => (bool) request()->user()?->hasRole(UserRole::MERCHANT->value),
+            'portal_url' => route('store.wholesale.catalog'),
+            'apply_url' => route('store.wholesale.apply'),
         ];
     }
 

@@ -25,6 +25,8 @@ class AdminTable
 
     private string $defaultSort = '-id';
 
+    private ?string $tieBreaker = null;
+
     private function __construct(private readonly Builder $query) {}
 
     public static function for(Builder $query): self
@@ -46,9 +48,24 @@ class AdminTable
         return $this;
     }
 
+    /**
+     * The order when the URL asks for none: one sort, or several separated by commas
+     * ("units,-stock"). The first is the one the table shows as sorted.
+     */
     public function defaultSort(string $sort): self
     {
         $this->defaultSort = $sort;
+
+        return $this;
+    }
+
+    /**
+     * A unique column ordered by after the chosen sort, so rows that tie on it keep one order and
+     * no row shows on two pages (or none).
+     */
+    public function tieBreaker(string $column): self
+    {
+        $this->tieBreaker = $column;
 
         return $this;
     }
@@ -61,7 +78,7 @@ class AdminTable
     public function search(array $columns = [], ?string $translated = 'name'): self
     {
         $this->filters[] = AllowedFilter::callback('search', function (Builder $query, mixed $value) use ($columns, $translated): void {
-            $term = '%'.addcslashes(trim((string) $value), '%_\\').'%';
+            $term = AdminFilter::likeTerm($value);
 
             $query->where(function (Builder $query) use ($columns, $translated, $term): void {
                 foreach ($columns as $column) {
@@ -91,7 +108,8 @@ class AdminTable
         $paginator = QueryBuilder::for($this->query, $request)
             ->allowedFilters(...$this->filters)
             ->allowedSorts(...$this->sorts)
-            ->defaultSort($this->defaultSort)
+            ->defaultSort(...explode(',', $this->defaultSort))
+            ->when($this->tieBreaker !== null, fn ($query) => $query->orderBy($this->tieBreaker))
             ->paginate($perPage)
             ->withQueryString();
 
@@ -107,7 +125,7 @@ class AdminTable
             ],
             'query' => [
                 'filter' => (object) array_filter((array) $request->input('filter', []), fn ($value) => $value !== null && $value !== ''),
-                'sort' => $request->input('sort', $this->defaultSort),
+                'sort' => $request->input('sort', explode(',', $this->defaultSort)[0]),
             ],
         ];
     }

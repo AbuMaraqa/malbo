@@ -3,6 +3,7 @@
 use App\Support\Locales;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\Core\Http\Controllers\Admin\ActivityLogController;
 use Modules\Core\Http\Controllers\Admin\CurrencyController;
 use Modules\Core\Http\Controllers\Admin\DashboardController;
 use Modules\Core\Http\Controllers\Admin\NotificationController;
@@ -18,6 +19,9 @@ Route::middleware(['auth', 'verified'])->prefix('{locale}')->where(['locale' => 
 
         Route::get('/settings', [SettingController::class, 'index'])->name('settings')->can('Setting View List');
         Route::put('/settings', [SettingController::class, 'update'])->name('settings.update')->can('Setting Update');
+
+        // Read only: the models write the log themselves.
+        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index')->can('Activity Log View List');
 
         Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function () {
             Route::get('/', 'index')->name('index');

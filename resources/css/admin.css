@@ -1,0 +1,290 @@
+/*
+ * The admin design system: palette, shadows, motion and a few utilities.
+ * Our own theme. The look: a light sidebar, bordered cards, a blue accent, a cool gray scale.
+ */
+
+@custom-variant dark (&:is(.dark *));
+
+/* Reka UI state attributes, under short names. */
+@custom-variant data-open (&:is([data-state='open'], [data-open]));
+@custom-variant data-closed (&:is([data-state='closed'], [data-closed]));
+@custom-variant data-checked (&:is([data-state='checked'], [data-checked]));
+@custom-variant data-unchecked (&:is([data-state='unchecked'], [data-unchecked]));
+@custom-variant data-active (&:is([data-state='active'], [data-active]));
+@custom-variant data-highlighted (&:is([data-highlighted]));
+
+@theme inline {
+    --animate-collapsible-down: collapsible-down 220ms ease-out;
+    --animate-collapsible-up: collapsible-up 180ms ease-in;
+    --animate-fade-in: fade-in 150ms ease-out;
+    --animate-pop-in: pop-in 160ms ease-out;
+    --animate-slide-in-end: slide-in-end 220ms ease-out;
+
+    @keyframes collapsible-down {
+        from {
+            height: 0;
+        }
+        to {
+            height: var(--reka-collapsible-content-height);
+        }
+    }
+    @keyframes collapsible-up {
+        from {
+            height: var(--reka-collapsible-content-height);
+        }
+        to {
+            height: 0;
+        }
+    }
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+        }
+    }
+    @keyframes pop-in {
+        from {
+            opacity: 0;
+            transform: translateY(-4px) scale(0.98);
+        }
+    }
+    @keyframes slide-in-end {
+        from {
+            opacity: 0;
+            translate: calc(var(--slide-from, 1) * 24px) 0;
+        }
+    }
+}
+
+@theme {
+    --color-white: #ffffff;
+    --color-black: #0d1018;
+
+    /* The accent. The general settings replace this scale with the chosen color (DashboardTheme). */
+    --color-brand-25: #f3f8ff;
+    --color-brand-50: #eaf2fe;
+    --color-brand-100: #d4e5fd;
+    --color-brand-200: #aacbfb;
+    --color-brand-300: #78acf7;
+    --color-brand-400: #4a8ef3;
+    --color-brand-500: #1570ef;
+    --color-brand-600: #105ccc;
+    --color-brand-700: #0e4aa3;
+    --color-brand-800: #0f3d82;
+    --color-brand-900: #10336a;
+    --color-brand-950: #0b2045;
+
+    /* A cool gray: text, borders and surfaces. */
+    --color-gray-25: #fcfcfd;
+    --color-gray-50: #f8f9fb;
+    --color-gray-100: #f1f3f7;
+    --color-gray-200: #e4e7ef;
+    --color-gray-300: #d2d7e2;
+    --color-gray-400: #9ba3b8;
+    --color-gray-500: #6c7590;
+    --color-gray-600: #4e566f;
+    --color-gray-700: #363d55;
+    --color-gray-800: #232a3d;
+    --color-gray-900: #151a28;
+    --color-gray-950: #0d1018;
+
+    /* Status scales, on Tailwind's own palettes. */
+    --color-success-25: var(--color-emerald-50);
+    --color-success-50: var(--color-emerald-50);
+    --color-success-100: var(--color-emerald-100);
+    --color-success-200: var(--color-emerald-200);
+    --color-success-300: var(--color-emerald-300);
+    --color-success-400: var(--color-emerald-400);
+    --color-success-500: var(--color-emerald-500);
+    --color-success-600: var(--color-emerald-600);
+    --color-success-700: var(--color-emerald-700);
+    --color-success-800: var(--color-emerald-800);
+    --color-success-900: var(--color-emerald-900);
+    --color-success-950: var(--color-emerald-950);
+
+    --color-error-25: var(--color-red-50);
+    --color-error-50: var(--color-red-50);
+    --color-error-100: var(--color-red-100);
+    --color-error-200: var(--color-red-200);
+    --color-error-300: var(--color-red-300);
+    --color-error-400: var(--color-red-400);
+    --color-error-500: var(--color-red-500);
+    --color-error-600: var(--color-red-600);
+    --color-error-700: var(--color-red-700);
+    --color-error-800: var(--color-red-800);
+    --color-error-900: var(--color-red-900);
+    --color-error-950: var(--color-red-950);
+
+    --color-warning-25: var(--color-amber-50);
+    --color-warning-50: var(--color-amber-50);
+    --color-warning-100: var(--color-amber-100);
+    --color-warning-200: var(--color-amber-200);
+    --color-warning-300: var(--color-amber-300);
+    --color-warning-400: var(--color-amber-400);
+    --color-warning-500: var(--color-amber-500);
+    --color-warning-600: var(--color-amber-600);
+    --color-warning-700: var(--color-amber-700);
+    --color-warning-800: var(--color-amber-800);
+    --color-warning-900: var(--color-amber-900);
+    --color-warning-950: var(--color-amber-950);
+
+    --color-blue-light-25: var(--color-sky-50);
+    --color-blue-light-50: var(--color-sky-50);
+    --color-blue-light-100: var(--color-sky-100);
+    --color-blue-light-200: var(--color-sky-200);
+    --color-blue-light-300: var(--color-sky-300);
+    --color-blue-light-400: var(--color-sky-400);
+    --color-blue-light-500: var(--color-sky-500);
+    --color-blue-light-600: var(--color-sky-600);
+    --color-blue-light-700: var(--color-sky-700);
+    --color-blue-light-800: var(--color-sky-800);
+    --color-blue-light-900: var(--color-sky-900);
+    --color-blue-light-950: var(--color-sky-950);
+
+    --shadow-theme-xs: 0 1px 2px 0 rgb(13 16 24 / 0.04);
+    --shadow-theme-sm: 0 1px 3px 0 rgb(13 16 24 / 0.06), 0 1px 2px -1px rgb(13 16 24 / 0.04);
+    --shadow-theme-md: 0 4px 12px -2px rgb(13 16 24 / 0.08);
+    --shadow-theme-lg: 0 12px 28px -6px rgb(13 16 24 / 0.12);
+    --shadow-theme-xl: 0 24px 48px -12px rgb(13 16 24 / 0.18);
+    --shadow-card: 0 3px 4px 0 rgb(13 16 24 / 0.03);
+    --shadow-focus-ring: 0 0 0 4px color-mix(in srgb, var(--color-brand-500) 14%, transparent);
+
+    /* Shell sizes. */
+    --spacing-sidebar: 270px;
+    --spacing-sidebar-collapsed: 76px;
+    --spacing-header: 70px;
+}
+
+@layer base {
+    /* Tailwind 4 borders default to currentColor: keep them on the theme's line color. */
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--line, currentColor);
+    }
+
+    button:not(:disabled),
+    [role='button']:not(:disabled) {
+        cursor: pointer;
+    }
+
+    /* The browser's date and time pickers keep their own field look. */
+    input[type='date']::-webkit-inner-spin-button,
+    input[type='time']::-webkit-inner-spin-button {
+        display: none;
+    }
+}
+
+@utility no-scrollbar {
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+@utility custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gray-200) transparent;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        background: var(--color-gray-200);
+    }
+    &:is(.dark *) {
+        scrollbar-color: var(--color-gray-700) transparent;
+    }
+    &:is(.dark *)::-webkit-scrollbar-thumb {
+        background: var(--color-gray-700);
+    }
+}
+
+/* A key on the keyboard: Ctrl, K, Enter. */
+@utility kbd {
+    display: inline-flex;
+    align-items: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding-inline: 0.3rem;
+    border: 1px solid var(--line);
+    border-radius: 0.3rem;
+    background: var(--card);
+    color: var(--muted);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1;
+}
+
+/* ApexCharts: tooltips and labels in the theme's colors. */
+.apexcharts-tooltip.apexcharts-theme-light,
+.apexcharts-tooltip.apexcharts-theme-dark {
+    border: 1px solid var(--line) !important;
+    border-radius: 0.5rem !important;
+    background: var(--card) !important;
+    color: var(--ink) !important;
+    box-shadow: var(--shadow-theme-md) !important;
+}
+
+.apexcharts-tooltip .apexcharts-tooltip-title {
+    border-bottom-color: var(--line) !important;
+    background: var(--surface) !important;
+    font-weight: 600;
+}
+
+.apexcharts-xaxistooltip {
+    border-color: var(--line) !important;
+    background: var(--card) !important;
+    color: var(--ink) !important;
+}
+
+.apexcharts-xaxistooltip::before,
+.apexcharts-xaxistooltip::after {
+    display: none;
+}
+
+.apexcharts-legend-text {
+    color: var(--muted) !important;
+}
+
+/*
+ * Forms in wide cards: the label on the side, the field beside it, one field a row. A narrow card
+ * (a side column, a phone) keeps the label on top.
+ * Only fields that sit straight in a card (or in a grid or tab of it); fields inside a repeater,
+ * a table or a dialog keep their label on top.
+ */
+[data-card-body] {
+    container: card / inline-size;
+}
+
+@container card (min-width: 40rem) {
+    :is([data-card-body], [data-card-body] [role='tabpanel']) > .grid:has(> [data-field]) {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 1.25rem;
+    }
+
+    :is([data-card-body], [data-card-body] [role='tabpanel']) > .grid:has(> [data-field]) > * {
+        grid-column: auto;
+    }
+
+    :is([data-card-body], [data-card-body] [role='tabpanel'], [data-card-body] > .grid, [data-card-body] [role='tabpanel'] > .grid) > [data-field] {
+        display: grid;
+        grid-template-columns: 13rem minmax(0, 1fr);
+        column-gap: 1.5rem;
+        align-items: start;
+
+        & > label {
+            grid-row: 1 / span 3;
+            margin: 0;
+            padding-top: 0.625rem;
+        }
+
+        & > :not(label) {
+            grid-column: 2;
+        }
+    }
+}

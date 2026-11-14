@@ -7,6 +7,7 @@ use Modules\Items\Enums\AddonOptionStatus;
 use Modules\Items\Enums\AddonType;
 use Modules\Items\Enums\AttributeType;
 use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
+use Modules\Items\Support\BundleStock;
 use Modules\Store\Support\Price;
 
 /**
@@ -26,7 +27,7 @@ class ProductConfigurator
 
     /**
      * @return array{
-     *     attributes: array<int, array{id: int, name: string, swatch: bool, values: array<int, array{id: int, name: string, color: ?string}>}>,
+     *     attributes: array<int, array{id: int, name: string, swatch: bool, size: bool, values: array<int, array{id: int, name: string, color: ?string}>}>,
      *     variants: array<int, array<int, int>>,
      *     addons: array<int, array{id: int, name: string, multiple: bool, required: bool, min: int, max: int, options: array<int, array{id: int, name: string, price: float, default: bool}>}>
      * }
@@ -68,6 +69,28 @@ class ProductConfigurator
 
     public function inStock(Product $item): bool
     {
+        return self::available($item);
+    }
+
+    /**
+     * A variation with a hidden (inactive) attribute value is not offered. Its values must be loaded.
+     */
+    public static function visible(Product $variation): bool
+    {
+        return ! $variation->attributeValues->contains(fn ($value) => ! $value->is_active);
+    }
+
+    /**
+     * Whether an item can be ordered now: not marked out of stock, and its stock is not managed,
+     * allows backorders, or is above 0. A set or bundle: when its components allow one
+     * (BundleStock; its own stock columns are inert).
+     */
+    public static function available(Product $item): bool
+    {
+        if ($item->bundle_type !== null) {
+            return BundleStock::orderable($item);
+        }
+
         if ($item->stock_status === 'out_of_stock') {
             return false;
         }
@@ -75,9 +98,19 @@ class ProductConfigurator
         return ! $item->manage_stock || $item->allow_backorder || (int) $item->stock_quantity > 0;
     }
 
+    /**
+     * A set or bundle: what its components allow at best (the buyer's own choices are capped again
+     * by BundlePage and the cart).
+     */
     public function maxQuantity(Product $item): int
     {
         $max = (int) ($item->max_quantity_per_order ?: self::MAX_QUANTITY);
+
+        if ($item->bundle_type !== null) {
+            $available = BundleStock::available($item);
+
+            return max($available === null ? $max : min($max, $available), 1);
+        }
 
         if ($item->manage_stock && ! $item->allow_backorder) {
             $max = min($max, (int) $item->stock_quantity);
@@ -86,14 +119,18 @@ class ProductConfigurator
         return max($max, 1);
     }
 
-    private function variationChoices(Product $product): array
+    /**
+     * The attributes the product's visible variations vary by, and each variation's values.
+     *
+     * @return array{attributes: array<int, array<string, mixed>>, variants: array<int, array<int, int>>}
+     */
+    public function variationChoices(Product $product): array
     {
         $attributes = [];
         $variants = [];
 
         foreach ($product->variations as $variation) {
-            // A variation with a hidden value is not offered.
-            if ($variation->attributeValues->contains(fn ($value) => ! $value->is_active)) {
+            if (! self::visible($variation)) {
                 continue;
             }
 
@@ -109,6 +146,8 @@ class ProductConfigurator
                     'id' => $attribute->id,
                     'name' => (string) $attribute->name,
                     'swatch' => (int) $attribute->type === AttributeType::COLOR->value,
+                    // The size (is_size): the size guide sits by it.
+                    'size' => (bool) $attribute->is_size,
                     'values' => [],
                     'sort' => [],
                 ];

@@ -23,6 +23,7 @@ final class PermissionLabels
     ];
 
     private const AR_MODULES = [
+        'Activity Log' => 'سجل النشاطات',
         'Addon' => 'الإضافات',
         'Attribute' => 'الخصائص',
         'Branch' => 'الفروع',
@@ -37,15 +38,32 @@ final class PermissionLabels
         'GeoLocation' => 'المواقع الجغرافية',
         'Governorate' => 'المحافظات',
         'Label' => 'الوسوم المرئية',
+        'Merchant' => 'التجار (الجملة)',
+        'Merchant Credit' => 'ائتمان التجار',
+        'Merchant Payment' => 'دفعات التجار وتسوياتهم',
+        'Sales Report' => 'تقرير المبيعات',
+        'Channel Report' => 'تقرير المتجر مقابل الجملة',
+        'Product Report' => 'تقرير المبيعات حسب المنتج',
+        'Seller Report' => 'تقرير الأكثر والأقل مبيعًا',
+        'Return Report' => 'تقرير نسبة الإرجاع',
+        'Merchant Report' => 'تقرير أداء التجار',
+        'Cart Report' => 'تقرير السلال المتروكة',
+        'Conversion Report' => 'تقرير التحويل ومتوسط الطلب',
         'Offer' => 'العروض',
         'Order' => 'الطلبات',
         'Product' => 'المنتجات',
+        'Return Request' => 'طلبات الإرجاع والاستبدال',
         'Roles And Permissions' => 'الأدوار والصلاحيات',
         'Setting' => 'الإعدادات',
         'Settings' => 'الإعدادات',
+        'Shipment' => 'الشحنات',
+        'Stock' => 'المخزون',
         'Sync System Data' => 'مزامنة بيانات النظام',
         'Tag' => 'الوسوم',
         'User' => 'المستخدمون',
+        'Wholesale Preorder' => 'الطلبات المسبقة (الجملة)',
+        'Wholesale Price' => 'أسعار الجملة',
+        'Wholesale Tier' => 'شرائح أسعار الجملة',
     ];
 
     private const AR_ACTIONS = [

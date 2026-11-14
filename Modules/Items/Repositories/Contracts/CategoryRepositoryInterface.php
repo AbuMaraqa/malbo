@@ -64,6 +64,21 @@ interface CategoryRepositoryInterface extends RepositoryInterface
     public function findActiveBySlug(string $slug): ?Category;
 
     /**
+     * Active categories whose name (any language) contains the term, best matches first.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Category>
+     */
+    public function searchActive(string $term, int $limit = 4): \Illuminate\Database\Eloquent\Collection;
+
+    /**
+     * These categories (any status) with their translations, keyed by id.
+     *
+     * @param  list<int>  $ids
+     * @return \Illuminate\Database\Eloquent\Collection<int, \Modules\Items\Entities\Category>
+     */
+    public function withTranslations(array $ids): \Illuminate\Database\Eloquent\Collection;
+
+    /**
      * Slugs of the active categories, for the sitemap.
      *
      * @return array<int, string>
@@ -76,6 +91,14 @@ interface CategoryRepositoryInterface extends RepositoryInterface
      * @return array<int, int>
      */
     public function withDescendantIds(Category $category): array;
+
+    /**
+     * This category's id and the ids of all its child categories at any depth, active or not (a
+     * coupon on a category covers what is sold under it, whatever the menu shows).
+     *
+     * @return list<int>
+     */
+    public function treeIds(int $categoryId): array;
 
     /**
      * Categories updated after $since, for the app's sync.

@@ -3,12 +3,13 @@
  * its own tabs, over the same fields.
  */
 const GROUPS: Record<string, readonly string[]> = {
-    general: ['sku', 'barcode', 'weight', 'is_featured', 'is_digital', 'status'],
+    general: ['sku', 'barcode', 'weight', 'is_featured', 'is_digital', 'is_new', 'is_best_seller', 'status'],
+    details: ['fabric', 'composition', 'fit', 'care', 'model_height', 'model_weight', 'model_size'],
     price: ['base_price', 'sale_price', 'cost_price', 'wholesale_price', 'discount_type', 'discount_value', 'discount_start_date', 'discount_end_date'],
     inventory: ['manage_stock', 'stock_quantity', 'low_stock_threshold', 'stock_status', 'allow_backorder', 'max_quantity_per_order'],
     addons: ['addons'],
     variations: ['variations', 'attributes'],
-    images: ['image', 'gallery', 'removed_image', 'removed_gallery', 'gallery_order'],
+    images: ['image', 'gallery', 'removed_image', 'removed_gallery', 'gallery_order', 'gallery_colors', 'gallery_new_colors', 'video_url'],
     categories: ['category_id'],
     seo: ['meta_title', 'meta_description', 'meta_keywords'],
 };

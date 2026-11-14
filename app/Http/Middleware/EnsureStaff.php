@@ -8,9 +8,9 @@ use Modules\Core\Enums\UserRole;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Store admin is for staff only. Staff = a user with at least one role other than
- * Customer, or with any direct permission. Every other signed-in user (Customer-only,
- * or no role and no permission) is sent to the storefront. Guests pass: `auth` handles them.
+ * Store admin is for staff only. Staff = a user with at least one role other than the buyers'
+ * (Customer, Merchant), or with any direct permission. Every other signed-in user (a buyer, or no
+ * role and no permission) is sent to the storefront. Guests pass: `auth` handles them.
  */
 class EnsureStaff
 {
@@ -31,7 +31,7 @@ class EnsureStaff
             return false;
         }
 
-        return $user->getRoleNames()->contains(fn (string $role) => $role !== UserRole::CUSTOMER->value)
+        return $user->getRoleNames()->contains(fn (string $role) => ! in_array($role, UserRole::nonStaff(), true))
             || $user->getDirectPermissions()->isNotEmpty();
     }
 }

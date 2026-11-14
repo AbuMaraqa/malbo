@@ -9,8 +9,8 @@ defineProps<{ price: StorePrice; size?: 'card' | 'large' }>();
 
 <template>
     <p class="flex flex-wrap items-baseline" :class="size === 'large' ? 'gap-3' : 'gap-2'">
-        <span class="font-bold text-store-700" :class="size === 'large' ? 'text-2xl' : 'text-lg'">{{ price.label }}</span>
-        <s v-if="price.discounted" class="text-muted" :class="{ 'text-sm': size !== 'large' }">
+        <span class="font-bold" :class="[size === 'large' ? 'text-2xl' : 'text-base', price.discounted ? 'text-(--danger)' : 'text-ink']">{{ price.label }}</span>
+        <s v-if="price.discounted" class="text-muted" :class="size === 'large' ? 'text-base' : 'text-sm'">
             <span class="sr-only">{{ t('Was') }}</span> {{ price.was }}
         </s>
         <slot />

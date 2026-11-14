@@ -74,6 +74,26 @@ class PermissionSeeder extends Seeder
                 'guard_name' => 'web',
                 'module_name' => 'Store Appearance Management',
             ],
+            ...array_map(fn (string $action) => [
+                'name' => 'Shipping Zone '.$action,
+                'guard_name' => 'web',
+                'module_name' => 'Shipping Zone Management',
+            ], ['View List', 'Create', 'Update', 'Delete']),
+            // Marketing (phase 8A).
+            ['name' => 'Marketing Settings Update', 'guard_name' => 'web', 'module_name' => 'Marketing Management'],
+            ['name' => 'Abandoned Cart View List', 'guard_name' => 'web', 'module_name' => 'Abandoned Cart Management'],
+            ['name' => 'Stock Alert View List', 'guard_name' => 'web', 'module_name' => 'Stock Alert Management'],
+            ['name' => 'Review View List', 'guard_name' => 'web', 'module_name' => 'Review Management'],
+            ['name' => 'Review Update', 'guard_name' => 'web', 'module_name' => 'Review Management'],
+            // Campaign pages and Instagram content (phase 8B).
+            ['name' => 'Campaign Page View List', 'guard_name' => 'web', 'module_name' => 'Campaign Page Management'],
+            ['name' => 'Campaign Page Create', 'guard_name' => 'web', 'module_name' => 'Campaign Page Management'],
+            ['name' => 'Campaign Page Update', 'guard_name' => 'web', 'module_name' => 'Campaign Page Management'],
+            ['name' => 'Campaign Page Delete', 'guard_name' => 'web', 'module_name' => 'Campaign Page Management'],
+            ['name' => 'Instagram Post View List', 'guard_name' => 'web', 'module_name' => 'Instagram Management'],
+            ['name' => 'Instagram Post Create', 'guard_name' => 'web', 'module_name' => 'Instagram Management'],
+            ['name' => 'Instagram Post Update', 'guard_name' => 'web', 'module_name' => 'Instagram Management'],
+            ['name' => 'Instagram Post Delete', 'guard_name' => 'web', 'module_name' => 'Instagram Management'],
         ];
 
         foreach ($permissions as $perm) {

@@ -38,6 +38,44 @@ class UserPagesTest extends DatabaseTestCase
                 ->has('branchOptions'));
     }
 
+    public function test_the_admin_form_refuses_an_email_taken_in_another_case(): void
+    {
+        $this->makeUser('Taken@Example.com');
+
+        $this->actingAs($this->admin)
+            ->post($this->siteUrl('/ar/admin/users'), [
+                'name' => 'Twin',
+                'email' => 'taken@example.com',
+                'password' => 'secret-password-1',
+                'password_confirmation' => 'secret-password-1',
+                'roles' => [Role::findByName('Super Admin')->id],
+            ])
+            ->assertSessionHasErrors('email');
+    }
+
+    public function test_customers_filter_and_order_count(): void
+    {
+        $buyer = $this->makeUser('buyer@example.com', 'Buyer')->assignRole('Customer');
+        foreach (['A-1', 'A-2'] as $number) {
+            \Modules\Items\Entities\Order::query()->create(['order_number' => $number, 'sub_total' => 10, 'total' => 10, 'status' => 1, 'user_id' => $buyer->id]);
+        }
+
+        $this->actingAs($this->admin)
+            ->get($this->siteUrl('/ar/admin/users?filter[customers]=1'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('table.meta.total', 1)
+                ->where('table.data.0.email', 'buyer@example.com')
+                ->where('table.data.0.orders_count', 2));
+
+        $this->actingAs($this->admin)
+            ->get($this->siteUrl('/ar/admin/users?filter[customers]=0&filter[email]=admin@example.com'))
+            ->assertInertia(fn (Assert $page) => $page->where('table.meta.total', 1)->where('table.data.0.orders_count', 0));
+
+        $this->actingAs($this->admin)
+            ->get($this->siteUrl('/ar/admin/users?filter[customers]=0&filter[email]=buyer@example.com'))
+            ->assertInertia(fn (Assert $page) => $page->where('table.meta.total', 0));
+    }
+
     public function test_search_finds_a_user_in_another_letter_case(): void
     {
         $this->makeUser('findme@example.com', 'Findable Person');

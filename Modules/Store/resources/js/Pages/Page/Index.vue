@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import RowMenu from '@/Components/table/RowMenu.vue';
+import DropdownItem from '@/Components/ui/DropdownItem.vue';
+import DropdownSeparator from '@/Components/ui/DropdownSeparator.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -87,8 +90,11 @@ async function remove(row: Row): Promise<void> {
             <Toggle :model-value="row.show_in_footer" :disabled="!can('Page Update')" :aria-label="t('In footer')" @update:model-value="toggle(row, 'footer', $event)" />
         </template>
         <template #actions="{ row }">
-            <Button v-if="can('Page Update')" variant="ghost" size="icon" :href="route('pages.edit', row.id)" :aria-label="t('Edit')"><Pencil class="size-4" /></Button>
-            <Button v-if="can('Page Delete') && !row.is_system" variant="ghost" size="icon" :aria-label="t('Delete')" @click="remove(row)"><Trash2 class="size-4" /></Button>
+            <RowMenu>
+                <DropdownItem v-if="can('Page Update')" :href="route('pages.edit', row.id)"><Pencil />{{ t('Edit') }}</DropdownItem>
+                <DropdownSeparator v-if="can('Page Delete') && !row.is_system" />
+                <DropdownItem v-if="can('Page Delete') && !row.is_system" destructive @select="remove(row)"><Trash2 />{{ t('Delete') }}</DropdownItem>
+            </RowMenu>
         </template>
     </DataTable>
 </template>

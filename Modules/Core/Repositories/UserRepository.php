@@ -29,7 +29,8 @@ class UserRepository extends BaseEloquentRepository implements UserRepositoryInt
 
     public function tableQuery(): Builder
     {
-        return $this->query()->with(['roles', 'branch.translations']);
+        // How many orders each placed (a buyer's account orders; soft-deleted ones left out).
+        return $this->query()->with(['roles', 'branch.translations'])->withCount('orders');
     }
 
     public function findWithRoles(int $id): User
@@ -52,5 +53,19 @@ class UserRepository extends BaseEloquentRepository implements UserRepositoryInt
         }
 
         return false;
+    }
+
+    public function findByEmail(string $email): ?User
+    {
+        /** @var User|null */
+        return $this->query()->whereRaw('lower(email) = ?', [mb_strtolower(trim($email))])->orderBy('id')->first();
+    }
+
+    public function emailTaken(string $email, ?int $exceptId = null): bool
+    {
+        return $this->query()
+            ->whereRaw('lower(email) = ?', [mb_strtolower(trim($email))])
+            ->when($exceptId, fn (Builder $query) => $query->whereKeyNot($exceptId))
+            ->exists();
     }
 }

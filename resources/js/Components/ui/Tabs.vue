@@ -10,12 +10,12 @@ const active = defineModel<string>();
 
 <template>
     <TabsRoot v-model="active" :default-value="tabs[0]?.value">
-        <TabsList class="no-scrollbar mb-5 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-line">
+        <TabsList class="no-scrollbar mb-5 flex gap-6 overflow-x-auto overflow-y-hidden border-b border-line">
             <TabsTrigger
                 v-for="tab in tabs"
                 :key="tab.value"
                 :value="tab.value"
-                class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm text-muted hover:text-ink data-[state=active]:border-brand data-[state=active]:font-medium data-[state=active]:text-ink"
+                class="-mb-px border-b-2 border-transparent py-3 text-sm font-medium whitespace-nowrap text-gray-500 transition-colors hover:text-brand-600 data-[state=active]:border-brand-500 data-[state=active]:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 dark:data-[state=active]:text-brand-400"
             >
                 {{ tab.label }}
                 <span v-if="tab.hasError" class="ms-1 inline-block size-1.5 rounded-full bg-danger align-middle" />

@@ -3,11 +3,13 @@
 import { computed } from 'vue';
 
 import ImageUpload from '@/Components/form/ImageUpload.vue';
+import TextInput from '@/Components/form/TextInput.vue';
 import { t } from '@/lib/i18n';
 
 import type { ErrorOf, ProductRowFields } from './types';
 
-const props = defineProps<{ row: ProductRowFields; error: ErrorOf; imageRequired?: boolean }>();
+/** `video`: the product itself, which has a video (a variation has none). */
+const props = defineProps<{ row: ProductRowFields & { video_url?: string | null }; error: ErrorOf; imageRequired?: boolean; video?: boolean }>();
 
 /** The saved gallery in the order the user dragged it to. */
 const galleryImages = computed(() => {
@@ -39,6 +41,16 @@ const galleryError = computed(() => {
             :existing="galleryImages"
             :label="t('Gallery')"
             :error="galleryError"
+        />
+        <TextInput
+            v-if="video"
+            v-model="row.video_url"
+            class="md:col-span-2"
+            :label="t('Video URL')"
+            dir="ltr"
+            :maxlength="500"
+            :hint="t('A YouTube or Vimeo link, or an https link to an .mp4 file. It shows after the images.')"
+            :error="error('video_url')"
         />
     </div>
 </template>

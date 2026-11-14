@@ -2,6 +2,7 @@
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
+import ConsentBanner from '@/Components/storefront/ConsentBanner.vue';
 import StorefrontAnnouncement from '@/Components/storefront/StorefrontAnnouncement.vue';
 import StorefrontFooter from '@/Components/storefront/StorefrontFooter.vue';
 import StorefrontHeader from '@/Components/storefront/StorefrontHeader.vue';
@@ -10,6 +11,8 @@ import type { StoreLayoutProps } from '@/Components/storefront/types';
 import { useReveal } from '@/Components/storefront/useReveal';
 import WhatsAppFloat from '@/Components/storefront/WhatsAppFloat.vue';
 import { t } from '@/lib/i18n';
+import type { MarketingProps } from '@/lib/metaPixel';
+import { useMetaPixel } from '@/lib/useMetaPixel';
 
 /**
  * The storefront's frame. It reads the shared `store` and `seo` props, so it stays mounted while
@@ -20,25 +23,31 @@ const store = computed(() => page.props.store as StoreLayoutProps);
 // On the product page phones have the sticky order bar instead of the floating button.
 const onProductPage = computed(() => page.component === 'Store/Storefront/ProductPage');
 
+// Meta Pixel: after the visitor accepted marketing cookies, storefront pages only (the server sends
+// no `marketing` prop elsewhere).
+const marketing = computed(() => page.props.marketing as MarketingProps | null | undefined);
+useMetaPixel(() => marketing.value);
+
 useReveal();
 </script>
 
 <template>
     <div
-        class="min-h-screen bg-(--paper) pb-px font-sans text-ink antialiased [font-variant-numeric:tabular-nums] [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-store"
+        class="flex min-h-screen flex-col bg-(--paper) font-sans text-ink antialiased [font-variant-numeric:tabular-nums] [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-store"
         style="
-            --paper: #f7f7f5;
-            --ink-soft: #3d3c39;
-            --ink-30: rgb(24 25 26 / 0.3);
-            --ink-18: rgb(24 25 26 / 0.18);
-            --sand: #eceae5;
-            --sand-light: #efede8;
-            --sand-deep: #e2dfd9;
-            --gold: #d8c9a3;
-            --danger: #b42335;
-            --color-ink: #18191a;
-            --color-muted: #6b6a66;
-            --color-line: #e3e1dc;
+            --paper: #ffffff;
+            --ink-soft: #3c4557;
+            --ink-30: rgb(22 28 45 / 0.3);
+            --ink-18: rgb(22 28 45 / 0.16);
+            --sand: #f1f3f6;
+            --sand-light: #f7f8fa;
+            --sand-deep: #eceff3;
+            --night: #161c2d;
+            --night-soft: #1f2639;
+            --danger: #dc2626;
+            --color-ink: #161c2d;
+            --color-muted: #6b7385;
+            --color-line: #e7e9ee;
             color-scheme: light;
         "
     >
@@ -51,57 +60,32 @@ useReveal();
         <StorefrontAnnouncement v-if="store.announcement" :text="store.announcement" />
         <StorefrontHeader :store="store" />
 
-        <main id="main">
+        <main id="main" class="flex-1">
             <slot />
         </main>
 
         <StorefrontFooter :store="store" />
         <WhatsAppFloat v-if="store.whatsapp" :number="store.whatsapp" :hide-on-phones="onProductPage" />
+        <ConsentBanner :marketing="marketing" />
     </div>
 </template>
 
 <style>
-/* What utilities cannot say: soft shapes that drift behind the glass, sections that rise in. */
-@keyframes store-drift {
-    0%,
-    100% {
-        transform: translate3d(0, 0, 0) scale(1);
-    }
-    50% {
-        transform: translate3d(0, -22px, 0) scale(1.04);
-    }
-}
-
-.blob {
-    animation: store-drift 16s ease-in-out infinite;
-    will-change: transform;
-}
-
-.blob-slow {
-    animation-duration: 22s;
-    animation-delay: -6s;
-}
-
+/* What utilities cannot say: sections that rise in as they scroll into view. */
 .reveal-ready {
     opacity: 0;
-    transform: translateY(28px);
+    transform: translateY(24px);
     transition:
-        opacity 900ms cubic-bezier(0.2, 0.7, 0.2, 1),
-        transform 900ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1),
+        transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .reveal-ready.reveal-late {
-    transition-delay: 180ms;
+    transition-delay: 150ms;
 }
 
 .reveal-ready.is-visible {
     opacity: 1;
     transform: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .blob {
-        animation: none;
-    }
 }
 </style>

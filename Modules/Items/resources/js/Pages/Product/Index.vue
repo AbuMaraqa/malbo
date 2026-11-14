@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DropdownItem from '@/Components/ui/DropdownItem.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
@@ -9,7 +10,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import Button from '@/Components/ui/Button.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { DollarSign, QrCode } from '@/lib/icons';
+import { DollarSign, QrCode, Tag } from '@/lib/icons';
 import { can, t } from '@/lib/i18n';
 import { route } from '@/lib/route';
 import type { TableColumn, TableFilter, TablePayload } from '@/types/table';
@@ -32,10 +33,19 @@ interface Row {
     base_price: string | number;
     sale_price: string | number | null;
     discount: number;
+    is_new: boolean;
+    is_best_seller: boolean;
     locales: string[];
 }
 
-const props = defineProps<{ table: TablePayload<Row>; statuses: Option[]; categories: Option[]; brands: Option[] }>();
+/** Other modules' links in the row menu: a route that takes the product's id, behind a permission. */
+interface RowLink {
+    label: string;
+    route: string;
+    permission: string;
+}
+
+const props = defineProps<{ table: TablePayload<Row>; statuses: Option[]; categories: Option[]; brands: Option[]; rowLinks?: RowLink[] }>();
 
 const columns = computed<TableColumn[]>(() => [
     { key: 'image', label: t('Image') },
@@ -57,6 +67,8 @@ const filters = computed<TableFilter[]>(() => [
     { key: 'brand_id', label: t('Brand'), options: props.brands },
     { type: 'boolean', key: 'is_active', label: t('Active'), trueLabel: t('Active'), falseLabel: t('Inactive') },
     { type: 'boolean', key: 'is_featured', label: t('Is this product featured'), trueLabel: t('Yes'), falseLabel: t('No') },
+    { type: 'boolean', key: 'is_new', label: t('New'), trueLabel: t('Yes'), falseLabel: t('No') },
+    { type: 'boolean', key: 'is_best_seller', label: t('Best seller'), trueLabel: t('Yes'), falseLabel: t('No') },
     {
         key: 'stock_status',
         label: t('Stock Status'),
@@ -93,7 +105,7 @@ const { remove, removeMany } = useRecordDelete('products');
 </script>
 
 <template>
-    <PageHeader :title="t('Products List')">
+    <PageHeader :title="t('Products List')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('Product Create')" variant="primary" :href="route('products.add')">{{ t('Add Product') }}</Button>
         </template>
@@ -106,6 +118,10 @@ const { remove, removeMany } = useRecordDelete('products');
         <template #cell-name="{ row }">
             <Link v-if="can('Product Update')" :href="route('products.edit', row.id)" class="font-medium text-brand-600 dark:text-brand-400 hover:underline">{{ row.name }}</Link>
             <template v-else>{{ row.name }}</template>
+            <span v-if="row.is_new || row.is_best_seller" class="ms-2 inline-flex gap-1 align-middle">
+                <Badge v-if="row.is_new" tone="success">{{ t('New') }}</Badge>
+                <Badge v-if="row.is_best_seller" tone="warning">{{ t('Best seller') }}</Badge>
+            </span>
         </template>
         <template #cell-slug="{ row }">
             <span dir="ltr">{{ row.slug }}</span>
@@ -115,7 +131,7 @@ const { remove, removeMany } = useRecordDelete('products');
                 v-if="can('Product Update')"
                 :value="row.status ?? undefined"
                 :aria-label="t('Status')"
-                class="h-9 rounded-[10px] border border-gray-300 bg-card px-2 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                class="h-9 rounded-lg border border-gray-300 bg-card px-2 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
                 @change="setStatus(row, $event)"
             >
                 <option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option>
@@ -132,8 +148,6 @@ const { remove, removeMany } = useRecordDelete('products');
             <Button v-if="can('Product Create')" variant="primary" :href="route('products.add')">{{ t('Add Product') }}</Button>
         </template>
         <template #actions="{ row }">
-            <Button variant="ghost" size="icon" :aria-label="t('Generate Barcode')" @click="openBarcodes(row)"><QrCode class="size-4" /></Button>
-            <Button v-if="can('Product Branch Pricings')" variant="ghost" size="icon" :href="route('products.branch-pricings', row.id)" :aria-label="t('Branch Pricings')"><DollarSign class="size-4" /></Button>
             <RecordActions
                 entity="Product"
                 routes="products"
@@ -146,7 +160,13 @@ const { remove, removeMany } = useRecordDelete('products');
                     { label: t('Description'), value: row.description },
                 ]"
                 @delete="remove(row.id, row.name)"
-            />
+            >
+                <DropdownItem @select="openBarcodes(row)"><QrCode />{{ t('Generate Barcode') }}</DropdownItem>
+                <DropdownItem v-if="can('Product Branch Pricings')" :href="route('products.branch-pricings', row.id)"><DollarSign />{{ t('Branch Pricings') }}</DropdownItem>
+                <template v-for="link in rowLinks ?? []" :key="link.route">
+                    <DropdownItem v-if="can(link.permission)" :href="route(link.route, row.id)"><Tag />{{ link.label }}</DropdownItem>
+                </template>
+            </RecordActions>
         </template>
         <template #bulk="{ selected }">
             <Button variant="danger" size="sm" @click="removeMany(selected)">{{ t('Delete') }}</Button>

@@ -65,6 +65,7 @@ class Category extends Model implements TranslatableContract, HasMedia
     public $translatedAttributes = [
         'name',
         'description',
+        'size_guide',
     ];
 
     public $useTranslationFallback = true;

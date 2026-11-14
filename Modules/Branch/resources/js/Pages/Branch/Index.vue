@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import RowMenu from '@/Components/table/RowMenu.vue';
+import DropdownItem from '@/Components/ui/DropdownItem.vue';
+import DropdownSeparator from '@/Components/ui/DropdownSeparator.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -87,7 +90,7 @@ async function removeMany(ids: (number | string)[]): Promise<void> {
 </script>
 
 <template>
-    <PageHeader :title="t('Branches List')">
+    <PageHeader :title="t('Branches List')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('Branch Create')" variant="primary" :href="route('branches.add')">{{ t('Add Branch') }}</Button>
         </template>
@@ -106,8 +109,11 @@ async function removeMany(ids: (number | string)[]): Promise<void> {
             <span class="text-muted uppercase">{{ row.locales.join(', ') }}</span>
         </template>
         <template #actions="{ row }">
-            <Button v-if="can('Branch Update')" variant="ghost" size="icon" :href="route('branches.edit', row.id)" :aria-label="t('Edit')"><Pencil class="size-4" /></Button>
-            <Button v-if="can('Branch Delete')" variant="ghost" size="icon" :aria-label="t('Delete')" @click="remove(row)"><Trash2 class="size-4" /></Button>
+            <RowMenu>
+                <DropdownItem v-if="can('Branch Update')" :href="route('branches.edit', row.id)"><Pencil />{{ t('Edit') }}</DropdownItem>
+                <DropdownSeparator v-if="can('Branch Delete')" />
+                <DropdownItem v-if="can('Branch Delete')" destructive @select="remove(row)"><Trash2 />{{ t('Delete') }}</DropdownItem>
+            </RowMenu>
         </template>
         <template #bulk="{ selected }">
             <Button variant="danger" size="sm" @click="removeMany(selected)">{{ t('Delete') }}</Button>

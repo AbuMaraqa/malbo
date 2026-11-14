@@ -5,6 +5,7 @@ namespace Modules\Store\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Store\Contracts\InstagramFeedSource;
 use Modules\Store\Services\StorefrontCatalog;
 use Modules\Store\Services\StorefrontContact;
 use Modules\Store\Services\StorefrontHome;
@@ -14,12 +15,16 @@ use Modules\Store\Support\Storefront;
 use Modules\Store\Support\StorefrontLayout;
 
 /**
- * The store's home page: hero, promises, categories, the signature piece and the store's picks,
+ * The store's home page: hero, promises, categories, new arrivals, the signature piece, the store's picks,
  * story, values and the members circle. A section without content is not rendered.
  */
 class HomeController extends Controller
 {
     public const FEATURED = 8;
+
+    public const NEW_ARRIVALS = 8;
+
+    public const INSTAGRAM_POSTS = 8;
 
     public function __construct(
         private readonly StorefrontCatalog $catalog,
@@ -55,12 +60,33 @@ class HomeController extends Controller
             ], $this->catalog->categoryList()),
             'signature' => $signature?->toArray(),
             'featured' => $picks->map(fn (ProductCard $card) => $card->toArray())->all(),
+            'arrivals' => $this->catalog->newArrivals(self::NEW_ARRIVALS)->map(fn (ProductCard $card) => $card->toArray())->all(),
             // Desktop: another pick floats beside the hero card (the first has its own section).
             'heroPiece' => $picks->first(fn (ProductCard $card) => $card->image !== null)?->toArray(),
             'story' => $story ? [...$story, 'about' => $story['about'] ? route('store.page', ['slug' => $story['about']]) : null] : null,
             'values' => $this->home->values()->all(),
             'membership' => $this->home->membership(),
+            // Instagram content, once staff switch the section on (InstagramFeedSource).
+            'instagram' => fn () => $this->instagram($appearance),
         ]);
+    }
+
+    /**
+     * @return array{title: string, profile_url: ?string, posts: list<array<string, mixed>>}|null
+     */
+    private function instagram(StoreAppearanceSettings $appearance): ?array
+    {
+        if (! $appearance->instagram_enabled) {
+            return null;
+        }
+
+        $posts = app(InstagramFeedSource::class)->posts(self::INSTAGRAM_POSTS);
+
+        return $posts === [] ? null : [
+            'title' => Storefront::t($appearance->instagram_title) ?? __('Follow us on Instagram'),
+            'profile_url' => $this->contact->socials()['Instagram'] ?? null,
+            'posts' => $posts,
+        ];
     }
 
     /**

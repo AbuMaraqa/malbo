@@ -13,6 +13,9 @@ use Modules\Store\Support\Price;
  */
 class PricingService
 {
+    /** The columns it reads: a cached card keeps these, never a price. */
+    public const COLUMNS = ['base_price', 'sale_price', 'discount_type', 'discount_value', 'discount_start_date', 'discount_end_date'];
+
     public function for(Product $product, ?CarbonInterface $at = null): Price
     {
         $base = (float) $product->base_price;

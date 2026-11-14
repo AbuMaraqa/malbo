@@ -18,6 +18,7 @@ const form = useForm<CategoryForm>({
     slug: '',
     parent_id: null,
     description: '',
+    size_guide: '',
     status: true,
     sort_order: 0,
     image: null,

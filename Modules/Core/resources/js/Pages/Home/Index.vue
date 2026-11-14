@@ -5,13 +5,14 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { t } from '@/lib/i18n';
 
+import AlertCards from './parts/AlertCards.vue';
 import MetricsGrid from './parts/MetricsGrid.vue';
 import NewUsersChart from './parts/NewUsersChart.vue';
 import OrdersByStatusChart from './parts/OrdersByStatusChart.vue';
 import OrdersPerMonthChart from './parts/OrdersPerMonthChart.vue';
 import QuickAccess from './parts/QuickAccess.vue';
 import RecentOrdersTable from './parts/RecentOrdersTable.vue';
-import type { LabelledSeries, Metric, MonthlySeries, QuickLink, RecentOrders } from './parts/types';
+import type { Alert, LabelledSeries, Metric, MonthlySeries, QuickLink, RecentOrders } from './parts/types';
 import UsersByRoleChart from './parts/UsersByRoleChart.vue';
 import WidgetEmpty from './parts/WidgetEmpty.vue';
 
@@ -26,10 +27,12 @@ const props = defineProps<{
     newUsersPerMonth: MonthlySeries | null;
     ordersByStatus: LabelledSeries | null;
     recentOrders: RecentOrders | null;
+    /** What needs attention now; each only with its permission. */
+    alerts: Alert[];
 }>();
 
 const hasMainColumn = computed(() => props.metrics.length > 0 || props.ordersPerMonth !== null);
-const hasWidgets = computed(() => hasMainColumn.value || props.quickLinks.length > 0 || props.usersByRole !== null);
+const hasWidgets = computed(() => hasMainColumn.value || props.quickLinks.length > 0 || props.usersByRole !== null || props.alerts.length > 0);
 </script>
 
 <template>
@@ -38,6 +41,10 @@ const hasWidgets = computed(() => hasMainColumn.value || props.quickLinks.length
     <WidgetEmpty v-if="!hasWidgets" :message="t('There is nothing on the dashboard for your permissions yet.')" />
 
     <div v-else class="grid grid-cols-12 gap-4 md:gap-6">
+        <div v-if="alerts.length" class="col-span-12">
+            <AlertCards :alerts="alerts" />
+        </div>
+
         <div v-if="hasMainColumn" class="col-span-12 space-y-6" :class="{ 'xl:col-span-7': usersByRole }">
             <MetricsGrid v-if="metrics.length" :metrics="metrics" />
             <OrdersPerMonthChart v-if="ordersPerMonth" :chart="ordersPerMonth" />

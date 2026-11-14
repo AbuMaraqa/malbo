@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DropdownItem from '@/Components/ui/DropdownItem.vue';
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -9,6 +10,7 @@ import Button from '@/Components/ui/Button.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { can, t } from '@/lib/i18n';
+import { Printer, Truck } from '@/lib/icons';
 import { route } from '@/lib/route';
 import type { TableColumn, TableFilter, TablePayload } from '@/types/table';
 
@@ -23,6 +25,9 @@ interface Row {
     id: number;
     order_number: string;
     customer: string | null;
+    customer_name: string | null;
+    channel: string;
+    channel_label: string;
     branch: string | null;
     sub_total: string;
     discount: string;
@@ -43,6 +48,7 @@ interface Row {
 const props = defineProps<{
     table: TablePayload<Row>;
     statuses: Option[];
+    channels: Option[];
     paymentStatuses: Option[];
     paymentMethods: Option[];
     deliveryTypes: Option[];
@@ -52,6 +58,7 @@ const props = defineProps<{
 const columns = computed<TableColumn[]>(() => [
     { key: 'order_number', label: t('Order Number'), sort: 'order_number' },
     { key: 'customer', label: t('Name') },
+    { key: 'channel_label', label: t('Channel'), toggleable: true },
     { key: 'branch', label: t('Branch'), toggleable: true, hidden: true },
     { key: 'sub_total', label: t('Sub Total'), sort: 'sub_total', class: 'tabular', toggleable: true },
     { key: 'discount', label: t('Discount'), sort: 'discount', class: 'tabular', toggleable: true },
@@ -65,7 +72,9 @@ const columns = computed<TableColumn[]>(() => [
 const filters = computed<TableFilter[]>(() => [
     { type: 'text', key: 'order_number', label: t('Order Number'), placeholder: t('Search by Order Number') },
     { type: 'text', key: 'customer', label: t('Name'), placeholder: t('Search by name') },
+    { type: 'boolean', key: 'awaiting_confirmation', label: t('Awaiting confirmation'), trueLabel: t('Awaiting confirmation'), falseLabel: t('Other statuses') },
     { key: 'status', label: t('Status'), options: props.statuses },
+    { key: 'channel', label: t('Channel'), options: props.channels },
     { key: 'payment_status', label: t('Payment Status'), options: props.paymentStatuses },
     { key: 'payment_method', label: t('Payment Method'), options: props.paymentMethods },
     { key: 'delivery_type', label: t('Delivery Type'), options: props.deliveryTypes },
@@ -80,13 +89,13 @@ const { remove, removeMany } = useRecordDelete('orders');
 </script>
 
 <template>
-    <PageHeader :title="t('Orders List')">
+    <PageHeader :title="t('Orders List')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('Order Create')" variant="primary" :href="route('orders.add')">{{ t('Add Order') }}</Button>
         </template>
     </PageHeader>
 
-    <DataTable :table="table" :columns="columns" :filters="filters" :selectable="can('Order Delete')" :empty-title="t('No orders found')" :empty-text="t('Create a new order by clicking the button below')">
+    <DataTable :table="table" :columns="columns" :filters="filters" :selectable="can('Order Delete') || can('Order Invoice')" :empty-title="t('No orders found')" :empty-text="t('Create a new order by clicking the button below')">
         <template #cell-order_number="{ row }">
             <Link v-if="can('Order Update')" :href="route('orders.edit', row.id)" class="font-medium text-brand-600 dark:text-brand-400 hover:underline" dir="ltr">{{ row.order_number }}</Link>
             <span v-else dir="ltr">{{ row.order_number }}</span>
@@ -109,6 +118,7 @@ const { remove, removeMany } = useRecordDelete('orders');
                 :edit-href="route('orders.edit', row.id)"
                 :fields="[
                     { label: t('Customer Name'), value: row.customer },
+                    { label: t('Channel'), value: row.channel_label },
                     { label: t('Order Number'), value: row.order_number },
                     { label: t('Products'), value: itemLines(row) },
                     { label: t('Subtotal'), value: row.sub_total },
@@ -124,10 +134,16 @@ const { remove, removeMany } = useRecordDelete('orders');
                     { label: t('Order Date'), value: row.created_at },
                 ]"
                 @delete="remove(row.id, row.order_number)"
-            />
+            >
+                <template v-if="can('Order Invoice')">
+                    <DropdownItem external :href="route('orders.invoice', row.id)"><Printer />{{ t('Invoice') }}</DropdownItem>
+                    <DropdownItem external :href="route('orders.waybill', row.id)"><Truck />{{ t('Waybill') }}</DropdownItem>
+                </template>
+            </RecordActions>
         </template>
         <template #bulk="{ selected }">
-            <Button variant="danger" size="sm" @click="removeMany(selected)">{{ t('Delete') }}</Button>
+            <Button v-if="can('Order Invoice')" size="sm" external new-tab :href="route('orders.waybills', { ids: selected })"><Truck class="size-4" /> {{ t('Print waybills') }}</Button>
+            <Button v-if="can('Order Delete')" variant="danger" size="sm" @click="removeMany(selected)">{{ t('Delete') }}</Button>
         </template>
     </DataTable>
 </template>

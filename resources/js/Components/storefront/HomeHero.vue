@@ -4,10 +4,14 @@ import { Link } from '@inertiajs/vue3';
 import { t } from '@/lib/i18n';
 import { route } from '@/lib/route';
 
-import { btnBrand, btnLg, btnOutline, eyebrow, glass } from './styles';
+import ArrowMark from './ArrowMark.vue';
+import { btnBrand, btnLg, btnOutline, container, eyebrow } from './styles';
 import type { StoreCard } from './types';
 
-/** The store's photo (or soft liquid shapes in its color) under a frosted card. */
+/**
+ * The home's banner. With the store's photo it fills the band behind the text; without one, a
+ * pick of the store stands beside the text on a soft background.
+ */
 defineProps<{
     hero: { eyebrow: string | null; title: string; subtitle: string | null; image: string | null };
     piece: StoreCard | null;
@@ -17,40 +21,44 @@ defineProps<{
 </script>
 
 <template>
-    <section data-section="hero" class="relative -mt-20 flex items-center overflow-hidden bg-(--sand) pt-32 pb-24 lg:min-h-[min(88svh,54rem)]">
-        <img v-if="hero.image" :src="hero.image" alt="" fetchpriority="high" class="absolute inset-0 size-full object-cover" />
-        <template v-else>
-            <!-- Shapes sit partly behind the card, so its glass has something to frost. -->
-            <div aria-hidden="true" class="blob absolute start-[22%] top-20 size-72 rounded-full bg-store opacity-25 sm:size-104"></div>
-            <div aria-hidden="true" class="blob blob-slow absolute start-[4%] bottom-8 size-40 rounded-full bg-(--gold) opacity-70 sm:size-56"></div>
-            <div aria-hidden="true" class="blob absolute end-[6%] top-40 size-64 rounded-full bg-store-200 opacity-60 max-lg:hidden"></div>
+    <section data-section="hero" class="relative overflow-hidden bg-(--sand)">
+        <template v-if="hero.image">
+            <img :src="hero.image" alt="" fetchpriority="high" class="absolute inset-0 size-full object-cover" />
+            <!-- Keeps the text readable on any photo, darker on the text's side. -->
+            <div aria-hidden="true" class="absolute inset-0 bg-linear-to-l from-white/0 via-white/55 to-white/90 rtl:bg-linear-to-r"></div>
         </template>
 
-        <div class="relative mx-auto grid w-full max-w-310 items-center gap-10 px-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-            <div class="reveal max-w-170 rounded-[2rem] p-7 sm:p-12" :class="glass">
+        <div :class="container" class="relative grid min-h-[min(78svh,40rem)] items-center gap-10 py-16 lg:grid-cols-2">
+            <div class="reveal max-w-xl">
                 <p v-if="hero.eyebrow" :class="eyebrow">{{ hero.eyebrow }}</p>
-                <h1 class="mt-4 text-[2.6rem] leading-[1.12] font-bold text-balance sm:text-6xl lg:text-7xl">{{ hero.title }}</h1>
-                <p v-if="hero.subtitle" class="mt-6 max-w-xl text-lg leading-8 text-(--ink-soft) sm:text-xl sm:leading-9">{{ hero.subtitle }}</p>
+                <h1 class="mt-4 text-[2.5rem] leading-[1.15] font-bold text-balance sm:text-6xl">{{ hero.title }}</h1>
+                <p v-if="hero.subtitle" class="mt-5 text-lg leading-8 text-(--ink-soft)">{{ hero.subtitle }}</p>
                 <div class="mt-9 flex flex-wrap gap-3">
-                    <Link :href="route('store.shop')" :class="[btnBrand, btnLg]">{{ t('Shop now') }}</Link>
+                    <Link :href="route('store.shop')" :class="[btnBrand, btnLg]">{{ t('Shop now') }} <ArrowMark /></Link>
                     <a v-if="hasSignature" href="#signature" :class="[btnOutline, btnLg]">{{ t('Discover the collection') }}</a>
                     <a v-else-if="hasStory" href="#story" :class="[btnOutline, btnLg]">{{ t('About us') }}</a>
                 </div>
             </div>
 
-            <!-- Desktop: another pick floats beside the card (the first has its own section below). -->
-            <Link v-if="piece" :href="piece.url" data-hero-piece class="reveal reveal-late group hidden rounded-[2rem] p-3 lg:block lg:max-w-105 lg:justify-self-end" :class="glass">
-                <span class="block aspect-4/5 overflow-hidden rounded-3xl bg-(--sand-deep)">
-                    <img :src="piece.image ?? undefined" alt="" class="size-full object-cover transition duration-700 group-hover:scale-[1.04] motion-reduce:transition-none" />
+            <Link v-if="!hero.image && piece" :href="piece.url" data-hero-piece class="reveal reveal-late group relative hidden justify-self-center lg:block">
+                <span aria-hidden="true" class="absolute inset-6 -z-0 rounded-full bg-store-100"></span>
+                <span class="relative block size-[26rem] overflow-hidden rounded-full border-8 border-white shadow-xl">
+                    <img :src="piece.image ?? undefined" alt="" class="size-full object-cover transition duration-700 group-hover:scale-105 motion-reduce:transition-none" />
                 </span>
-                <span class="flex items-end justify-between gap-4 px-3 pt-4 pb-2">
-                    <span class="min-w-0">
-                        <span class="block text-[13px] font-bold text-store-700">{{ t('From the collection') }}</span>
-                        <span class="mt-0.5 block truncate text-lg font-bold">{{ piece.name }}</span>
-                    </span>
-                    <span class="shrink-0 text-lg font-bold">{{ piece.price.label }}</span>
+                <span class="absolute start-0 bottom-8 rounded-lg bg-white px-5 py-3.5 shadow-lg">
+                    <span class="block text-[13px] font-semibold text-store-600">{{ t('From the collection') }}</span>
+                    <span class="mt-0.5 block max-w-52 truncate font-bold">{{ piece.name }}</span>
+                    <span class="mt-0.5 block text-sm font-semibold text-(--ink-soft)">{{ piece.price.label }}</span>
                 </span>
             </Link>
+
+            <!-- No photo and no pick yet: shapes in the store's color fill the other half. -->
+            <div v-else-if="!hero.image" aria-hidden="true" class="relative hidden h-96 lg:block">
+                <span class="absolute inset-y-0 start-1/2 aspect-square -translate-x-1/2 rounded-full bg-store-100 rtl:translate-x-1/2"></span>
+                <span class="absolute start-[18%] top-6 size-40 rounded-full bg-store opacity-90"></span>
+                <span class="absolute end-[14%] bottom-4 size-28 rounded-full border-[14px] border-store-300"></span>
+                <span class="absolute end-[30%] top-10 size-10 rounded-full bg-ink"></span>
+            </div>
         </div>
     </section>
 </template>

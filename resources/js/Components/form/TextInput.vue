@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { useId } from 'vue';
 
-import { Input } from '@/tailadmin/ui/input';
-
+import { controlClasses } from './controlClasses';
 import Field from './Field.vue';
 
 withDefaults(
@@ -30,9 +29,9 @@ const id = useId();
 
 <template>
     <Field :id="id" :label="label" :error="error" :hint="hint" :required="required">
-        <Input
+        <input
             :id="id"
-            :model-value="model ?? ''"
+            :value="model ?? ''"
             :type="type"
             :placeholder="placeholder"
             :disabled="disabled"
@@ -43,7 +42,8 @@ const id = useId();
             :maxlength="maxlength"
             :dir="dir"
             :aria-invalid="!!error"
-            @update:model-value="model = $event"
+            :class="[controlClasses, 'h-10']"
+            @input="model = ($event.target as HTMLInputElement).value"
         />
     </Field>
 </template>

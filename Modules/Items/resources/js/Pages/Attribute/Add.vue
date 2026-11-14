@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
 
 import FormActions from '@/Components/form/FormActions.vue';
 import type { Option } from '@/Components/form/SelectInput.vue';
@@ -17,8 +18,18 @@ const form = useForm<AttributeForm>({
     name: '',
     slug: '',
     type: Number(props.types.find((type) => type.value === 2)?.value ?? props.types[0]?.value),
+    is_filterable: false,
+    is_size: false,
     description: '',
     values: [],
+});
+
+// A color is a filter at first; once staff flip the switch, their choice stays.
+const touched = ref(false);
+form.is_filterable = form.type === props.colorType;
+watch(() => form.is_filterable, (value) => (touched.value = touched.value || value !== (form.type === props.colorType)));
+watch(() => form.type, (type) => {
+    if (!touched.value) form.is_filterable = type === props.colorType;
 });
 </script>
 

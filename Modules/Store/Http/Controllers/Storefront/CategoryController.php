@@ -30,7 +30,11 @@ class CategoryController extends Controller
         }
 
         return Inertia::render('Store/Storefront/Category', [
-            ...$this->layout->props(['title' => $category->name]),
+            ...$this->layout->props([
+                'title' => (string) $category->name,
+                'description' => filled($category->description) ? (string) $category->description : null,
+                'og_image' => $category->getFirstMediaUrl('category') ?: null,
+            ]),
             ...$this->shop->props($request, $category),
         ])->toResponse($request);
     }

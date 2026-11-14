@@ -2,6 +2,8 @@
 
 namespace Modules\Items\Http\Requests\Admin;
 
+use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
+
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -9,11 +11,14 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 use Modules\Items\Entities\Addon;
 use Modules\Items\Entities\AddonOption;
+use Modules\Items\Entities\Attribute;
 use Modules\Items\Entities\AttributeValue;
+use Modules\Items\Enums\AttributeType;
 use Modules\Items\Entities\Brand;
 use Modules\Items\Entities\Category;
 use Modules\Items\Entities\Product;
 use Modules\Items\Enums\ProductStatus;
+use Modules\Items\Support\ProductVideo;
 use Modules\Branch\Entities\Branch;
 
 /**
@@ -32,15 +37,16 @@ class ProductRequest extends FormRequest
 
     private const INT_MAX = 'max:2147483647';
 
-    private const BOOLEANS = ['manage_stock', 'allow_backorder', 'is_featured', 'is_digital'];
+    private const BOOLEANS = ['manage_stock', 'allow_backorder', 'is_featured', 'is_digital', 'is_new', 'is_best_seller'];
 
     /** What a variation row may set; anything else the browser adds is dropped. */
     private const VARIATION_KEYS = [
         'id', 'name', 'slug', 'short_description', 'description', 'sku', 'barcode', 'weight', 'is_featured', 'is_digital',
         'base_price', 'sale_price', 'cost_price', 'wholesale_price', 'discount_type', 'discount_value',
-        'discount_start_date', 'discount_end_date', 'manage_stock', 'stock_quantity', 'low_stock_threshold', 'stock_status',
+        'discount_start_date', 'discount_end_date', 'manage_stock', 'stock_quantity', 'stock_quantity_loaded', 'low_stock_threshold', 'stock_status',
         'allow_backorder', 'max_quantity_per_order', 'category_id', 'attribute_values', 'image', 'gallery',
         'removed_image', 'removed_gallery', 'gallery_order', 'meta_title', 'meta_description', 'meta_keywords',
+        'fabric', 'composition', 'fit', 'care', 'model_height', 'model_weight', 'model_size',
     ];
 
     private const ADDON_KEYS = ['addon_id', 'is_required', 'min_selection', 'max_selection', 'max_quantity_per_option', 'allowed_options'];
@@ -52,6 +58,11 @@ class ProductRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        // A set or bundle is edited in its own form, under its own permission ("Bundle Update").
+        if (filled($id = $this->route('product')) && app(ProductRepositoryInterface::class)->isBundle((int) $id)) {
+            abort(404);
+        }
+
         $data = $this->filled('payload')
             ? (array) json_decode((string) $this->input('payload'), true)
             : $this->input();
@@ -67,6 +78,7 @@ class ProductRequest extends FormRequest
         }
 
         $data = self::defaults($data);
+        $data = self::knownColors($data);
         $data['variations'] = array_map(fn ($row) => is_array($row) ? self::defaults($row) : $row, $data['variations']);
         $data['addons'] = array_map(function ($row) {
             if (! is_array($row)) {
@@ -111,6 +123,19 @@ class ProductRequest extends FormRequest
             'branches' => ['array'],
             'branches.*' => ['integer', Rule::exists((new Branch)->getTable(), 'id')],
             'image' => [$id ? 'nullable' : 'required', ...self::IMAGE],
+            // The color each gallery image shows: saved images by media id, new ones in upload order.
+            // Only COLOR values reach here (knownColors), anything else is "no color".
+            'gallery_colors' => ['nullable', 'array'],
+            'gallery_colors.*' => ['nullable', 'integer'],
+            'gallery_new_colors' => ['nullable', 'array'],
+            'gallery_new_colors.*' => ['nullable', 'integer'],
+            'is_new' => ['boolean'],
+            'is_best_seller' => ['boolean'],
+            'video_url' => ['nullable', 'string', 'max:500', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (is_string($value) && ! ProductVideo::isValid($value)) {
+                    $fail(__('Enter a YouTube or Vimeo link, or an https link to an .mp4 file.'));
+                }
+            }],
             ...$this->sharedRules(''),
             'addons' => ['array'],
             'addons.*.addon_id' => ['required', 'integer', 'distinct', Rule::exists((new Addon)->getTable(), 'id')->whereNull('deleted_at')],
@@ -149,9 +174,11 @@ class ProductRequest extends FormRequest
             'max_quantity_per_order' => 'Max Quantity Per Order', 'category_id' => 'Category', 'image' => 'Image', 'gallery' => 'Gallery',
             'meta_title' => 'Meta Title', 'meta_description' => 'Meta Description', 'meta_keywords' => 'Meta Keywords',
             'short_description' => 'Short Description', 'description' => 'Description',
+            'fabric' => 'Fabric', 'composition' => 'Composition', 'fit' => 'Fit', 'care' => 'Care',
+            'model_height' => 'Model height', 'model_weight' => 'Model weight', 'model_size' => 'Size the model wears',
         ];
 
-        $attributes = ['status' => __('Status'), 'brand_id' => __('Brand'), 'branches' => __('Branches'), 'tags' => __('Tags'), 'labels' => __('Labels')];
+        $attributes = ['video_url' => __('Video URL'), 'status' => __('Status'), 'brand_id' => __('Brand'), 'branches' => __('Branches'), 'tags' => __('Tags'), 'labels' => __('Labels')];
 
         foreach ($names as $field => $label) {
             $attributes[$field] = __($label);
@@ -160,6 +187,8 @@ class ProductRequest extends FormRequest
 
         return [
             ...$attributes,
+            'gallery_colors.*' => __('Color'),
+            'gallery_new_colors.*' => __('Color'),
             'addons.*.addon_id' => __('Addon Group'),
             'addons.*.min_selection' => __('Min Selection'),
             'addons.*.max_selection' => __('Max Selection'),
@@ -237,7 +266,15 @@ class ProductRequest extends FormRequest
             "{$prefix}discount_start_date" => ['nullable', 'date'],
             "{$prefix}discount_end_date" => ['nullable', 'date', "after_or_equal:{$prefix}discount_start_date"],
             "{$prefix}manage_stock" => ['boolean'],
-            "{$prefix}stock_quantity" => ['nullable', 'integer', 'min:0', self::INT_MAX],
+            // Below 0 only when it is the stored value (a backorder product owing units), unchanged.
+            "{$prefix}stock_quantity" => ['nullable', 'integer', self::INT_MAX, function (string $attribute, mixed $value, \Closure $fail): void {
+                $loaded = $this->input(substr($attribute, 0, -strlen('stock_quantity')).'stock_quantity_loaded');
+
+                if (is_numeric($value) && (int) $value < 0 && (string) (int) $value !== (string) $loaded) {
+                    $fail('validation.min.numeric')->translate(['min' => 0]);
+                }
+            }],
+            "{$prefix}stock_quantity_loaded" => ['nullable', 'integer'],
             "{$prefix}low_stock_threshold" => ['nullable', 'integer', 'min:0', self::INT_MAX],
             "{$prefix}stock_status" => ['nullable', Rule::in(['in_stock', 'out_of_stock', 'on_backorder'])],
             "{$prefix}allow_backorder" => ['boolean'],
@@ -253,7 +290,44 @@ class ProductRequest extends FormRequest
             "{$prefix}meta_title" => ['nullable', 'string', 'max:60'],
             "{$prefix}meta_description" => ['nullable', 'string', 'max:160'],
             "{$prefix}meta_keywords" => ['nullable', 'string', 'max:255'],
+            "{$prefix}fabric" => ['nullable', 'string', 'max:1000'],
+            "{$prefix}composition" => ['nullable', 'string', 'max:1000'],
+            "{$prefix}fit" => ['nullable', 'string', 'max:1000'],
+            "{$prefix}care" => ['nullable', 'string', 'max:2000'],
+            // The model in the photos: centimetres and kilograms.
+            "{$prefix}model_height" => ['nullable', 'integer', 'min:50', 'max:250'],
+            "{$prefix}model_weight" => ['nullable', 'integer', 'min:20', 'max:300'],
+            "{$prefix}model_size" => ['nullable', 'string', 'max:32'],
         ];
+    }
+
+    /**
+     * A gallery color that is not a value of a COLOR attribute (deleted since the page was opened, or
+     * never one) is "no color": it must not stop the rest of the product from saving.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private static function knownColors(array $data): array
+    {
+        if (! is_array($data['gallery_colors'] ?? null) && ! is_array($data['gallery_new_colors'] ?? null)) {
+            return $data;
+        }
+
+        $colors = AttributeValue::query()
+            ->whereIn('attribute_id', Attribute::query()->where('type', AttributeType::COLOR->value)->select('id'))
+            ->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        foreach (['gallery_colors', 'gallery_new_colors'] as $key) {
+            if (is_array($data[$key] ?? null)) {
+                $data[$key] = array_map(
+                    fn ($value) => is_numeric($value) && in_array((int) $value, $colors, true) ? (int) $value : null,
+                    $data[$key],
+                );
+            }
+        }
+
+        return $data;
     }
 
     /**

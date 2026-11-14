@@ -7,7 +7,8 @@ import { t } from '@/lib/i18n';
 
 import type { ErrorOf, ProductRowFields } from './types';
 
-defineProps<{ row: ProductRowFields & { status?: number }; error: ErrorOf; statuses?: Option[] }>();
+/** `flags`: the product itself, which has the new and best seller flags (a variation has none). */
+defineProps<{ row: ProductRowFields & { status?: number; is_new?: boolean; is_best_seller?: boolean }; error: ErrorOf; statuses?: Option[]; flags?: boolean }>();
 </script>
 
 <template>
@@ -17,6 +18,8 @@ defineProps<{ row: ProductRowFields & { status?: number }; error: ErrorOf; statu
         <TextInput v-model="row.weight" :label="t('Weight')" type="number" step="0.01" min="0" :error="error('weight')" />
         <Toggle v-model="row.is_featured" :label="t('Is this product featured')" />
         <Toggle v-model="row.is_digital" :label="t('Is this product digital')" />
+        <Toggle v-if="flags" v-model="row.is_new" :label="t('New')" :hint="t('Shows the New badge in the store')" />
+        <Toggle v-if="flags" v-model="row.is_best_seller" :label="t('Best seller')" :hint="t('Shows the Best seller badge in the store')" />
         <SelectInput v-if="statuses" v-model="row.status" :label="t('Status')" required :options="statuses" :error="error('status')" />
     </div>
 </template>

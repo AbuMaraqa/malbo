@@ -81,18 +81,39 @@ class Product extends Model implements TranslatableContract, HasMedia
         'parent_id',
         'brand_id',
         'is_active',
+        'is_new',
+        'is_best_seller',
+        'model_height',
+        'model_weight',
+        'model_size',
+        'video_url',
+        'bundle_type',
+        'bundle_discount_percent',
         'created_by',
     ];
 
     protected $casts = [
         'status' => ProductStatus::class,
         'meta_data' => 'array',
+        'is_new' => 'boolean',
+        'is_best_seller' => 'boolean',
+        // Written by InventoryService only (incoming goods merchants may reserve).
+        'incoming_quantity' => 'integer',
+        'incoming_expected_at' => 'date',
+        // Units sold (parents only), written by SalesCounter only: the "best selling" sort.
+        'sales_count' => 'integer',
+        // A set or bundle (Modules\Items\Enums\BundleType): no stock of its own (BundleStock).
+        'bundle_discount_percent' => 'decimal:2',
     ];
 
     public $translatedAttributes = [
         'name',
         'description',
         'short_description',
+        'fabric',
+        'composition',
+        'fit',
+        'care',
     ];
 
     // NOT NULL columns with a default: an empty form value means the column's default.
@@ -192,12 +213,17 @@ class Product extends Model implements TranslatableContract, HasMedia
         }
     }
 
+    /**
+     * @return list<\Spatie\MediaLibrary\MediaCollections\Models\Media>|null  the images added, in the order given; null on an error
+     */
     public function addGalleryImage($files)
     {
         // التأكد من أن المدخل هو مصفوفة
         if (!is_array($files)) {
             $files = [$files];
         }
+
+        $added = [];
 
         try {
             foreach ($files as $file) {
@@ -221,9 +247,11 @@ class Product extends Model implements TranslatableContract, HasMedia
                 $size = ImageSize::MEDIUM;
                 ImageService::optimize($media->getPath(), ImageQuality::HIGH->value);
                 ImageService::resize($media->getPath(), $size->width(), $size->height());
+
+                $added[] = $media;
             }
 
-            return true;
+            return $added;
         } catch (\Exception $e) {
             \Log::error('Error uploading product gallery images: ' . $e->getMessage());
             return null;
@@ -358,6 +386,32 @@ class Product extends Model implements TranslatableContract, HasMedia
             ->orderBy('created_at', 'desc');
     }
 
+
+    /**
+     * The pieces of a set or bundle, in their order.
+     */
+    public function bundleComponents(): HasMany
+    {
+        return $this->hasMany(BundleComponent::class, 'bundle_id')->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * "Complete the look": the products staff put next to this one, in their order.
+     */
+    public function looks(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, config('items.table_prefix').'product_looks', 'product_id', 'look_product_id')
+            ->withPivot('sort_order')
+            ->orderByPivot('sort_order');
+    }
+
+    /**
+     * A set or bundle offer: sold on the storefront only, made of its components.
+     */
+    public function isBundle(): bool
+    {
+        return $this->bundle_type !== null;
+    }
 
     public function branchProducts(): HasMany
     {

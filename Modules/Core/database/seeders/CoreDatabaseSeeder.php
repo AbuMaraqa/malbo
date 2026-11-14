@@ -16,6 +16,9 @@ class CoreDatabaseSeeder extends Seeder
             PermissionSeeder::class,
             CurrencySeeder::class,
             AppVersionSeeder::class,
+            // The Super Admin account (ADMIN_* in .env). Its role receives every module's
+            // permissions, including those the modules seeded after Core add.
+            AdminSeeder::class,
         ]);
     }
 }

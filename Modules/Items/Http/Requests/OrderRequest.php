@@ -23,7 +23,7 @@ class OrderRequest extends FormRequest
             'delivery_address' => ['nullable', 'numeric', 'max:255'],
             'contact_phone'    => ['nullable', 'string', 'max:20'],
             'branch_id'        => ['required', 'integer', 'exists:' . $branchesTable . ',id'],
-            'payment_method'   => ['required', new \Illuminate\Validation\Rules\Enum(PaymentMethod::class)],
+            'payment_method'   => ['required', (new \Illuminate\Validation\Rules\Enum(PaymentMethod::class))->except(PaymentMethod::ON_ACCOUNT)], // on account: wholesale credit only
             'notes'            => ['nullable', 'string'],
             'delivery_type'    => ['required', new \Illuminate\Validation\Rules\Enum(DeliveryType::class)],
             'items'            => ['required', 'array', 'min:1'],

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useId } from 'vue';
 
-import { Switch } from '@/tailadmin/ui/switch';
+import Switch from '../ui/Switch.vue';
 
 defineProps<{ label?: string; hint?: string; disabled?: boolean; ariaLabel?: string }>();
 
@@ -11,10 +11,10 @@ const id = useId();
 
 <template>
     <div class="flex items-start gap-3">
-        <Switch :id="id" v-model="model" :disabled="disabled" :aria-label="ariaLabel" size="sm" class="mt-0.5" />
+        <Switch :id="id" v-model="model" :disabled="disabled" :aria-label="ariaLabel" class="mt-0.5" />
         <div v-if="label">
-            <label :for="id" class="text-sm font-medium text-gray-700 dark:text-gray-400">{{ label }}</label>
-            <p v-if="hint" class="text-sm text-gray-500 dark:text-gray-400">{{ hint }}</p>
+            <label :for="id" class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ label }}</label>
+            <p v-if="hint" class="text-sm text-muted">{{ hint }}</p>
         </div>
     </div>
 </template>

@@ -29,10 +29,18 @@ function chooseCity(value: unknown): void {
             <SelectInput v-model="form.payment_status" :label="t('Payment Status')" required :options="options.paymentStatuses" :error="form.errors.payment_status" />
             <SelectInput v-model="form.delivery_type" :label="t('Delivery Type')" :options="options.deliveryTypes" :error="form.errors.delivery_type" />
             <MultiSelect :model-value="form.city_id" single :label="t('City')" required :options="options.cities" :error="form.errors.city_id" @update:model-value="chooseCity" />
-            <MultiSelect v-model="form.district_id" single :label="t('District')" required :options="districts" :error="form.errors.district_id" />
+            <MultiSelect v-model="form.district_id" single :label="t('District')" :required="options.required.district_id" :options="districts" :error="form.errors.district_id" />
             <TextareaInput v-model="form.delivery_address" :label="t('Delivery Address')" required :error="form.errors.delivery_address" />
             <TextInput v-model="form.contact_phone" :label="t('Contact Phone')" dir="ltr" required :error="form.errors.contact_phone" />
+            <TextInput v-model="form.customer_name" :label="t('Customer name')" :error="form.errors.customer_name" />
+            <TextInput v-model="form.customer_email" :label="t('Customer email')" type="email" dir="ltr" :error="form.errors.customer_email" />
             <TextareaInput v-model="form.notes" :label="t('Notes')" :error="form.errors.notes" />
+            <TextareaInput
+                v-model="form.internal_notes"
+                :label="t('Internal notes')"
+                :hint="t('Only staff see this')"
+                :error="form.errors.internal_notes"
+            />
         </div>
     </Card>
 </template>

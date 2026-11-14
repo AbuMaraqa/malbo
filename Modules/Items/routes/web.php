@@ -5,11 +5,16 @@ use Illuminate\Support\Facades\Route;
 use Modules\Items\Http\Controllers\Admin\AddonController;
 use Modules\Items\Http\Controllers\Admin\AttributeController;
 use Modules\Items\Http\Controllers\Admin\BrandController;
+use Modules\Items\Http\Controllers\Admin\BundleController;
 use Modules\Items\Http\Controllers\Admin\CategoryController;
 use Modules\Items\Http\Controllers\Admin\LabelController;
 use Modules\Items\Http\Controllers\Admin\OfferController;
 use Modules\Items\Http\Controllers\Admin\OrderController;
+use Modules\Items\Http\Controllers\Admin\OrderDocumentController;
 use Modules\Items\Http\Controllers\Admin\ProductController;
+use Modules\Items\Http\Controllers\Admin\ReturnRequestController;
+use Modules\Items\Http\Controllers\Admin\ShipmentController;
+use Modules\Items\Http\Controllers\Admin\StockController;
 use Modules\Items\Http\Controllers\Admin\TagController;
 
 Route::middleware(['auth', 'verified'])->prefix('{locale}')->where(['locale' => Locales::pattern()])->group(function () {
@@ -82,6 +87,9 @@ Route::middleware(['auth', 'verified'])->prefix('{locale}')->where(['locale' => 
             Route::get('/add', 'add')->name('add')->can('Product Create');
             Route::post('/', 'store')->name('store')->can('Product Create');
             Route::delete('/', 'destroyMany')->name('destroy-many')->can('Product Delete');
+            // "Complete the look" (phase 8B): the products shown next to a product.
+            Route::get('/look-lookup', 'lookLookup')->name('look.lookup')->can('Product Update');
+            Route::put('/{product}/look', 'look')->whereNumber('product')->name('look.update')->can('Product Update');
             Route::get('/{product}/info', 'info')->whereNumber('product')->name('info')->can('Product Info');
             Route::get('/{product}/edit', 'edit')->whereNumber('product')->name('edit')->can('Product Update');
             Route::get('/{product}/barcodes', 'barcodes')->whereNumber('product')->name('barcodes')->can('Product View List');
@@ -92,6 +100,18 @@ Route::middleware(['auth', 'verified'])->prefix('{locale}')->where(['locale' => 
             Route::put('/{product}/active', 'active')->whereNumber('product')->name('active')->can('Product Update');
             Route::put('/{product}', 'update')->whereNumber('product')->name('update')->can('Product Update');
             Route::delete('/{product}', 'destroy')->whereNumber('product')->name('destroy')->can('Product Delete');
+        });
+
+
+        // Sets and bundle offers (phase 8B): products made of components, sold on the storefront only.
+        Route::prefix('bundles')->name('bundles.')->controller(BundleController::class)->group(function () {
+            Route::get('/', 'index')->name('index')->can('Bundle View List');
+            Route::get('/add', 'add')->name('add')->can('Bundle Create');
+            Route::post('/', 'store')->name('store')->can('Bundle Create');
+            Route::get('/lookup', 'lookup')->name('lookup')->can('Bundle View List');
+            Route::get('/{bundle}/edit', 'edit')->whereNumber('bundle')->name('edit')->can('Bundle Update');
+            Route::put('/{bundle}', 'update')->whereNumber('bundle')->name('update')->can('Bundle Update');
+            Route::delete('/{bundle}', 'destroy')->whereNumber('bundle')->name('destroy')->can('Bundle Delete');
         });
 
         Route::prefix('offers')->name('offers.')->controller(OfferController::class)->group(function () {
@@ -115,8 +135,43 @@ Route::middleware(['auth', 'verified'])->prefix('{locale}')->where(['locale' => 
             Route::get('/edit-lookup/{type}', 'lookup')->whereIn('type', ['customers', 'products'])->name('edit-lookup')->can('Order Update');
             Route::get('/{order}/info', 'info')->whereNumber('order')->name('info')->can('Order Info');
             Route::get('/{order}/edit', 'edit')->whereNumber('order')->name('edit')->can('Order Update');
+            Route::put('/{order}/confirm', 'confirm')->whereNumber('order')->name('confirm')->can('Order Update');
             Route::put('/{order}', 'update')->whereNumber('order')->name('update')->can('Order Update');
             Route::delete('/{order}', 'destroy')->whereNumber('order')->name('destroy')->can('Order Delete');
+        });
+
+        // An order's papers (PDF): the invoice and the courier's waybill, one or many at once.
+        Route::prefix('orders')->name('orders.')->controller(OrderDocumentController::class)->group(function () {
+            Route::get('/waybills', 'waybills')->name('waybills')->can('Order Invoice');
+            Route::get('/{order}/invoice', 'invoice')->whereNumber('order')->name('invoice')->can('Order Invoice');
+            Route::get('/{order}/waybill', 'waybill')->whereNumber('order')->name('waybill')->can('Order Invoice');
+        });
+
+        Route::prefix('shipments')->name('shipments.')->controller(ShipmentController::class)->group(function () {
+            Route::get('/', 'index')->name('index')->can('Shipment View List');
+            Route::post('/', 'store')->name('store')->can('Shipment Create');
+            Route::put('/{shipment}/status', 'status')->whereNumber('shipment')->name('status')->can('Shipment Update');
+        });
+
+        Route::prefix('stock')->name('stock.')->controller(StockController::class)->group(function () {
+            Route::get('/movements', 'movements')->name('movements')->can('Stock View List');
+            Route::get('/low', 'lowStock')->name('low')->can('Stock View List');
+            Route::get('/receive', 'receiveForm')->name('receive')->can('Stock Update');
+            Route::post('/receive', 'receive')->name('receive.store')->can('Stock Update');
+            Route::get('/adjust', 'adjustForm')->name('adjust')->can('Stock Update');
+            Route::post('/adjust', 'adjust')->name('adjust.store')->can('Stock Update');
+            Route::get('/products', 'products')->name('products')->can('Stock Update');
+        });
+
+        Route::prefix('return-requests')->name('return-requests.')->controller(ReturnRequestController::class)->group(function () {
+            Route::get('/', 'index')->name('index')->can('Return Request View List');
+            Route::get('/add', 'add')->name('add')->can('Return Request Create');
+            Route::post('/', 'store')->name('store')->can('Return Request Create');
+            Route::get('/products', 'products')->name('products')->can('Return Request Create');
+            Route::put('/settings', 'settings')->name('settings')->can('Return Request Update');
+            Route::get('/{returnRequest}/edit', 'edit')->whereNumber('returnRequest')->name('edit')->can('Return Request Update');
+            Route::put('/{returnRequest}/status', 'status')->whereNumber('returnRequest')->name('status')->can('Return Request Update');
+            Route::put('/{returnRequest}', 'update')->whereNumber('returnRequest')->name('update')->can('Return Request Update');
         });
     });
 });

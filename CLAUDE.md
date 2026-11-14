@@ -17,7 +17,8 @@ multi-tenant version: multi-tenancy has since been removed).
   on every route. Public routes stay outside `auth`.
 - Models: `newFactory()`, traits, constructor `setTable(config('<module>.table_prefix').'<table>')`,
   `$fillable`, `$casts`, `$translatedAttributes`, `getActivitylogOptions()`, `createdBy()`, `booted()`.
-- Permissions: module `database/seeders/PermissionSeeder.php`. Sidebar: `Providers/SidebarServiceProvider.php`.
+- Permissions: module `database/seeders/PermissionSeeder.php`. Sidebar: `Providers/SidebarServiceProvider.php`;
+  each top entry names its heading with `->section('Sales'|'Catalog'|'Store'|'Administration')`, and its sort keeps sections together.
   Texts: `Lang/ar.json`, English keys, read in Vue with `t('Key')`.
 
 ## Layering
@@ -39,28 +40,34 @@ multi-tenant version: multi-tenancy has since been removed).
 
 - No multi-tenancy and no Redis: cache, sessions and queue are in the database.
 - `php artisan migrate` runs `database/migrations`, `database/settings` and `Modules/*/database/migrations`.
-- `php artisan db:seed`: `BaseDataSeeder` (permissions, roles, base data) then
-  `Modules/Core/database/seeders/AdminSeeder.php` (the Super Admin from `ADMIN_*` in `.env`,
-  `config/admin.php`). Safe to run again.
+- `php artisan db:seed` runs every enabled module's `<Module>DatabaseSeeder`, Core first. Core's runs
+  `AdminSeeder` (the Super Admin from `ADMIN_*` in `.env`, `config/admin.php`). A new module only
+  needs that class. Safe to run again.
 
 ## Frontend
 
-- The admin is built on TailAdmin Vue, free edition (MIT): `resources/js/tailadmin` is its component
-  library, left as it is; keep its LICENSE and `THIRD_PARTY_NOTICES.md`. Never copy from the paid Pro edition.
-- Pages use our components, which wrap it: `resources/js/Components/{ui,form,table,layout,dashboard}`.
+- The admin has its own design system (no template): tokens in `resources/css/admin.css`, primitives on
+  Reka UI. Shell: `Layouts/AdminLayout.vue` with `Components/layout/{AppSidebar,AppHeader,AppFooter}`;
+  folding sidebar (`lib/useSidebar.ts`, Ctrl+B), search dialog (`CommandSearch.vue`, Ctrl+K), notifications
+  sheet, user menu with language and dark mode (`lib/useTheme.ts`). Never copy code or assets from a paid template.
+- Pages use our components: `resources/js/Components/{ui,form,table,layout,dashboard}`. Button looks come from
+  `lib/buttonClasses.ts`, field looks from `Components/form/controlClasses.ts`, class merging from `lib/cn.ts`.
   One component per file: when a part of a component has its own job, it moves to its own file.
 - Every admin table is a `DataTable` with a non-empty `filters` list, and the controller allows those
   filters with `Modules\Core\Support\AdminFilter`. `TableFiltersTest` enforces it.
 - Every `t('...')` text has an Arabic entry in a `Lang/ar.json` (`ArabicTextsTest`).
 - RTL by default: logical Tailwind utilities only (`ms-`, `pe-`, `start-`, `text-start`), never `ml-`, `right-`.
-- Dark mode is on in the admin: use `dark:` variants as TailAdmin does, or the `ink`, `muted`, `line`,
-  `surface`, `card` tokens. Brand tints need a dark variant: `text-brand-600 dark:text-brand-400`, `bg-brand-50 dark:bg-brand-500/15`. Colors: admin `brand-*` (TailAdmin), storefront `store-*` (the store's color).
+- Dark mode is on in the admin: use `dark:` variants, or the `ink`, `muted`, `line`, `surface`, `card`,
+  `canvas` tokens. Brand tints need a dark variant: `text-brand-600 dark:text-brand-400`, `bg-brand-50 dark:bg-brand-500/15`.
+  Colors: admin `brand-*` (the panel color from the settings, default `#1570EF`), storefront `store-*` (the store's color).
+  Cards: `rounded-xl border border-line bg-card shadow-card`.
 - Icons: Solar only, through `resources/js/lib/icons.ts` (`SolarIconsTest`). Sidebar keys in `Components/layout/navIcons.ts`.
 - Languages: add a line to `config/app.php` `locales` (native name, direction, flag) and a `Lang/<code>.json`.
 - Heavy libraries (Tiptap, Leaflet, ApexCharts, Sortable) are loaded with `defineAsyncComponent`.
 
 ## Tests
 
-- `Tests\DatabaseTestCase` on `core_view_testing` (RefreshDatabase, seeded with `BaseDataSeeder`,
+- `Tests\DatabaseTestCase` on `core_view_testing` (RefreshDatabase, seeded with `DatabaseSeeder`,
   `siteUrl()` for absolute URLs). Page tests use `assertInertia`.
 - The machine is RAM-constrained: run single files while working, full suites at the end.
+- Frontend: `npm run test:js` (Vitest) for components with logic.

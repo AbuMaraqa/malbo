@@ -143,6 +143,66 @@ class AttributePagesTest extends DatabaseTestCase
             ->assertSessionDoesntHaveErrors(['values.0.name']);
     }
 
+    public function test_staff_mark_an_attribute_filterable(): void
+    {
+        $this->actingAs($this->staff)
+            ->post($this->siteUrl('/ar/admin/attributes'), $this->payload(['slug' => 'size', 'type' => AttributeType::SELECT->value, 'is_filterable' => true]))
+            ->assertSessionHasNoErrors();
+
+        $attribute = Attribute::query()->where('slug', 'size')->firstOrFail();
+        $this->assertTrue($attribute->is_filterable);
+
+        $this->page('/attributes/'.$attribute->id.'/edit')->assertInertia(fn (Assert $page) => $page->where('attribute.is_filterable', true));
+        $this->page('/attributes')->assertInertia(fn (Assert $page) => $page->where('table.data.0.is_filterable', true));
+
+        $this->actingAs($this->staff)
+            ->put($this->siteUrl('/ar/admin/attributes/'.$attribute->id), $this->payload(['slug' => 'size', 'type' => AttributeType::SELECT->value, 'is_filterable' => false]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertFalse($attribute->fresh()->is_filterable);
+
+        $this->actingAs($this->staff)
+            ->put($this->siteUrl('/ar/admin/attributes/'.$attribute->id), $this->payload(['slug' => 'size', 'is_filterable' => 'nope']))
+            ->assertSessionHasErrors('is_filterable');
+    }
+
+    public function test_a_color_attribute_is_filterable_unless_said_otherwise(): void
+    {
+        $this->actingAs($this->staff)->post($this->siteUrl('/ar/admin/attributes'), $this->payload())->assertSessionHasNoErrors();
+        $this->actingAs($this->staff)->post($this->siteUrl('/ar/admin/attributes'), $this->payload(['slug' => 'fit', 'type' => AttributeType::SELECT->value]))->assertSessionHasNoErrors();
+
+        $this->assertTrue(Attribute::query()->where('slug', 'color')->firstOrFail()->is_filterable);
+        $this->assertFalse(Attribute::query()->where('slug', 'fit')->firstOrFail()->is_filterable);
+
+        // An edit that does not send it keeps what was saved.
+        $fit = Attribute::query()->where('slug', 'fit')->firstOrFail();
+        $fit->forceFill(['is_filterable' => true])->save();
+        $this->actingAs($this->staff)->put($this->siteUrl('/ar/admin/attributes/'.$fit->id), $this->payload(['slug' => 'fit', 'type' => AttributeType::SELECT->value]))->assertSessionHasNoErrors();
+        $this->assertTrue($fit->fresh()->is_filterable);
+    }
+
+    public function test_staff_mark_the_size_attribute_and_only_one_is(): void
+    {
+        $this->actingAs($this->staff)
+            ->post($this->siteUrl('/ar/admin/attributes'), $this->payload(['slug' => 'size', 'type' => AttributeType::SELECT->value, 'is_size' => true, 'is_filterable' => false]))
+            ->assertSessionHasNoErrors();
+
+        $size = Attribute::query()->where('slug', 'size')->firstOrFail();
+        $this->assertTrue($size->is_size);
+        $this->assertTrue($size->is_filterable); // the size is always a filter
+        $this->page('/attributes/'.$size->id.'/edit')->assertInertia(fn (Assert $page) => $page->where('attribute.is_size', true));
+
+        $this->actingAs($this->staff)
+            ->post($this->siteUrl('/ar/admin/attributes'), $this->payload(['slug' => 'length', 'type' => AttributeType::SELECT->value, 'is_size' => true]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertFalse($size->fresh()->is_size);
+        $this->assertTrue(Attribute::query()->where('slug', 'length')->firstOrFail()->is_size);
+
+        $this->expectException(\Illuminate\Database\QueryException::class);
+        $size->fresh()->forceFill(['is_size' => true])->save(); // the database keeps one too
+    }
+
     public function test_a_slug_used_by_a_category_is_free_for_an_attribute(): void
     {
         Category::factory()->create(['slug' => 'color']);

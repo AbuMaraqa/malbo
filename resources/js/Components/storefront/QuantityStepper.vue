@@ -15,9 +15,9 @@ function set(event: Event): void {
 
 <template>
     <div>
-        <span id="quantity-label" class="mb-3 block font-bold">{{ t('Quantity') }}</span>
-        <div class="inline-flex items-center rounded-md border border-(--ink-30) bg-white" role="group" aria-labelledby="quantity-label">
-            <button type="button" class="grid size-11 cursor-pointer place-items-center text-xl disabled:cursor-not-allowed disabled:opacity-40" :aria-label="t('Decrease quantity')" :disabled="model <= 1" @click="model -= 1">−</button>
+        <span id="quantity-label" class="mb-3 block font-semibold">{{ t('Quantity') }}</span>
+        <div class="inline-flex items-center rounded-md border border-line bg-white" role="group" aria-labelledby="quantity-label">
+            <button type="button" class="grid size-11 cursor-pointer place-items-center text-xl transition-colors hover:bg-(--sand) disabled:cursor-not-allowed disabled:opacity-40" :aria-label="t('Decrease quantity')" :disabled="model <= 1" @click="model -= 1">−</button>
             <input
                 :value="model"
                 type="number"
@@ -25,10 +25,10 @@ function set(event: Event): void {
                 :max="max"
                 inputmode="numeric"
                 aria-labelledby="quantity-label"
-                class="h-11 w-14 border-x border-(--ink-30) text-center [appearance:textfield]"
+                class="h-11 w-14 border-x border-line text-center [appearance:textfield]"
                 @change="set"
             />
-            <button type="button" class="grid size-11 cursor-pointer place-items-center text-xl disabled:cursor-not-allowed disabled:opacity-40" :aria-label="t('Increase quantity')" :disabled="model >= max" @click="model += 1">+</button>
+            <button type="button" class="grid size-11 cursor-pointer place-items-center text-xl transition-colors hover:bg-(--sand) disabled:cursor-not-allowed disabled:opacity-40" :aria-label="t('Increase quantity')" :disabled="model >= max" @click="model += 1">+</button>
         </div>
     </div>
 </template>

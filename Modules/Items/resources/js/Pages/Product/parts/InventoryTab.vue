@@ -21,7 +21,15 @@ const stockStatuses = computed(() => [
     <div class="grid gap-4 md:grid-cols-2">
         <Toggle v-model="row.manage_stock" :label="t('Manage Stock')" />
         <Toggle v-if="row.manage_stock" v-model="row.allow_backorder" :label="t('Allow Backorder')" />
-        <TextInput v-if="row.manage_stock" v-model="row.stock_quantity" :label="t('Stock Quantity')" type="number" min="0" :error="error('stock_quantity')" />
+        <TextInput
+            v-if="row.manage_stock"
+            v-model="row.stock_quantity"
+            :label="t('Stock Quantity')"
+            type="number"
+            min="0"
+            :hint="row.incoming_quantity ? t('Goods on their way (:count)? Use Receive on the stock page so the incoming goods go down.', { count: row.incoming_quantity }) : undefined"
+            :error="error('stock_quantity')"
+        />
         <TextInput v-if="row.manage_stock" v-model="row.low_stock_threshold" :label="t('Low Stock Threshold')" type="number" min="0" :error="error('low_stock_threshold')" />
         <SelectInput v-if="row.manage_stock" v-model="row.stock_status" :label="t('Stock Status')" :options="stockStatuses" :error="error('stock_status')" />
         <TextInput v-model="row.max_quantity_per_order" :label="t('Max Quantity Per Order')" type="number" min="1" :error="error('max_quantity_per_order')" />

@@ -84,6 +84,7 @@ return [
     'locales' => [
         'ar' => ['native' => 'العربية', 'dir' => 'rtl', 'flag' => 'SA'],
         'en' => ['native' => 'English', 'dir' => 'ltr', 'flag' => 'US'],
+        'he' => ['native' => 'עברית', 'dir' => 'rtl', 'flag' => 'IL'],
     ],
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),

@@ -41,7 +41,7 @@ class CountryPagesTest extends DatabaseTestCase
                 ->has('codes')
                 ->has('phoneCodes')
                 ->has('currencies')
-                ->where('locales', ['ar', 'en'])
+                ->where('locales', ['ar', 'en', 'he'])
                 ->where('table.meta.per_page', 25));
     }
 

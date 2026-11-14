@@ -61,7 +61,7 @@ function submit(): void {
                                     inputmode="decimal"
                                     :aria-label="`${row.name} - ${branch.name}`"
                                     :placeholder="t('Price')"
-                                    class="h-9 w-full rounded-[10px] border bg-card px-2 text-sm text-gray-800 dark:bg-gray-900 dark:text-white/90"
+                                    class="h-9 w-full rounded-lg border bg-card px-2 text-sm text-gray-800 dark:bg-gray-900 dark:text-white/90"
                                     :class="errors[`prices.${row.id}.${branch.id}`] ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'"
                                 />
                                 <p v-if="errors[`prices.${row.id}.${branch.id}`]" class="mt-1 text-xs text-danger" role="alert">{{ errors[`prices.${row.id}.${branch.id}`] }}</p>

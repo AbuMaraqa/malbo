@@ -3,7 +3,10 @@
 namespace Tests\Feature\Store;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Modules\Branch\Entities\Branch;
+use Modules\Core\Entities\User;
+use Modules\Core\Enums\UserRole;
 use Modules\Items\Entities\Category;
 use Modules\Items\Entities\Product;
 use Modules\Store\Services\StoreAppearanceService;
@@ -93,6 +96,49 @@ class HomePageTest extends StorefrontTestCase
         $this->assertNull($props['store']['contact']);
         $this->assertSame([], $props['store']['branches']);
         $this->assertSame([], $props['store']['socials']);
+    }
+
+    public function test_new_arrivals_list_the_newest_products_first(): void
+    {
+        $older = Product::factory()->create(['name' => 'قميص قديم']);
+        $newer = Product::factory()->create(['name' => 'فستان جديد']);
+        $older->forceFill(['created_at' => now()->subWeek()])->save();
+
+        $arrivals = $this->props('/ar', self::HOME)['arrivals'];
+
+        $this->assertSame([$newer->id, $older->id], array_column($arrivals, 'id'));
+    }
+
+    public function test_every_page_gets_the_header_categories_and_the_members_link(): void
+    {
+        $category = Category::factory()->create(['name' => 'فساتين']);
+        app(StoreAppearanceService::class)->save(['membership_enabled' => true], [], []);
+
+        $store = $this->props('/ar', self::HOME)['store'];
+
+        $this->assertSame($category->id, $store['categories'][0]['id']);
+        $this->assertSame('فساتين', $store['categories'][0]['name']);
+        $this->assertSame(route('store.category', ['slug' => $category->slug]), $store['categories'][0]['url']);
+        $this->assertSame(route('store.members'), $store['members_url']);
+
+        app(StoreAppearanceService::class)->save(['membership_enabled' => false], [], []);
+        $this->assertNull($this->props('/ar', self::HOME)['store']['members_url']);
+    }
+
+    public function test_the_layout_invites_buyers_to_wholesale_and_sends_merchants_to_the_portal(): void
+    {
+        $guest = $this->props('/ar', self::HOME)['store']['wholesale'];
+
+        $this->assertFalse($guest['merchant']);
+        $this->assertSame(route('store.wholesale.apply'), $guest['apply_url']);
+        $this->assertSame(route('store.wholesale.catalog'), $guest['portal_url']);
+        $this->assertSame(['merchant', 'portal_url', 'apply_url'], array_keys($guest), 'links only, never a price');
+
+        $merchant = User::forceCreate(['name' => 'Shop', 'email' => 'shop-'.Str::random(8).'@store.test', 'password' => 'secret-password'])
+            ->assignRole(UserRole::MERCHANT->value);
+        $this->actingAs($merchant);
+
+        $this->assertTrue($this->props('/ar', self::HOME)['store']['wholesale']['merchant']);
     }
 
     public function test_each_section_is_only_rendered_with_content(): void

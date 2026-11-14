@@ -7,7 +7,6 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 use Modules\Branch\Entities\Branch;
 use Modules\Items\Entities\Category;
-use Modules\Items\Entities\Offer;
 use Modules\Items\Enums\OfferType;
 use Modules\Items\Repositories\Contracts\OfferRepositoryInterface;
 use Modules\Items\Repositories\Contracts\ProductRepositoryInterface;
@@ -49,7 +48,14 @@ class OfferRequest extends FormRequest
             'offerable_id' => ['required', 'integer'],
             'type' => ['required', Rule::enum(OfferType::class)],
             'value' => ['required', 'numeric', 'min:0', self::MONEY_MAX],
-            'code' => ['nullable', 'string', 'max:50', Rule::unique((new Offer)->getTable(), 'code')->ignore($id)],
+            // Checkout matches a code in any letter case (lower(code)): two offers may not share one.
+            'code' => ['nullable', 'string', 'max:50', function (string $attribute, mixed $value, \Closure $fail) use ($id): void {
+                $taken = is_string($value) ? app(OfferRepositoryInterface::class)->findCoupon($value) : null;
+
+                if ($taken !== null && $taken->id !== $id) {
+                    $fail(__('Coupon codes must be unique, whatever the letter case.'));
+                }
+            }],
             'min_purchase_amount' => ['required', 'numeric', 'min:0', self::MONEY_MAX],
             'usage_limit' => ['required', 'integer', 'min:1', self::INT_MAX],
             'usage_limit_per_user' => ['required', 'integer', 'min:1', self::INT_MAX],

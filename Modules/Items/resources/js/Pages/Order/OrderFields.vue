@@ -12,7 +12,7 @@ import { route } from '@/lib/route';
 
 import OrderInfoCard from './parts/OrderInfoCard.vue';
 import OrderItemsCard from './parts/OrderItemsCard.vue';
-import type { OrderForm, OrderFormOptions, ProductOption } from './parts/types';
+import type { OrderForm, OrderFormOptions, OrderItemRow, ProductOption } from './parts/types';
 
 const props = defineProps<{
     form: InertiaForm<OrderForm>;
@@ -22,7 +22,13 @@ const props = defineProps<{
     selectedCustomer?: Option | null;
     selectedProducts?: ProductOption[];
     discount?: number | string;
+    /** Edit only: the order's lines can no longer change. */
+    linesLocked?: boolean;
+    /** Edit only: the pieces of the sets on the order. */
+    bundleItems?: OrderItemRow[];
 }>();
+
+const emit = defineEmits<{ removeBundle: [key: string] }>();
 
 const DELIVERY = 1;
 
@@ -38,11 +44,20 @@ const customers = computed(() => (props.selectedCustomer ? [props.selectedCustom
         <div class="grid gap-4 lg:col-span-2">
             <Card :title="t('Order Details')">
                 <div class="grid gap-4 md:grid-cols-2">
-                    <RemoteSelect v-model="form.user_id" :url="route(lookupRoute, { type: 'customers' })" :initial="customers" :label="t('Customer')" required :error="form.errors.user_id" />
-                    <MultiSelect v-model="form.branch_id" single :label="t('Branch')" required :options="options.branches" :error="form.errors.branch_id" />
+                    <RemoteSelect v-model="form.user_id" :url="route(lookupRoute, { type: 'customers' })" :initial="customers" :label="t('Customer')" :required="options.required.user_id" :error="form.errors.user_id" />
+                    <MultiSelect v-model="form.branch_id" single :label="t('Branch')" :required="options.required.branch_id" :options="options.branches" :error="form.errors.branch_id" />
                 </div>
             </Card>
-            <OrderItemsCard :form="form" :lookup-route="lookupRoute" :selected-products="selectedProducts" :discount="discount" :is-delivered="isDelivered" />
+            <OrderItemsCard
+                :form="form"
+                :lookup-route="lookupRoute"
+                :selected-products="selectedProducts"
+                :discount="discount"
+                :is-delivered="isDelivered"
+                :locked="linesLocked"
+                :bundle-items="bundleItems"
+                @remove-bundle="emit('removeBundle', $event)"
+            />
             <Card v-if="isDelivered" :title="t('Location On Map')">
                 <MapPicker v-model:latitude="form.latitude" v-model:longitude="form.longitude" :center="MAP_CENTER" :error="form.errors.latitude ?? form.errors.longitude" />
             </Card>

@@ -45,8 +45,8 @@ class ProductResource extends JsonResource
             'base_price' => $this->base_price,
             'sale_price' => $this->sale_price,
             'price' => $this->price,
-            'cost_price' => $this->cost_price,
-            'wholesale_price' => $this->wholesale_price,
+            // No cost_price and no wholesale_price: this API is public. The cost is MALBO's own,
+            // and wholesale prices are for approved merchants only (the Wholesale module's portal).
             'stock_quantity' => $this->stock_quantity,
             'manage_stock' => $this->manage_stock,
             'low_stock_threshold' => $this->low_stock_threshold,
@@ -82,7 +82,7 @@ class ProductResource extends JsonResource
         // ... (هذه الدالة صحيحة كما هي، لا تغيير) ...
         return [
             'id', 'slug', 'barcode', 'sku', 'discount', 'base_price', 'sale_price',
-            'cost_price', 'wholesale_price', 'stock_quantity', 'manage_stock',
+            'stock_quantity', 'manage_stock',
             'low_stock_threshold', 'stock_status', 'allow_backorder',
             'max_quantity_per_order', 'discount_type', 'discount_value',
             'discount_start_date', 'discount_end_date', 'min_quantity_discount',

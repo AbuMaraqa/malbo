@@ -3,7 +3,8 @@ import { computed } from 'vue';
 
 import { t } from '@/lib/i18n';
 
-import { eyebrow, sectionTitle } from './styles';
+import SectionHeading from './SectionHeading.vue';
+import { container } from './styles';
 import type { BrandValueText } from './types';
 
 const props = defineProps<{ values: BrandValueText[] }>();
@@ -13,17 +14,20 @@ const number = (index: number): string => String(index + 1).padStart(2, '0');
 </script>
 
 <template>
-    <section data-section="values" class="reveal mx-auto mt-24 max-w-310 px-4">
-        <div class="text-center">
-            <p :class="eyebrow">{{ t('Our promise') }}</p>
-            <h2 class="mt-2" :class="sectionTitle">{{ t('What we believe in') }}</h2>
+    <section data-section="values" class="reveal mt-24 bg-(--sand-light) py-20">
+        <div :class="container">
+            <SectionHeading :title="t('What we believe in')" :lead="t('Our promise')" />
+            <ul class="mt-12 grid gap-5" :class="grid">
+                <li
+                    v-for="(value, index) in values"
+                    :key="index"
+                    class="rounded-lg border border-line bg-white p-8 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-24px_rgb(22_28_45/0.4)] motion-reduce:transition-none"
+                >
+                    <span class="grid size-12 place-items-center rounded-full bg-store text-lg font-bold text-store-contrast tabular-nums">{{ number(index) }}</span>
+                    <h3 class="mt-6 text-xl font-bold">{{ value.title }}</h3>
+                    <p v-if="value.text" class="mt-2 text-[15px] leading-7 text-(--ink-soft)">{{ value.text }}</p>
+                </li>
+            </ul>
         </div>
-        <ul class="mt-12 grid gap-10 md:gap-0" :class="grid">
-            <li v-for="(value, index) in values" :key="index" class="md:border-s md:border-line md:px-10 md:first:border-s-0">
-                <span class="block text-5xl font-light text-store-700 tabular-nums">{{ number(index) }}</span>
-                <h3 class="mt-5 text-xl font-bold">{{ value.title }}</h3>
-                <p v-if="value.text" class="mt-2 text-[15px] leading-7 text-(--ink-soft)">{{ value.text }}</p>
-            </li>
-        </ul>
     </section>
 </template>

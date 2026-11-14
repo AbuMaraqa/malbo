@@ -14,7 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withBroadcasting(__DIR__.'/../routes/channels.php')
     ->withMiddleware(function (Middleware $middleware): void {
 
-        $middleware->trustProxies(at: '*');
+        // Trusted proxies come from TRUSTED_PROXIES (config/trustedproxy.php); unset trusts none.
+
+        // Meta Pixel's own cookies, set by its script in the browser: read as they are for the
+        // Conversions API (Modules\Store\Services\Marketing\MetaUserData).
+        $middleware->encryptCookies(except: ['_fbp', '_fbc']);
 
         $middleware->web(append: [
             \Modules\Core\Http\Middleware\SetRouteLocale::class,
@@ -22,8 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // Guests go to /login (staff and customers sign in there).
-        $middleware->redirectGuestsTo(fn () => route('login'));
+        // Guests of the storefront's account pages sign in on the storefront; everyone else (the
+        // admin) at Fortify's /login.
+        // `auth` runs before SetRouteLocale fills URL::defaults, so the locale is passed here.
+        $middleware->redirectGuestsTo(fn (\Illuminate\Http\Request $request) => $request->routeIs('store.*')
+            ? route('store.account.login', ['locale' => $request->route('locale') ?? app()->getLocale()])
+            : route('login'));
 
         $middleware->alias([
             'staff' => \App\Http\Middleware\EnsureStaff::class,

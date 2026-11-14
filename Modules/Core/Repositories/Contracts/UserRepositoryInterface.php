@@ -20,4 +20,14 @@ interface UserRepositoryInterface extends RepositoryInterface
      * Records whose foreign key deletes them with the user who created them.
      */
     public function hasRecordsDeletedWithUser(User $user): bool;
+
+    /**
+     * The user with this email, whatever its letter case.
+     */
+    public function findByEmail(string $email): ?User;
+
+    /**
+     * Whether another user already has this email, whatever its letter case.
+     */
+    public function emailTaken(string $email, ?int $exceptId = null): bool;
 }

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { Eye, Info, Pencil, Trash2 } from '@/lib/icons';
 import { ref } from 'vue';
 
-import Button from '@/Components/ui/Button.vue';
+import RowMenu from '@/Components/table/RowMenu.vue';
+import DropdownItem from '@/Components/ui/DropdownItem.vue';
+import DropdownSeparator from '@/Components/ui/DropdownSeparator.vue';
 import { can, t } from '@/lib/i18n';
+import { Eye, Info, Pencil, Trash2 } from '@/lib/icons';
 import { route } from '@/lib/route';
 
 import RecordInfoModal from './RecordInfoModal.vue';
@@ -24,7 +26,7 @@ const props = defineProps<{
     editHref?: string;
 }>();
 
-defineEmits<{ edit: []; delete: [] }>();
+const emit = defineEmits<{ edit: []; delete: [] }>();
 
 const infoOpen = ref(false);
 const viewOpen = ref(false);
@@ -33,14 +35,22 @@ const infoUrl = (): string => route(`${props.routes}.info`, props.id);
 </script>
 
 <template>
-    <Button v-if="can(`${entity} Info`)" variant="ghost" size="icon" :aria-label="t('Info')" @click="infoOpen = true"><Info class="size-4" /></Button>
-    <Button v-if="can(`${entity} View`)" variant="ghost" size="icon" :aria-label="t('View')" @click="viewOpen = true"><Eye class="size-4" /></Button>
-    <template v-if="can(`${entity} Update`)">
-        <Button v-if="editHref" variant="ghost" size="icon" :href="editHref" :aria-label="t('Edit')"><Pencil class="size-4" /></Button>
-        <Button v-else variant="ghost" size="icon" :aria-label="t('Edit')" @click="$emit('edit')"><Pencil class="size-4" /></Button>
-    </template>
-    <Button v-if="can(`${entity} Delete`)" variant="ghost" size="icon" :aria-label="t('Delete')" @click="$emit('delete')"><Trash2 class="size-4" /></Button>
+    <RowMenu v-if="$slots.default || ['View', 'Info', 'Update', 'Delete'].some((action) => can(`${entity} ${action}`))">
+        <!-- A table's own actions (invoice, barcode...) come first. -->
+        <slot />
+        <DropdownItem v-if="can(`${entity} View`)" @select="viewOpen = true"><Eye />{{ t('View') }}</DropdownItem>
+        <DropdownItem v-if="can(`${entity} Info`)" @select="infoOpen = true"><Info />{{ t('Info') }}</DropdownItem>
+        <template v-if="can(`${entity} Update`)">
+            <DropdownItem v-if="editHref" :href="editHref"><Pencil />{{ t('Edit') }}</DropdownItem>
+            <DropdownItem v-else @select="emit('edit')"><Pencil />{{ t('Edit') }}</DropdownItem>
+        </template>
+        <template v-if="can(`${entity} Delete`)">
+            <DropdownSeparator />
+            <DropdownItem destructive @select="emit('delete')"><Trash2 />{{ t('Delete') }}</DropdownItem>
+        </template>
+    </RowMenu>
 
+    <!-- Outside the menu: they stay open after it closes. -->
     <RecordInfoModal v-if="can(`${entity} Info`)" v-model:open="infoOpen" :title="title" :url="infoUrl()" />
     <RecordViewModal v-if="can(`${entity} View`)" v-model:open="viewOpen" :title="title" :fields="fields" />
 </template>

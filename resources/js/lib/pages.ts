@@ -5,7 +5,7 @@ const pages = import.meta.glob<{ default: DefineComponent }>([
     '../../../Modules/*/resources/js/Pages/**/*.vue',
 ]);
 
-const MODULES = ['Core', 'Items', 'GeoLocation', 'Branch', 'Store'];
+const MODULES = ['Core', 'Items', 'GeoLocation', 'Branch', 'Store', 'Wholesale', 'Reports'];
 
 /** `Core/Currency/Index` lives in its module; `Auth/Login` in resources/js/Pages. */
 export async function resolvePage(name: string): Promise<DefineComponent> {

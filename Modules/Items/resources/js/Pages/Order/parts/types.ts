@@ -12,6 +12,11 @@ export interface OrderItemRow {
     /** Shown only: the server ignores it. */
     price: number | string;
     addons_total: number | string;
+    /** Edit only: the product as sold ("Shirt — M") and the line's saved total. */
+    name?: string;
+    total?: number | string;
+    /** A piece of a set or bundle: the set it was sold in. Kept or removed with its set. */
+    bundle?: { key: string; name: string | null; quantity: number; unit_price: number } | null;
 }
 
 export interface OrderForm {
@@ -28,6 +33,9 @@ export interface OrderForm {
     delivery_address: string;
     contact_phone: string;
     notes: string;
+    customer_name: string | null;
+    customer_email: string | null;
+    internal_notes: string | null;
     latitude: number | string | null;
     longitude: number | string | null;
 }
@@ -45,6 +53,8 @@ export interface OrderFormOptions {
     branches: Option[];
     cities: Option[];
     districts: DistrictOption[];
+    /** What the server requires: a storefront order has no customer account or branch, and may have no district. */
+    required: { user_id: boolean; branch_id: boolean; district_id: boolean };
 }
 
 /** What is posted: only what the server reads, never a price. */

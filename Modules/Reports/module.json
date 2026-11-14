@@ -1,0 +1,11 @@
+{
+    "name": "Reports",
+    "alias": "reports",
+    "description": "Read-only sales, channel, product, return, merchant, cart and conversion reports.",
+    "keywords": [],
+    "priority": -1,
+    "providers": [
+        "Modules\\Reports\\Providers\\ReportsServiceProvider"
+    ],
+    "files": []
+}

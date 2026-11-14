@@ -27,9 +27,9 @@ class LayeringTest extends TestCase
      * @var array<string, string>
      */
     private const KNOWN = [
-        // Placing an order and changing its status write here: to move to OrderService, which the
-        // Items pages introduce, with the same server-side prices (tests/Feature/Api/OrderApiTest).
-        'Modules/Items/Http/Controllers/Api/V1/OrderController.php' => 'Writes belong in OrderService',
+        // Writes go through OrderService (place, changeStatus). Pricing still reads Product and
+        // AddonOption models here: to move to the repositories (tests/Feature/Api/OrderApiTest).
+        'Modules/Items/Http/Controllers/Api/V1/OrderController.php' => 'Pricing reads belong in repositories',
         // syncOrders() reads Order::query(): to move to OrderRepositoryInterface.
         'Modules/Items/Http/Controllers/Api/V1/SyncController.php' => 'Read belongs in OrderRepository',
         // getAttributes() reads Attribute::query(). This controller belongs to the Items worker.

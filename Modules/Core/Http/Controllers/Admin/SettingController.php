@@ -33,7 +33,7 @@ class SettingController extends Controller
                 'dashboard_color' => $general->dashboard_color,
                 'dashboard_font' => $general->dashboard_font,
             ],
-            'colorPresets' => ['#465FFF', ...array_values(config('store.color_presets'))],
+            'colorPresets' => [DashboardTheme::DEFAULT_COLOR, ...array_values(config('store.color_presets'))],
             'fonts' => DashboardTheme::fontOptions(),
             // Both fonts, so each choice shows in its own letters.
             'fontPreviewUrl' => FontCatalog::googleFontsUrl(DashboardTheme::FONTS),

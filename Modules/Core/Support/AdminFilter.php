@@ -109,8 +109,20 @@ final class AdminFilter
         return $date && $date->format('Y-m-d') === (string) $value ? (string) $value : null;
     }
 
-    private static function likeTerm(mixed $value): string
+    /**
+     * A typed text as a LIKE pattern. Filter values are split on commas (config/query-builder.php),
+     * so "Shirt, red" arrives as an array: it is searched for whole.
+     */
+    public static function likeTerm(mixed $value): string
     {
-        return '%'.addcslashes(trim((string) $value), '%_\\').'%';
+        return '%'.addcslashes(trim(self::whole($value)), '%_\\').'%';
+    }
+
+    /**
+     * A filter value the query builder split on its commas, joined back.
+     */
+    public static function whole(mixed $value): string
+    {
+        return is_array($value) ? implode(',', array_map(fn ($part) => is_scalar($part) ? (string) $part : '', $value)) : (string) $value;
     }
 }

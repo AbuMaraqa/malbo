@@ -9,8 +9,8 @@ defineProps<{
 </script>
 
 <template>
-    <div class="min-w-0">
-        <label v-if="label" :for="id" class="mb-1 block text-sm font-medium">
+    <div data-field class="min-w-0">
+        <label v-if="label" :for="id" class="mb-1.5 block text-sm font-medium text-gray-800 dark:text-gray-200">
             {{ label }}<span v-if="required" class="text-danger" aria-hidden="true"> *</span>
         </label>
         <slot />

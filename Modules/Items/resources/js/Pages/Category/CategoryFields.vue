@@ -2,6 +2,7 @@
 import type { InertiaForm } from '@inertiajs/vue3';
 
 import ImageUpload, { type ExistingImage } from '@/Components/form/ImageUpload.vue';
+import RichEditor from '@/Components/form/RichEditor.vue';
 import TextareaInput from '@/Components/form/TextareaInput.vue';
 import TextInput from '@/Components/form/TextInput.vue';
 import Toggle from '@/Components/form/Toggle.vue';
@@ -15,6 +16,7 @@ export interface CategoryForm {
     slug: string;
     parent_id: number | null;
     description: string;
+    size_guide: string;
     status: boolean;
     sort_order: number | string;
     image: File | File[] | null;
@@ -32,6 +34,14 @@ defineProps<{ form: InertiaForm<CategoryForm>; parents: TreeNode[]; images?: Exi
                 <TextInput v-model="form.slug" :label="t('Slug')" dir="ltr" :error="form.errors.slug" :hint="t('Leave empty to make it from the name')" />
                 <TreeSelect v-model="form.parent_id as number | null" class="md:col-span-2" :nodes="parents" :label="t('Parent Category')" :placeholder="t('Select Parent Category')" :error="form.errors.parent_id" />
                 <TextareaInput v-model="form.description" class="md:col-span-2" :label="t('Description')" :error="form.errors.description" />
+                <RichEditor
+                    v-model="form.size_guide"
+                    tables
+                    class="md:col-span-2"
+                    :label="t('Size guide')"
+                    :hint="t('Shown on the pages of this category’s products, next to the size choice.')"
+                    :error="form.errors.size_guide"
+                />
                 <Toggle v-model="form.status" :label="t('Active')" />
                 <TextInput v-model="form.sort_order" :label="t('Sort Order')" type="number" min="0" :error="form.errors.sort_order" />
             </div>

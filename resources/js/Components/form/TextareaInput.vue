@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { useId } from 'vue';
 
-import { Textarea } from '@/tailadmin/ui/textarea';
-
+import { controlClasses } from './controlClasses';
 import Field from './Field.vue';
 
 withDefaults(
@@ -24,14 +23,15 @@ const id = useId();
 
 <template>
     <Field :id="id" :label="label" :error="error" :hint="hint" :required="required">
-        <Textarea
+        <textarea
             :id="id"
-            :model-value="model ?? ''"
+            :value="model ?? ''"
             :rows="rows"
             :maxlength="maxlength"
             :disabled="disabled"
             :aria-invalid="!!error"
-            @update:model-value="model = String($event)"
+            :class="[controlClasses, 'block py-2.5 leading-6']"
+            @input="model = ($event.target as HTMLTextAreaElement).value"
         />
     </Field>
 </template>

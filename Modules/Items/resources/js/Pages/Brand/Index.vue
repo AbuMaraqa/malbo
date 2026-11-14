@@ -61,7 +61,7 @@ function editRow(row: Row): void {
 </script>
 
 <template>
-    <PageHeader :title="t('Brands List')">
+    <PageHeader :title="t('Brands List')" :count="table.meta.total">
         <template #actions>
             <Button v-if="can('Brand Create')" variant="primary" @click="add">{{ t('Add Brand') }}</Button>
         </template>
