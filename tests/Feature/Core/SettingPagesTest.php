@@ -112,7 +112,9 @@ class SettingPagesTest extends DatabaseTestCase
 
         $this->actingAs($this->admin)
             ->get($this->siteUrl('/ar/admin/settings'))
-            ->assertInertia(fn (Assert $page) => $page->has('logo', 1));
+            ->assertInertia(fn (Assert $page) => $page->has('logo', 1)
+                // Shared with every admin page: the sidebar and the sign-in page show it.
+                ->where('store.logo', app(GeneralSettings::class)->site_logo_url));
 
         $this->actingAs($this->admin)
             ->put($this->siteUrl('/ar/admin/settings'), $this->payload(['remove_logo' => true]))
