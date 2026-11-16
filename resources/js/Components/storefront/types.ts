@@ -151,6 +151,8 @@ export interface StoreChannels {
 export interface StoreLayoutProps {
     name: string;
     logo: string | null;
+    /** The MALBO logo for maroon surfaces, while the owner has not uploaded a logo of their own. */
+    logo_light: string | null;
     share_image: string | null;
     announcement: string | null;
     about_url: string | null;

@@ -7,10 +7,10 @@ use Tests\TestCase;
 
 class FontCatalogTest extends TestCase
 {
-    public function test_has_the_ten_fonts_with_tajawal_default(): void
+    public function test_has_the_ten_fonts_with_readex_pro_default(): void
     {
         $this->assertCount(10, FontCatalog::all());
-        $this->assertSame('tajawal', config('store.default_font'));
+        $this->assertSame('readex-pro', config('store.default_font'));
         $this->assertTrue(FontCatalog::has('ibm-plex-sans-arabic'));
         $this->assertFalse(FontCatalog::has('comic-sans'));
     }
@@ -27,7 +27,7 @@ class FontCatalogTest extends TestCase
 
     public function test_unknown_font_falls_back_to_the_default_stack(): void
     {
-        $this->assertSame(FontCatalog::stack('tajawal'), FontCatalog::stack('nope'));
+        $this->assertSame(FontCatalog::stack('readex-pro'), FontCatalog::stack('nope'));
         $this->assertStringContainsString("'Tajawal'", FontCatalog::stack('tajawal'));
     }
 }

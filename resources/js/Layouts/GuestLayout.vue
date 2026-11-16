@@ -18,12 +18,8 @@ const name = computed(() => store.value?.name ?? '');
                 <slot />
             </div>
         </div>
-        <!-- The brand side: the panel color, a fading grid, the logo from the system settings (or an icon), the store's name. -->
-        <div class="relative m-3 hidden items-center justify-center overflow-hidden rounded-2xl bg-brand-600 lg:flex">
-            <div
-                class="absolute inset-0 opacity-20 [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]"
-                aria-hidden="true"
-            />
+        <!-- The brand side: the panel color under the MALBO pattern, the logo from the system settings (or the MALBO mark), the store's name. -->
+        <div class="relative m-3 hidden items-center justify-center overflow-hidden rounded-2xl bg-brand-500 bg-brand-pattern lg:flex">
             <div class="relative flex flex-col items-center gap-5 text-center">
                 <!-- A white tile: any logo stays readable on the panel color. -->
                 <span v-if="store?.logo" class="flex h-28 min-w-28 items-center justify-center rounded-2xl bg-white p-4 shadow-theme-lg">

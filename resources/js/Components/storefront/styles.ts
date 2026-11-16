@@ -1,17 +1,17 @@
 /**
- * The storefront's look as Tailwind classes: a clean, bright shop in the store's own color, with
- * white panels on soft grey. They live in utilities, in the CSS the first paint already has (SSR),
- * so nothing flashes unstyled. The store's color is `store-*`; the neutrals are CSS variables set
- * by StorefrontLayout.
+ * The storefront's look as Tailwind classes, after the MALBO guidelines: white panels on warm cream,
+ * the store's color (maroon) for actions, gold (`--gold`) for small accents. They live in utilities,
+ * in the CSS the first paint already has (SSR), so nothing flashes unstyled. The store's color is
+ * `store-*`; the neutrals are CSS variables set by StorefrontLayout.
  */
 
-const panelBase = 'border border-line shadow-[0_10px_30px_-18px_rgb(22_28_45/0.25)]';
+const panelBase = 'border border-line shadow-[0_10px_30px_-18px_rgb(42_21_26/0.25)]';
 
 /** White panels: menus, labels over photos, badges. */
 export const panel = `${panelBase} bg-white`;
 
 /** The header's bar once the page scrolls under it. */
-export const panelFirm = 'bg-white shadow-[0_6px_24px_-16px_rgb(22_28_45/0.35)]';
+export const panelFirm = 'bg-(--paper) shadow-[0_6px_24px_-16px_rgb(42_21_26/0.35)]';
 
 /** Carries text over busy photos: signature, story and members cards. */
 export const panelStrong = `${panelBase} bg-white/95`;
@@ -23,7 +23,10 @@ export const btnBrand = `${buttonBase} border border-store bg-store text-store-c
 
 export const btnDark = `${buttonBase} border border-ink bg-ink text-white hover:bg-store hover:border-store hover:text-store-contrast`;
 
-export const btnOutline = `${buttonBase} border border-line bg-white text-ink hover:border-store hover:bg-store hover:text-store-contrast`;
+/** The gold call to action on maroon surfaces (the footer, the members band). */
+export const btnGold = `${buttonBase} border border-(--gold) bg-(--gold) text-(--night) hover:border-white hover:bg-white`;
+
+export const btnOutline =`${buttonBase} border border-line bg-white text-ink hover:border-store hover:bg-store hover:text-store-contrast`;
 
 export const btnLg = 'min-h-12 px-8 text-[1rem]';
 

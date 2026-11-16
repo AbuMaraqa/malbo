@@ -14,7 +14,7 @@ defineProps<{ categories: StoreCategoryTile[] }>();
 <template>
     <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <li v-for="category in categories" :key="category.id">
-            <Link :href="category.url" class="group relative block aspect-4/3 overflow-hidden rounded-xl bg-store-50">
+            <Link :href="category.url" class="group relative block aspect-4/3 overflow-hidden rounded-xl bg-(--sand)">
                 <img
                     v-if="category.image"
                     :src="category.image"

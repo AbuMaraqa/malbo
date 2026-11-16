@@ -224,7 +224,7 @@ const heading = 'px-3 pt-2 pb-1.5 text-xs font-semibold tracking-[0.12em] text-m
             :id="listId"
             role="listbox"
             :aria-label="t('Suggestions')"
-            class="absolute inset-x-0 top-full z-50 mt-1 max-h-[70vh] overflow-y-auto rounded-md border border-line bg-white p-2 text-start shadow-[0_10px_30px_-18px_rgb(22_28_45/0.35)]"
+            class="absolute inset-x-0 top-full z-50 mt-1 max-h-[70vh] overflow-y-auto rounded-md border border-line bg-white p-2 text-start shadow-[0_10px_30px_-18px_rgb(42_21_26/0.35)]"
             @mousedown.prevent
         >
             <div v-if="products.length" role="group" :aria-labelledby="productsHeading">

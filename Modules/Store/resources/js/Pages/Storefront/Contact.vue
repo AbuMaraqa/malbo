@@ -38,7 +38,7 @@ defineProps<{
                     </ul>
                 </div>
 
-                <div v-if="faqUrl" class="rounded-lg bg-store-50 p-6">
+                <div v-if="faqUrl" class="rounded-lg bg-(--sand) p-6">
                     <h2 class="text-[17px] font-bold">{{ t('Quick answers') }}</h2>
                     <p class="mt-1.5 text-sm leading-6 text-(--ink-soft)">{{ t('Ordering, payment, delivery and returns: most answers are already in our FAQ.') }}</p>
                     <Link :href="faqUrl" class="mt-4 w-full bg-white" :class="btnOutline">{{ t('Read the FAQ') }}</Link>

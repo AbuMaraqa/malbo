@@ -13,7 +13,7 @@ defineProps<{ story: { title: string | null; text: string; image: string | null;
     <section id="story" data-section="story" :class="container" class="reveal mt-24 scroll-mt-36">
         <div class="grid items-center gap-10" :class="{ 'lg:grid-cols-2 lg:gap-16': story.image }">
             <div v-if="story.image" class="relative">
-                <span aria-hidden="true" class="absolute -start-4 -top-4 hidden size-full rounded-xl border-2 border-store/40 sm:block"></span>
+                <span aria-hidden="true" class="absolute -start-4 -top-4 hidden size-full rounded-xl border-2 border-(--gold) sm:block"></span>
                 <img :src="story.image" alt="" loading="lazy" class="relative aspect-4/3 w-full rounded-xl object-cover" />
             </div>
             <div :class="{ 'mx-auto max-w-3xl text-center': !story.image }">

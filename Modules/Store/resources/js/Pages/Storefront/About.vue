@@ -49,7 +49,7 @@ const number = (index: number): string => String(index + 1).padStart(2, '0');
         <section v-if="values.length" data-section="about-values" class="mx-auto mt-20 max-w-310 px-4">
             <h2 class="text-center" :class="sectionTitle">{{ t('What we believe in') }}</h2>
             <ul class="mt-8 grid gap-5 md:grid-cols-3">
-                <li v-for="(value, index) in values" :key="index" class="rounded-lg border border-line bg-white p-8 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-24px_rgb(22_28_45/0.4)] motion-reduce:transition-none">
+                <li v-for="(value, index) in values" :key="index" class="rounded-lg border border-line bg-white p-8 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-24px_rgb(42_21_26/0.4)] motion-reduce:transition-none">
                     <span class="grid size-12 place-items-center rounded-full bg-store text-lg font-bold text-store-contrast">{{ number(index) }}</span>
                     <h3 class="mt-6 mb-2 text-xl font-bold">{{ value.title }}</h3>
                     <p v-if="value.text" class="text-[15px] leading-7 text-(--ink-soft)">{{ value.text }}</p>

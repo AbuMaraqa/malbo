@@ -28,7 +28,7 @@ defineProps<{ categories: StoreCategory[] }>();
         </Link>
 
         <div
-            class="invisible absolute start-0 top-full z-50 w-[min(44rem,calc(100vw-3rem))] translate-y-2 rounded-b-lg border border-t-0 border-line bg-white p-5 opacity-0 shadow-[0_24px_48px_-20px_rgb(22_28_45/0.35)] transition duration-200 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:transition-none"
+            class="invisible absolute start-0 top-full z-50 w-[min(44rem,calc(100vw-3rem))] translate-y-2 rounded-b-lg border border-t-0 border-line bg-white p-5 opacity-0 shadow-[0_24px_48px_-20px_rgb(42_21_26/0.35)] transition duration-200 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:transition-none"
         >
             <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <li v-for="category in categories" :key="category.id">

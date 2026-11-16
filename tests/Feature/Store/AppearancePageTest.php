@@ -70,7 +70,7 @@ class AppearancePageTest extends StorefrontTestCase
 
     public function test_saving_clears_the_cached_theme(): void
     {
-        $this->assertStringContainsString('--brand:#1F6F50', app(ThemeService::class)->css());
+        $this->assertStringContainsString('--brand:#6D1C2F', app(ThemeService::class)->css());
 
         $this->save(['primary_color' => '#6B2D5C'])->assertSessionHasNoErrors();
 
@@ -99,7 +99,7 @@ class AppearancePageTest extends StorefrontTestCase
         $this->save(['primary_color' => 'red', 'font' => 'comic-sans', 'x_url' => 'javascript:alert(1)'])
             ->assertSessionHasErrors(['primary_color', 'font', 'x_url']);
 
-        $this->assertSame('#1F6F50', app(StoreAppearanceSettings::class)->primary_color);
+        $this->assertSame('#6D1C2F', app(StoreAppearanceSettings::class)->primary_color);
     }
 
     public function test_staff_without_the_permission_is_refused(): void

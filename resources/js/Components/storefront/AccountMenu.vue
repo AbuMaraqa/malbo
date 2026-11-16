@@ -33,7 +33,7 @@ onBeforeUnmount(() => stopListening?.());
         >
             <UserRound class="size-5.5" aria-hidden="true" />
         </summary>
-        <div class="absolute end-0 top-full z-50 mt-2 w-60 rounded-lg border border-line bg-white p-2 text-[15px] shadow-[0_24px_48px_-20px_rgb(22_28_45/0.35)]">
+        <div class="absolute end-0 top-full z-50 mt-2 w-60 rounded-lg border border-line bg-white p-2 text-[15px] shadow-[0_24px_48px_-20px_rgb(42_21_26/0.35)]">
             <p v-if="account.name" class="truncate px-3 pt-1 pb-2 text-sm text-muted">{{ t('Hello, :name', { name: account.name }) }}</p>
             <Link :href="account.account_url" class="block rounded-md px-3 py-2 hover:bg-(--sand-light)">{{ t('My account') }}</Link>
             <Link :href="account.orders_url" class="block rounded-md px-3 py-2 hover:bg-(--sand-light)">{{ t('My orders') }}</Link>

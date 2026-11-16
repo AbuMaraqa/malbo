@@ -18,7 +18,7 @@ defineProps<{ categories: StoreCategory[] }>();
         <ul class="mt-10 flex flex-wrap justify-center gap-x-6 gap-y-8 sm:gap-x-10">
             <li v-for="category in categories" :key="category.id" class="w-28 sm:w-36">
                 <Link :href="category.url" class="group block text-center">
-                    <span class="block aspect-square overflow-hidden rounded-full border-4 border-white bg-(--sand) shadow-[0_8px_24px_-12px_rgb(22_28_45/0.35)] ring-1 ring-line transition group-hover:ring-2 group-hover:ring-store">
+                    <span class="block aspect-square overflow-hidden rounded-full border-4 border-white bg-(--sand) shadow-[0_8px_24px_-12px_rgb(42_21_26/0.35)] ring-1 ring-line transition group-hover:ring-2 group-hover:ring-store">
                         <img
                             v-if="category.image"
                             :src="category.image"

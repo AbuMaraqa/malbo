@@ -12,9 +12,9 @@ use Modules\Store\Theme\FontCatalog;
  */
 final class DashboardTheme
 {
-    public const DEFAULT_COLOR = '#1570EF';
+    public const DEFAULT_COLOR = '#6D1C2F';
 
-    public const FONTS = ['tajawal', 'ibm-plex-sans-arabic'];
+    public const FONTS = ['readex-pro', 'tajawal', 'ibm-plex-sans-arabic'];
 
     /** Buttons keep white text, so a lighter color than this would make them unreadable. */
     public const MINIMUM_CONTRAST = 3.0;

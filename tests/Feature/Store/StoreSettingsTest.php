@@ -12,8 +12,8 @@ class StoreSettingsTest extends DatabaseTestCase
     {
         $appearance = app(StoreAppearanceSettings::class);
 
-        $this->assertSame('#1F6F50', $appearance->primary_color);
-        $this->assertSame('tajawal', $appearance->font);
+        $this->assertSame('#6D1C2F', $appearance->primary_color);
+        $this->assertSame('readex-pro', $appearance->font);
         $this->assertNull($appearance->logo_path);
         $this->assertSame(['ar' => '', 'en' => ''], $appearance->hero_title);
         $this->assertSame([], $appearance->values);

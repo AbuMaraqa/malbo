@@ -26,7 +26,7 @@ const emit = defineEmits<{ add: [] }>();
 </script>
 
 <template>
-    <div data-order-bar class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white px-4 py-3 shadow-[0_-8px_24px_-16px_rgb(22_28_45/0.3)] lg:static lg:shadow-none lg:mt-8 lg:border-0 lg:bg-transparent lg:p-0">
+    <div data-order-bar class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white px-4 py-3 shadow-[0_-8px_24px_-16px_rgb(42_21_26/0.3)] lg:static lg:shadow-none lg:mt-8 lg:border-0 lg:bg-transparent lg:p-0">
         <div class="mx-auto flex max-w-310 flex-wrap items-center gap-x-4 gap-y-2">
             <p class="shrink-0">
                 <span class="block text-xs text-muted">{{ t('Total') }}</span>

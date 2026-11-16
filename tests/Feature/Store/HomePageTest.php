@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Store;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Modules\Branch\Entities\Branch;
 use Modules\Core\Entities\User;
@@ -211,5 +213,27 @@ class HomePageTest extends StorefrontTestCase
         foreach (['#151716', '#111312', 'bg-black', 'bg-neutral-900'] as $dark) {
             $this->assertStringNotContainsString($dark, $html);
         }
+    }
+
+    public function test_without_its_own_logo_the_store_shows_the_malbo_identity(): void
+    {
+        $props = $this->props('/ar', self::HOME);
+
+        $this->assertStringEndsWith('/brand/malbo-logo.svg', $props['store']['logo']);
+        $this->assertStringEndsWith('/brand/malbo-logo-light.svg', $props['store']['logo_light']);
+        // A share card wants a photo, not the brand's logo.
+        $this->assertNull($props['store']['share_image']);
+        $this->get($this->siteUrl('/ar'))->assertSee('/brand/favicon.svg', false)->assertSee('--brand:#6D1C2F', false);
+    }
+
+    public function test_an_uploaded_logo_replaces_the_malbo_logo(): void
+    {
+        Storage::fake('public');
+        app(StoreAppearanceService::class)->save([], [], ['logo' => UploadedFile::fake()->image('logo.png')]);
+
+        $props = $this->props('/ar', self::HOME);
+
+        $this->assertStringNotContainsString('/brand/', $props['store']['logo']);
+        $this->assertNull($props['store']['logo_light']);
     }
 }

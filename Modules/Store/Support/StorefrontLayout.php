@@ -110,7 +110,9 @@ class StorefrontLayout
         $appearance = app(StoreAppearanceSettings::class);
         $locale = app()->getLocale();
         $otherLocale = collect(Locales::keys())->first(fn (string $code) => $code !== $locale) ?? $locale;
-        $logo = Storefront::image($appearance->logo_path);
+        // The owner's logo, else the MALBO logo (config store.brand), with its version for maroon surfaces.
+        $ownLogo = Storefront::image($appearance->logo_path);
+        $logo = $ownLogo ?? asset(config('store.brand.logo'));
         $aboutSlug = $this->pages->publishedKeys()['about'] ?? null;
         $hasStory = Storefront::t($appearance->story_text) !== null;
         [$policyPages, $storePages] = $this->pages->footerPages()->partition(fn (Page $page) => in_array($page->key, Page::POLICIES, true));
@@ -118,7 +120,8 @@ class StorefrontLayout
         return [
             'name' => (string) app(GeneralSettings::class)->site_name,
             'logo' => $logo,
-            'share_image' => Storefront::image($appearance->hero_image_path) ?? $logo,
+            'logo_light' => $ownLogo ? null : asset(config('store.brand.logo_light')),
+            'share_image' => Storefront::image($appearance->hero_image_path) ?? $ownLogo,
             'announcement' => Storefront::t($appearance->announcement),
             // "About us": its page when published, else the story on the home page.
             'about_url' => $aboutSlug ? route('store.page', ['slug' => $aboutSlug]) : ($hasStory ? route('home').'#story' : null),

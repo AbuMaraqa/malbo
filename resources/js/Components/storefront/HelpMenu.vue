@@ -25,7 +25,7 @@ defineProps<{ help: { about: PageLink[]; policies: PageLink[] }; whatsapp: strin
         </template>
     </nav>
 
-    <div data-help-ask class="rounded-lg bg-store-50 p-5">
+    <div data-help-ask class="rounded-lg bg-(--sand) p-5">
         <h2 class="text-[15px] font-bold">{{ t('Still have a question?') }}</h2>
         <p class="mt-1.5 text-sm leading-6 text-(--ink-soft)">{{ t('Our team is happy to help with your order or anything else.') }}</p>
         <div class="mt-4 flex flex-col gap-2">

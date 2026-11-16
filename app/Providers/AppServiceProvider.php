@@ -43,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with([
                 'themeCss' => $theme->css(),
                 'fontsUrl' => $theme->fontsUrl() ?? FontCatalog::googleFontsUrl([config('store.default_font')]),
-                'faviconUrl' => Storefront::image(app(StoreAppearanceSettings::class)->favicon_path),
+                'faviconUrl' => Storefront::image(app(StoreAppearanceSettings::class)->favicon_path) ?? asset(config('store.brand.favicon')),
             ]);
         });
     }

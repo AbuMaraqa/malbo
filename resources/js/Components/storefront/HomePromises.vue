@@ -24,7 +24,7 @@ const grid = computed(() => ['', 'sm:grid-cols-1', 'sm:grid-cols-2', 'sm:grid-co
                     class="group flex h-full items-center gap-4 rounded-lg border border-line p-5 transition-colors"
                     :class="{ 'hover:border-store': promise.url }"
                 >
-                    <span class="grid size-13 shrink-0 place-items-center rounded-full bg-store-50 text-store-600 transition-colors group-hover:bg-store group-hover:text-store-contrast">
+                    <span class="grid size-13 shrink-0 place-items-center rounded-full bg-(--sand-deep) text-store transition-colors group-hover:bg-store group-hover:text-store-contrast">
                         <component :is="icons[promise.key] ?? ShieldCheck" class="size-6" aria-hidden="true" />
                     </span>
                     <span class="min-w-0">

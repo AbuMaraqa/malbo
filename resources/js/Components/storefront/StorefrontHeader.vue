@@ -104,7 +104,7 @@ const iconButton = 'relative grid size-11 place-items-center rounded-full transi
 </script>
 
 <template>
-    <header class="sticky top-0 z-40 bg-white transition-shadow" :class="{ [panelFirm]: scrolled }">
+    <header class="sticky top-0 z-40 bg-(--paper) transition-shadow" :class="{ [panelFirm]: scrolled }">
         <div class="border-b border-line">
             <div :class="container" class="flex h-18 items-center gap-3 sm:gap-6">
                 <button type="button" :class="iconButton" class="-ms-2 cursor-pointer lg:hidden" :aria-label="t('Open menu')" :aria-expanded="menuOpen" @click="menuOpen = true">

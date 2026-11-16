@@ -14,11 +14,11 @@ class ThemeServiceTest extends DatabaseTestCase
     {
         $css = app(ThemeService::class)->css();
 
-        $this->assertStringContainsString('--brand:#1F6F50', $css);
-        $this->assertStringContainsString('--brand-50:'.BrandColor::fromHex('#1F6F50')->shades()[50], $css);
+        $this->assertStringContainsString('--brand:#6D1C2F', $css);
+        $this->assertStringContainsString('--brand-50:'.BrandColor::fromHex('#6D1C2F')->shades()[50], $css);
         $this->assertStringContainsString('--brand-contrast:#FFFFFF', $css);
-        $this->assertStringContainsString("--font-sans:'Tajawal'", $css);
-        $this->assertStringContainsString('family=Tajawal', app(ThemeService::class)->fontsUrl());
+        $this->assertStringContainsString("--font-sans:'Readex Pro'", $css);
+        $this->assertStringContainsString('family=Readex+Pro', app(ThemeService::class)->fontsUrl());
     }
 
     public function test_saving_appearance_changes_the_css(): void

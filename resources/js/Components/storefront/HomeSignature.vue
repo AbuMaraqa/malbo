@@ -4,6 +4,8 @@ import { Link } from '@inertiajs/vue3';
 import { t } from '@/lib/i18n';
 
 import ArrowMark from './ArrowMark.vue';
+import BrandPetal from './BrandPetal.vue';
+import BrandSparkle from './BrandSparkle.vue';
 import InitialTile from './InitialTile.vue';
 import PriceRow from './PriceRow.vue';
 import { btnBrand, btnLg, container, eyebrow } from './styles';
@@ -15,8 +17,9 @@ defineProps<{ card: StoreCard }>();
 
 <template>
     <section id="signature" data-section="signature" :class="container" class="reveal mt-20">
-        <div class="relative grid items-center overflow-hidden rounded-xl bg-store-50 lg:grid-cols-2">
-            <div aria-hidden="true" class="absolute -start-20 -bottom-24 size-72 rounded-full bg-store opacity-10"></div>
+        <div class="relative grid items-center overflow-hidden rounded-xl bg-(--sand) lg:grid-cols-2">
+            <BrandPetal class="absolute -start-24 -bottom-10 w-96 text-store opacity-10" />
+            <BrandSparkle class="absolute end-6 top-6 h-8 w-6 text-(--gold) lg:end-[calc(50%+1.5rem)]" />
             <div class="relative px-6 py-12 sm:px-12 lg:py-16">
                 <p :class="eyebrow">
                     <template v-if="card.price.discounted && card.price.percent_off">{{ t('Save :percent% today', { percent: card.price.percent_off }) }}</template>

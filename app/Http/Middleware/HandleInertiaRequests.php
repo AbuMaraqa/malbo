@@ -68,8 +68,8 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $request->user()->getAllPermissions()->pluck('name'),
             ] : ['user' => null, 'permissions' => []],
             'sidebar' => fn () => $request->user() ? app(SidebarService::class)->all() : [],
-            // The logo from the system settings: the sidebar and the sign-in page show it, else an icon.
-            'store' => fn () => ['name' => app(GeneralSettings::class)->site_name, 'logo' => app(GeneralSettings::class)->site_logo_url],
+            // The logo from the system settings, else the MALBO mark: the sidebar and the sign-in page show it.
+            'store' => fn () => ['name' => app(GeneralSettings::class)->site_name, 'logo' => app(GeneralSettings::class)->site_logo_url ?? asset(config('store.brand.mark'))],
             'dashboardTheme' => fn () => [
                 'css' => app(DashboardTheme::class)->css(),
                 'fontsUrl' => app(DashboardTheme::class)->fontsUrl(),
