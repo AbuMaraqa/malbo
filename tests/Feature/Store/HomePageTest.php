@@ -73,7 +73,13 @@ class HomePageTest extends StorefrontTestCase
     {
         $props = $this->props('/ar/shop?q=x', 'Store/Storefront/Shop');
 
-        $this->assertSame($this->siteUrl('/en/shop?q=x'), $props['store']['other_locale_url']);
+        $languages = collect($props['store']['languages'])->keyBy('code');
+
+        $this->assertSame(array_keys(config('app.locales')), $languages->keys()->all());
+        $this->assertSame($this->siteUrl('/en/shop?q=x'), $languages['en']['url']);
+        $this->assertTrue($languages['ar']['current']);
+        $this->assertFalse($languages['en']['current']);
+        $this->assertStringEndsWith('/images/flags/SA.svg', $languages['ar']['flag']);
     }
 
     public function test_arabic_home_is_rtl(): void

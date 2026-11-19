@@ -4,6 +4,7 @@ import { Link } from '@inertiajs/vue3';
 import { t } from '@/lib/i18n';
 import { Boxes, X } from '@/lib/icons';
 
+import LanguageMenu from './LanguageMenu.vue';
 import SearchCombobox from './SearchCombobox.vue';
 import StoreBrand from './StoreBrand.vue';
 import type { StoreLayoutProps } from './types';
@@ -68,9 +69,9 @@ const emit = defineEmits<{ close: [] }>();
                 </ul>
             </template>
 
-            <a :href="store.other_locale_url" :hreflang="store.other_locale" :lang="store.other_locale" class="mt-auto border-t border-line px-5 py-4 text-sm font-medium">
-                {{ store.other_locale_name }}
-            </a>
+            <div v-if="store.languages.length > 1" class="mt-auto border-t border-line px-3 py-2">
+                <LanguageMenu :languages="store.languages" up />
+            </div>
         </nav>
     </div>
 </template>

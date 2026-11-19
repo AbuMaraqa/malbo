@@ -4,7 +4,9 @@ namespace Modules\Store\Providers;
 
 use Modules\Store\Repositories\CampaignPageRepository;
 use Modules\Store\Repositories\Contracts\CampaignPageRepositoryInterface;
+use Modules\Store\Repositories\Contracts\HeroSlideRepositoryInterface;
 use Modules\Store\Repositories\Contracts\InstagramPostRepositoryInterface;
+use Modules\Store\Repositories\HeroSlideRepository;
 use Modules\Store\Repositories\InstagramPostRepository;
 
 use Illuminate\Support\ServiceProvider;
@@ -50,6 +52,7 @@ class RepositoryServiceProvider extends ServiceProvider
         ReviewRepositoryInterface::class => ReviewRepository::class,
         InstagramPostRepositoryInterface::class => InstagramPostRepository::class,
         CampaignPageRepositoryInterface::class => CampaignPageRepository::class,
+        HeroSlideRepositoryInterface::class => HeroSlideRepository::class,
     ];
 
     public function register(): void

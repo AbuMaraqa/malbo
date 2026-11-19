@@ -24,6 +24,7 @@ class SidebarServiceProvider extends ServiceProvider
         $sidebar->add(
             (new SidebarGroup('Online store', 'store', [], 90))->section('Store') // no permissions: shown when one of its items is
                 ->add(new SidebarItem('Store appearance' , 'store', ['Appearance Update'] , 'appearance.index'))
+                ->add(new SidebarItem('Home slider' , 'store', ['Hero Slide View List'] , 'hero-slides.index'))
                 ->add(new SidebarItem('Store pages' , 'store', ['Page View List'] , 'pages.index'))
                 ->add(new SidebarItem('Customer messages' , 'store', ['Contact Message View List'] , 'contact-messages.index'))
                 ->add(new SidebarItem('Members' , 'store', ['Member View List'] , 'members.index'))

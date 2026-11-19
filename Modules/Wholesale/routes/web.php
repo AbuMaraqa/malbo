@@ -9,8 +9,8 @@ use Modules\Wholesale\Http\Controllers\Admin\ProductPriceController;
 use Modules\Wholesale\Http\Controllers\Admin\TierController;
 use Modules\Wholesale\Http\Controllers\Storefront\ApplyController;
 use Modules\Wholesale\Http\Controllers\Storefront\CartController;
-use Modules\Wholesale\Http\Controllers\Storefront\CatalogPdfController;
 use Modules\Wholesale\Http\Controllers\Storefront\CatalogController;
+use Modules\Wholesale\Http\Controllers\Storefront\CatalogPdfController;
 use Modules\Wholesale\Http\Controllers\Storefront\CheckoutController;
 use Modules\Wholesale\Http\Controllers\Storefront\OrderController;
 use Modules\Wholesale\Http\Controllers\Storefront\PortalController;
@@ -21,6 +21,8 @@ Route::middleware(['auth', 'verified'])->prefix('{locale}')->where(['locale' => 
     Route::prefix('admin/wholesale')->middleware('staff')->group(function () {
         Route::prefix('merchants')->name('merchants.')->controller(MerchantController::class)->group(function () {
             Route::get('/', 'index')->name('index')->can('Merchant View List');
+            Route::get('/add', 'add')->name('add')->can('Merchant Create');
+            Route::post('/', 'store')->name('store')->can('Merchant Create');
             Route::get('/{merchant}/edit', 'edit')->whereNumber('merchant')->name('edit')->can('Merchant View List');
             Route::get('/{merchant}/document', 'document')->whereNumber('merchant')->middleware('signed')->name('document')->can('Merchant View List');
             Route::put('/{merchant}', 'update')->whereNumber('merchant')->name('update')->can('Merchant Update');

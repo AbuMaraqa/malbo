@@ -2,11 +2,15 @@
 
 namespace Modules\Wholesale\Services;
 
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Modules\Core\Entities\User;
+use Modules\Core\Enums\UserRole;
 use Modules\Core\Notifications\GeneralNotification;
+use Modules\Core\Repositories\Contracts\UserRepositoryInterface;
 use Modules\Store\Support\Phone;
 use Modules\Wholesale\Entities\Merchant;
 use Modules\Wholesale\Enums\MerchantStatus;
@@ -14,13 +18,65 @@ use Modules\Wholesale\Repositories\Contracts\MerchantRepositoryInterface;
 use Throwable;
 
 /**
- * The staff's changes to a merchant: its profile, tier, sales rep and minimum order (`update`), and
- * where its application stands (`changeStatus`). A status changes on the locked row, only along the
- * allowed paths, with a line in its history (who, when, why); the merchant is told after the commit.
+ * The staff's changes to a merchant: adding one from the merchants list (`create`), its profile,
+ * tier, sales rep and minimum order (`update`), and where its application stands (`changeStatus`).
+ * A status changes on the locked row, only along the allowed paths, with a line in its history
+ * (who, when, why); the merchant is told after the commit.
  */
 class MerchantService
 {
-    public function __construct(private readonly MerchantRepositoryInterface $merchants) {}
+    public function __construct(
+        private readonly MerchantRepositoryInterface $merchants,
+        private readonly UserRepositoryInterface $users,
+    ) {}
+
+    /**
+     * A merchant staff add themselves: in one transaction its account (the Merchant role only, so it
+     * never reaches the admin; the password staff typed and hand over), its profile and terms, and
+     * the first line of its history. Staff vouch for the shop, so it starts approved.
+     *
+     * @param  array<string, mixed>  $data  what update() takes, and email and password
+     *
+     * @throws ValidationException on `sales_rep_id` when the user is not staff, or on `email` when it already has an account
+     */
+    public function create(array $data, int $staffId): Merchant
+    {
+        $profile = $this->profile($data);
+        $email = mb_strtolower(trim((string) $data['email']));
+
+        try {
+            return DB::transaction(function () use ($data, $profile, $email, $staffId): Merchant {
+                /** @var User $user */
+                $user = $this->users->create([
+                    'name' => $profile['owner_name'],
+                    'email' => $email,
+                    'phone' => $profile['phone'],
+                    'password' => (string) $data['password'], // the model's `hashed` cast hashes it
+                ]);
+                $user->assignRole(UserRole::MERCHANT->value);
+
+                /** @var Merchant $merchant */
+                $merchant = $this->merchants->create([
+                    ...$profile,
+                    'user_id' => $user->id,
+                    'email' => $email,
+                    'status' => MerchantStatus::APPROVED,
+                    'approved_at' => Carbon::now(),
+                ]);
+
+                $merchant->statusChanges()->create([
+                    'from_status' => null,
+                    'to_status' => MerchantStatus::APPROVED,
+                    'note' => __('Added by staff'),
+                    'created_by' => $staffId,
+                ]);
+
+                return $merchant;
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages(['email' => __('An account with this email already exists.')]);
+        }
+    }
 
     /**
      * @param  array<string, mixed>  $data  shop_name, owner_name, city_id, phone, commercial_register, shop_address, tier_id, sales_rep_id, minimum_order_value, minimum_order_pieces; credit_enabled and credit_limit when sent
@@ -29,13 +85,26 @@ class MerchantService
      */
     public function update(Merchant $merchant, array $data): Merchant
     {
+        return $this->merchants->update($merchant, $this->profile($data));
+    }
+
+    /**
+     * The profile and terms columns from the staff's form, trimmed; the credit only when it was sent.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     *
+     * @throws ValidationException on `sales_rep_id` when the user is not staff
+     */
+    private function profile(array $data): array
+    {
         $rep = filled($data['sales_rep_id'] ?? null) ? (int) $data['sales_rep_id'] : null;
 
         if ($rep !== null && ! $this->merchants->isStaff($rep)) {
             throw ValidationException::withMessages(['sales_rep_id' => __('A sales rep must be a staff member.')]);
         }
 
-        return $this->merchants->update($merchant, [
+        return [
             'shop_name' => trim((string) $data['shop_name']),
             'owner_name' => trim((string) $data['owner_name']),
             'city_id' => filled($data['city_id'] ?? null) ? (int) $data['city_id'] : null,
@@ -50,7 +119,7 @@ class MerchantService
                 'credit_enabled' => (bool) $data['credit_enabled'],
                 'credit_limit' => filled($data['credit_limit'] ?? null) ? round((float) $data['credit_limit'], 2) : null,
             ] : []),
-        ]);
+        ];
     }
 
     /**

@@ -9,6 +9,7 @@ import { route } from '@/lib/route';
 import AccountMenu from './AccountMenu.vue';
 import CartButton from './CartButton.vue';
 import CategoryMenu from './CategoryMenu.vue';
+import LanguageMenu from './LanguageMenu.vue';
 import MobileMenu from './MobileMenu.vue';
 import SearchCombobox from './SearchCombobox.vue';
 import StoreBrand from './StoreBrand.vue';
@@ -179,15 +180,7 @@ const shopHref = route('store.shop');
                     </span>
                 </Link>
                 <CartButton :count="store.cart_count" :url="store.cart_url" />
-                <!-- Another language is a full page load: its texts come with the page. -->
-                <a
-                    :href="store.other_locale_url"
-                    :hreflang="store.other_locale"
-                    :lang="store.other_locale"
-                    class="ms-2 hidden border-s border-line ps-4 text-[0.8125rem] font-semibold hover:text-store-600 lg:block"
-                >
-                    {{ store.other_locale_name }}
-                </a>
+                <LanguageMenu :languages="store.languages" class="ms-2 hidden border-s border-line ps-2 lg:block" />
             </div>
         </div>
 

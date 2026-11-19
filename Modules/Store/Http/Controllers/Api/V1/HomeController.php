@@ -33,6 +33,16 @@ class HomeController extends Controller
      *                     @OA\Property(property="subtitle", type="string", nullable=true),
      *                     @OA\Property(property="image", type="string", nullable=true)
      *                 ),
+     *                 @OA\Property(property="slides", type="array", description="The home slider's slides set up in the admin, in their order", @OA\Items(type="object",
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="eyebrow", type="string", nullable=true),
+     *                     @OA\Property(property="title", type="string", nullable=true),
+     *                     @OA\Property(property="subtitle", type="string", nullable=true),
+     *                     @OA\Property(property="button", type="string", nullable=true),
+     *                     @OA\Property(property="url", type="string", nullable=true, description="A path on the site or an https address"),
+     *                     @OA\Property(property="image", type="string"),
+     *                     @OA\Property(property="mobile_image", type="string", nullable=true)
+     *                 )),
      *                 @OA\Property(property="promises", type="array", @OA\Items(type="object",
      *                     @OA\Property(property="key", type="string", enum={"shipping", "returns", "whatsapp", "privacy"}),
      *                     @OA\Property(property="title", type="string"),
@@ -62,6 +72,7 @@ class HomeController extends Controller
     {
         return $this->successResponse([
             'hero' => $home->hero(),
+            'slides' => $home->slides(),
             'promises' => $home->promises(),
             'story' => $home->story(),
             'values' => $home->values(),

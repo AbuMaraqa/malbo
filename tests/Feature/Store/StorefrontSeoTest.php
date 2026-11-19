@@ -91,7 +91,7 @@ class StorefrontSeoTest extends StorefrontTestCase
 
         $this->assertSame($this->siteUrl('/en/shop'), $props['seo']['canonical']);
         $this->assertSame('en_US', $props['seo']['og']['locale']);
-        $this->assertSame($this->siteUrl('/ar/shop?q=x'), $props['store']['other_locale_url']);
+        $this->assertSame($this->siteUrl('/ar/shop?q=x'), collect($props['store']['languages'])->firstWhere('code', 'ar')['url']);
     }
 
     public function test_a_missing_product_shows_the_store_404_page(): void

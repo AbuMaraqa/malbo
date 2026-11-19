@@ -147,6 +147,15 @@ export interface StoreChannels {
     address?: string;
 }
 
+/** A language of the site (config/app.php `locales`) with its flag and the current page in it. */
+export interface StoreLanguage {
+    code: string;
+    name: string;
+    flag: string;
+    url: string;
+    current: boolean;
+}
+
 /** The `store` prop every storefront page gets (Modules\Store\Support\StorefrontLayout). */
 export interface StoreLayoutProps {
     name: string;
@@ -157,9 +166,8 @@ export interface StoreLayoutProps {
     announcement: string | null;
     about_url: string | null;
     tagline: string | null;
-    other_locale: string;
-    other_locale_name: string;
-    other_locale_url: string;
+    /** Every language of the site, for the language menu. */
+    languages: StoreLanguage[];
     contact: StoreChannels | null;
     whatsapp: string | null;
     socials: StoreSocial[];
@@ -332,6 +340,19 @@ export interface BundleComponentOption {
     available: boolean;
     attributes: ProductAttribute[];
     variants: { id: number; values: Record<string, number>; in_stock: boolean; image: string | null }[];
+}
+
+/** A home slider slide set up in the admin (Modules\Store\Services\StorefrontHome::slides). */
+export interface HeroSlideCard {
+    id: number;
+    eyebrow: string | null;
+    title: string | null;
+    subtitle: string | null;
+    button: string | null;
+    /** A path on the store or an https address. */
+    url: string | null;
+    image: string;
+    mobile_image: string | null;
 }
 
 /** An Instagram post on the storefront (Modules\Store\Contracts\InstagramFeedSource::posts). */

@@ -50,6 +50,8 @@ class HomeController extends Controller
                 'json_ld' => [$this->organization($name, $appearance)],
             ]),
             'hero' => $this->home->hero(),
+            // The slides staff set up in the admin; empty, the hero builds its own.
+            'slides' => $this->home->slides(),
             'promises' => array_map(fn (array $promise) => [
                 ...$promise,
                 'url' => $promise['page'] ? route('store.page', ['slug' => $promise['page']]) : null,

@@ -13,13 +13,15 @@ import HomeStory from '@/Components/storefront/HomeStory.vue';
 import HomeValues from '@/Components/storefront/HomeValues.vue';
 import HomeWholesale from '@/Components/storefront/HomeWholesale.vue';
 import InstagramGrid from '@/Components/storefront/InstagramGrid.vue';
-import type { BrandValueText, InstagramPostCard, StoreCard, StoreCategory, StoreLayoutProps } from '@/Components/storefront/types';
+import type { BrandValueText, HeroSlideCard, InstagramPostCard, StoreCard, StoreCategory, StoreLayoutProps } from '@/Components/storefront/types';
 import StorefrontLayout from '@/Layouts/StorefrontLayout.vue';
 
 defineOptions({ layout: StorefrontLayout });
 
 const props = defineProps<{
     hero: { eyebrow: string | null; title: string; subtitle: string | null; image: string | null };
+    /** The home slider's slides set up in the admin; empty, the hero builds its own. */
+    slides: HeroSlideCard[];
     promises: { key: string; title: string; text: string; url: string | null }[];
     categories: StoreCategory[];
     signature: StoreCard | null;
@@ -53,7 +55,7 @@ const deals = computed(() => {
 </script>
 
 <template>
-    <HomeHero :hero="hero" :pieces="heroPieces" />
+    <HomeHero :hero="hero" :pieces="heroPieces" :slides="slides" />
     <HomeCategories v-if="categories.length" :categories="categories" />
     <HomeProductTabs v-if="arrivals.length" :arrivals="arrivals" :best-sellers="bestSellers" :featured="featured" />
     <HomeSignature v-if="signature" :card="signature" />

@@ -19,6 +19,7 @@ use Modules\Wholesale\Entities\MerchantStatusChange;
 use Modules\Wholesale\Enums\MerchantStatus;
 use Modules\Wholesale\Http\Requests\Admin\MerchantRequest;
 use Modules\Wholesale\Http\Requests\Admin\MerchantStatusRequest;
+use Modules\Wholesale\Http\Requests\Admin\MerchantStoreRequest;
 use Modules\Wholesale\Repositories\Contracts\LedgerEntryRepositoryInterface;
 use Modules\Wholesale\Repositories\Contracts\MerchantRepositoryInterface;
 use Modules\Wholesale\Repositories\Contracts\TierRepositoryInterface;
@@ -29,8 +30,8 @@ use Spatie\QueryBuilder\AllowedFilter;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Wholesale merchants: the list, and a merchant's page (profile, register document, status with a
- * note, tier, sales rep, minimum order, history).
+ * Wholesale merchants: the list, adding one (its account starts approved), and a merchant's page
+ * (profile, register document, status with a note, tier, sales rep, minimum order, history).
  */
 class MerchantController extends Controller
 {
@@ -82,6 +83,23 @@ class MerchantController extends Controller
         ]);
     }
 
+    public function add(): Response
+    {
+        return Inertia::render('Wholesale/Merchant/Add', [
+            'storeMinimum' => $this->storeMinimum(),
+            'tiers' => $this->tiers->options(),
+            'salesReps' => $this->merchants->salesRepOptions(),
+            'cities' => $this->cityOptions(),
+        ]);
+    }
+
+    public function store(MerchantStoreRequest $request): RedirectResponse
+    {
+        $merchant = $this->merchantService->create($request->merchantData(), (int) $request->user()->id);
+
+        return redirect()->route('merchants.edit', $merchant->id)->with('success', __('Merchant added successfully'));
+    }
+
     public function edit(int $merchant): Response
     {
         $model = $this->merchants->forEdit($merchant);
@@ -131,11 +149,7 @@ class MerchantController extends Controller
                 'email' => $model->user?->email,
                 'created_at' => $model->created_at?->format('Y-m-d H:i'),
             ],
-            // What applies when the merchant has no minimum of its own.
-            'storeMinimum' => [
-                'value' => ($value = app(WholesaleSettings::class)->minimum_order_value) !== null ? (new Price((float) $value))->format() : null,
-                'pieces' => app(WholesaleSettings::class)->minimum_order_pieces,
-            ],
+            'storeMinimum' => $this->storeMinimum(),
             // The account in brief; its page holds the ledger.
             'finance' => [
                 'balance_label' => (new Price($this->ledger->balance((int) $model->id)))->format(),
@@ -174,6 +188,21 @@ class MerchantController extends Controller
         abort_if(blank($path) || ! Storage::disk(MerchantApplicationService::DISK)->exists($path), 404);
 
         return Storage::disk(MerchantApplicationService::DISK)->download($path, $model->register_document_name ?: basename($path));
+    }
+
+    /**
+     * What applies when the merchant has no minimum of its own.
+     *
+     * @return array{value: ?string, pieces: ?int}
+     */
+    private function storeMinimum(): array
+    {
+        $settings = app(WholesaleSettings::class);
+
+        return [
+            'value' => $settings->minimum_order_value !== null ? (new Price((float) $settings->minimum_order_value))->format() : null,
+            'pieces' => $settings->minimum_order_pieces,
+        ];
     }
 
     /**

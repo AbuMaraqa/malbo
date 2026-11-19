@@ -13,6 +13,12 @@ export interface MerchantForm {
     credit_limit: number | string | null;
 }
 
+/** A merchant staff add (MerchantController::store): its profile and the account it signs in with. */
+export interface NewMerchantForm extends MerchantForm {
+    email: string;
+    password: string;
+}
+
 export interface MerchantStatus {
     value: string;
     label: string;

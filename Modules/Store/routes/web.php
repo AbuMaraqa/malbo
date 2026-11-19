@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Store\Http\Controllers\Admin\AppearanceController;
 use Modules\Store\Http\Controllers\Admin\AbandonedCartController;
 use Modules\Store\Http\Controllers\Admin\CampaignPageController;
+use Modules\Store\Http\Controllers\Admin\HeroSlideController;
 use Modules\Store\Http\Controllers\Admin\InstagramPostController;
 use Modules\Store\Http\Controllers\Storefront\CampaignController;
 use Modules\Store\Http\Controllers\Admin\MarketingSettingsController;
@@ -102,6 +103,17 @@ Route::middleware(['auth', 'verified'])->prefix('{locale}')->where(['locale' => 
             Route::get('/{page}/edit', 'edit')->whereNumber('page')->name('edit')->can('Campaign Page Update');
             Route::put('/{page}', 'update')->whereNumber('page')->name('update')->can('Campaign Page Update');
             Route::delete('/{page}', 'destroy')->whereNumber('page')->name('destroy')->can('Campaign Page Delete');
+        });
+
+        // The home page slider: slides with a picture, optional texts and a link.
+        Route::prefix('slider')->name('hero-slides.')->controller(HeroSlideController::class)->group(function () {
+            Route::get('/', 'index')->name('index')->can('Hero Slide View List');
+            Route::get('/add', 'add')->name('add')->can('Hero Slide Create');
+            Route::post('/', 'store')->name('store')->can('Hero Slide Create');
+            Route::get('/{slide}/edit', 'edit')->whereNumber('slide')->name('edit')->can('Hero Slide Update');
+            Route::put('/{slide}/status', 'status')->whereNumber('slide')->name('status')->can('Hero Slide Update');
+            Route::put('/{slide}', 'update')->whereNumber('slide')->name('update')->can('Hero Slide Update');
+            Route::delete('/{slide}', 'destroy')->whereNumber('slide')->name('destroy')->can('Hero Slide Delete');
         });
 
         // Instagram content (phase 8B): posts entered here, the home section's switch.

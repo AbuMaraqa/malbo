@@ -109,7 +109,6 @@ class StorefrontLayout
     {
         $appearance = app(StoreAppearanceSettings::class);
         $locale = app()->getLocale();
-        $otherLocale = collect(Locales::keys())->first(fn (string $code) => $code !== $locale) ?? $locale;
         // The owner's logo, else the MALBO logo (config store.brand), with its version for maroon surfaces.
         $ownLogo = Storefront::image($appearance->logo_path);
         $logo = $ownLogo ?? asset(config('store.brand.logo'));
@@ -126,9 +125,14 @@ class StorefrontLayout
             // "About us": its page when published, else the story on the home page.
             'about_url' => $aboutSlug ? route('store.page', ['slug' => $aboutSlug]) : ($hasStory ? route('home').'#story' : null),
             'tagline' => Storefront::t($appearance->hero_subtitle),
-            'other_locale' => $otherLocale,
-            'other_locale_name' => config("app.locales.{$otherLocale}.native"),
-            'other_locale_url' => Storefront::localeUrl($otherLocale, withQuery: true),
+            // The language menu: every language in config('app.locales'), with its flag and this page in it.
+            'languages' => collect(config('app.locales'))->map(fn (array $language, string $code) => [
+                'code' => $code,
+                'name' => $language['native'],
+                'flag' => asset("images/flags/{$language['flag']}.svg"),
+                'url' => Storefront::localeUrl($code, withQuery: true),
+                'current' => $code === $locale,
+            ])->values()->all(),
             'contact' => $this->contact->channels() ?: null,
             'whatsapp' => app(StoreContactSettings::class)->whatsapp,
             'socials' => $this->socials(),

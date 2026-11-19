@@ -6,10 +6,11 @@ import type { Option } from '@/Components/form/SelectInput.vue';
 import DataTable from '@/Components/table/DataTable.vue';
 import RowMenu from '@/Components/table/RowMenu.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import Button from '@/Components/ui/Button.vue';
 import DropdownItem from '@/Components/ui/DropdownItem.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { t } from '@/lib/i18n';
+import { can, t } from '@/lib/i18n';
 import { Eye } from '@/lib/icons';
 import { route } from '@/lib/route';
 import type { TableColumn, TableFilter, TablePayload } from '@/types/table';
@@ -55,7 +56,11 @@ const filters = computed<TableFilter[]>(() => [
 </script>
 
 <template>
-    <PageHeader :title="t('Merchants')" :count="table.meta.total" />
+    <PageHeader :title="t('Merchants')" :count="table.meta.total">
+        <template #actions>
+            <Button v-if="can('Merchant Create')" variant="primary" :href="route('merchants.add')">{{ t('Add merchant') }}</Button>
+        </template>
+    </PageHeader>
 
     <DataTable :table="table" :columns="columns" :filters="filters" :empty-title="t('No merchants yet')" :empty-text="t('Shops apply on the wholesale join form.')">
         <template #cell-shop_name="{ row }">

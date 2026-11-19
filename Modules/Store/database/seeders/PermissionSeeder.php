@@ -94,6 +94,11 @@ class PermissionSeeder extends Seeder
             ['name' => 'Instagram Post Create', 'guard_name' => 'web', 'module_name' => 'Instagram Management'],
             ['name' => 'Instagram Post Update', 'guard_name' => 'web', 'module_name' => 'Instagram Management'],
             ['name' => 'Instagram Post Delete', 'guard_name' => 'web', 'module_name' => 'Instagram Management'],
+            // The home page slider.
+            ['name' => 'Hero Slide View List', 'guard_name' => 'web', 'module_name' => 'Hero Slide Management'],
+            ['name' => 'Hero Slide Create', 'guard_name' => 'web', 'module_name' => 'Hero Slide Management'],
+            ['name' => 'Hero Slide Update', 'guard_name' => 'web', 'module_name' => 'Hero Slide Management'],
+            ['name' => 'Hero Slide Delete', 'guard_name' => 'web', 'module_name' => 'Hero Slide Management'],
         ];
 
         foreach ($permissions as $perm) {

@@ -7,6 +7,7 @@ import { t } from '@/lib/i18n';
 import { Boxes, Letter, MapPin, Phone } from '@/lib/icons';
 import { route } from '@/lib/route';
 
+import LanguageMenu from './LanguageMenu.vue';
 import StoreBrand from './StoreBrand.vue';
 import { btnDark, container } from './styles';
 import type { StoreLayoutProps } from './types';
@@ -148,7 +149,7 @@ const link = 'transition-colors hover:text-store-600';
             <div :class="container" class="flex flex-wrap items-center justify-between gap-3 py-5 text-[0.8125rem]">
                 <span>© {{ store.year }} <span class="font-semibold text-(--gold)">{{ store.name }}</span>. {{ t('All rights reserved.') }}</span>
                 <button v-if="tracking" type="button" class="cursor-pointer transition-colors hover:text-white" @click="openConsentBanner">{{ t('Cookie settings') }}</button>
-                <a :href="store.other_locale_url" :hreflang="store.other_locale" :lang="store.other_locale" class="transition-colors hover:text-white">{{ store.other_locale_name }}</a>
+                <LanguageMenu :languages="store.languages" tone="dark" up />
             </div>
         </div>
     </footer>

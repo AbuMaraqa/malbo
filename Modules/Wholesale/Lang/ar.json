@@ -295,5 +295,12 @@
     "The suggested retail price only: for your customers.": "سعر البيع المقترح فقط: لزبائنك.",
     "This page is for wholesale merchants.": "هذه الصفحة لتجار الجملة.",
     "Too many statements in an hour. Try again later.": "طلبت كشوفًا كثيرة خلال ساعة. حاول لاحقًا.",
-    "Your prices with quantity discounts, and the suggested retail price.": "أسعارك مع خصومات الكمية، وسعر البيع المقترح."
+    "Your prices with quantity discounts, and the suggested retail price.": "أسعارك مع خصومات الكمية، وسعر البيع المقترح.",
+    "Add merchant": "إضافة تاجر",
+    "Sign-in details": "بيانات الدخول",
+    "The merchant signs in to the wholesale portal with this email and password. Send both to them.": "يدخل التاجر إلى بوابة الجملة بهذا البريد وكلمة المرور. أرسلهما إليه.",
+    "At least 8 characters.": "8 أحرف على الأقل.",
+    "Merchant added successfully": "تمت إضافة التاجر بنجاح",
+    "Added by staff": "أضافه أحد الموظفين",
+    "An account with this email already exists.": "يوجد حساب بهذا البريد الإلكتروني."
 }

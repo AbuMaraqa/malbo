@@ -27,6 +27,7 @@ use Modules\Store\Entities\Cart;
 use Modules\Store\Entities\InstagramPost;
 use Modules\Store\Entities\Page;
 use Modules\Store\Entities\Review;
+use Modules\Store\Services\HeroSlideService;
 use Modules\Store\Services\InstagramService;
 use Modules\Store\Services\OptOutService;
 use Modules\Wholesale\Entities\CatalogShare;
@@ -289,7 +290,10 @@ class RouteCrawlTest extends E2ETestCase
             'permalink' => 'https://www.instagram.com/p/CRAWL/', 'caption' => 'crawl', 'is_active' => true,
             'products' => [$demo->products['bomber']->id], 'image' => UploadedFile::fake()->image('post.jpg', 400, 400),
         ], $admin->id);
-        $return = app(ReturnRequestService::class)->create($demo->orders['delivered-recent'], [
+        $slide = app(HeroSlideService::class)->create([
+            'title' => 'crawl', 'link' => '/ar/shop', 'is_active' => true, 'image' => UploadedFile::fake()->image('slide.jpg', 600, 300),
+        ], 'ar', $admin->id);
+        $return =app(ReturnRequestService::class)->create($demo->orders['delivered-recent'], [
             'type' => 'return', 'reason' => 'wrong_size', 'customer_note' => null,
             'lines' => [['order_item_id' => $demo->orders['delivered-recent']->items()->value('id'), 'quantity' => 1, 'exchange_product_id' => null]],
         ], $this->customer);
@@ -322,6 +326,7 @@ class RouteCrawlTest extends E2ETestCase
             'user' => $this->customer->id,
             'zone' => $demo->zones['center']->id,
             'post' => $post->id,
+            'slide' => $slide->id,
             'review' => Review::query()->value('id'),
             'returnRequest' => $return->id,
             'merchant' => $merchant->id,

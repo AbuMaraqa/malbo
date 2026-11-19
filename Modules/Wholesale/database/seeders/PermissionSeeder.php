@@ -16,6 +16,7 @@ class PermissionSeeder extends Seeder
 {
     public const PERMISSIONS = [
         'Merchant View List',
+        'Merchant Create',
         'Merchant Update',
         'Wholesale Tier View List',
         'Wholesale Tier Create',
