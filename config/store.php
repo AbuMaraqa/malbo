@@ -32,6 +32,8 @@ return [
         'KO Sans' => [
             'unicode_range' => 'U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F',
             'files' => [
+                100 => 'fonts/ko-sans/ko-sans-thin',
+                200 => 'fonts/ko-sans/ko-sans-extralight',
                 300 => 'fonts/ko-sans/ko-sans-light',
                 400 => 'fonts/ko-sans/ko-sans-regular',
                 500 => 'fonts/ko-sans/ko-sans-medium',
