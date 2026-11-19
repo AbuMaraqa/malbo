@@ -51,7 +51,7 @@ watch(
             </template>
             <button v-else-if="current" type="button" class="group block size-full cursor-zoom-in" :aria-label="t('Zoom in')" @click="lightbox = active">
                 <img :src="current" :alt="name" class="size-full object-cover" />
-                <span class="absolute end-3 bottom-3 grid size-10 place-items-center rounded-full bg-white text-ink shadow-sm transition group-hover:scale-105" aria-hidden="true">
+                <span class="absolute end-3 bottom-3 grid size-10 place-items-center rounded-full bg-(--shell) text-ink shadow-sm transition group-hover:scale-105" aria-hidden="true">
                     <ZoomIn class="size-5" />
                 </span>
             </button>
@@ -73,7 +73,7 @@ watch(
             <li v-if="video" class="shrink-0">
                 <button
                     type="button"
-                    class="grid size-18 cursor-pointer place-items-center rounded-md border-2 bg-ink text-white"
+                    class="grid size-18 cursor-pointer place-items-center rounded-md border-2 bg-(--night) text-white"
                     :class="showsVideo ? 'border-store' : 'border-transparent'"
                     :aria-pressed="showsVideo"
                     @click="active = images.length"

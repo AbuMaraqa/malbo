@@ -13,7 +13,7 @@ class MalboBrandSettingsTest extends DatabaseTestCase
     public function test_a_fresh_store_and_panel_wear_the_malbo_identity(): void
     {
         $this->assertSame('#6D1C2F', app(StoreAppearanceSettings::class)->primary_color);
-        $this->assertSame('readex-pro', app(StoreAppearanceSettings::class)->font);
+        $this->assertSame('malbo', app(StoreAppearanceSettings::class)->font); // then 2026_11_18_000001_apply_malbo_store_font
         $this->assertSame('#6D1C2F', app(GeneralSettings::class)->dashboard_color);
         $this->assertSame('readex-pro', app(GeneralSettings::class)->dashboard_font);
         $this->assertSame('#6D1C2F', DashboardTheme::DEFAULT_COLOR);

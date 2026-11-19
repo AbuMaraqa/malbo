@@ -41,16 +41,16 @@ class AppearancePageTest extends StorefrontTestCase
                 ->where('settings.hero_title.ar', 'أهلاً')
                 ->where('settings.hero_title.en', 'Welcome')
                 ->where('settings.whatsapp', '970599000000')
-                ->has('presets', 8)
-                ->has('fonts', 10)
+                ->has('presets', 3)
+                ->has('fonts', 2)
                 ->where('maxValues', 3));
     }
 
     public function test_saving_updates_the_settings(): void
     {
         $this->save([
-            'primary_color' => '#6B2D5C',
-            'font' => 'cairo',
+            'primary_color' => '#73232A',
+            'font' => 'readex-pro',
             'hero_title' => ['ar' => 'متجرنا', 'en' => 'Our store'],
             'story_text' => ['ar' => 'قصة', 'en' => ''],
             'values' => [['title' => ['ar' => 'جودة', 'en' => 'Quality'], 'text' => ['ar' => 'نص', 'en' => 'Text']]],
@@ -59,8 +59,8 @@ class AppearancePageTest extends StorefrontTestCase
         ])->assertRedirect()->assertSessionHasNoErrors();
 
         $appearance = app(StoreAppearanceSettings::class);
-        $this->assertSame('#6B2D5C', $appearance->primary_color);
-        $this->assertSame('cairo', $appearance->font);
+        $this->assertSame('#73232A', $appearance->primary_color);
+        $this->assertSame('readex-pro', $appearance->font);
         $this->assertSame(['ar' => 'متجرنا', 'en' => 'Our store'], $appearance->hero_title);
         $this->assertSame('قصة', $appearance->story_text['ar']);
         $this->assertSame('Quality', $appearance->values[0]['title']['en']);
@@ -72,9 +72,9 @@ class AppearancePageTest extends StorefrontTestCase
     {
         $this->assertStringContainsString('--brand:#6D1C2F', app(ThemeService::class)->css());
 
-        $this->save(['primary_color' => '#6B2D5C'])->assertSessionHasNoErrors();
+        $this->save(['primary_color' => '#231F20'])->assertSessionHasNoErrors();
 
-        $this->assertStringContainsString('--brand:#6B2D5C', app(ThemeService::class)->css());
+        $this->assertStringContainsString('--brand:#231F20', app(ThemeService::class)->css());
     }
 
     public function test_an_empty_values_list_clears_the_values(): void
@@ -100,6 +100,14 @@ class AppearancePageTest extends StorefrontTestCase
             ->assertSessionHasErrors(['primary_color', 'font', 'x_url']);
 
         $this->assertSame('#6D1C2F', app(StoreAppearanceSettings::class)->primary_color);
+    }
+
+    public function test_only_the_brand_colors_and_fonts_are_allowed(): void
+    {
+        $this->save(['primary_color' => '#0F766E', 'font' => 'cairo'])->assertSessionHasErrors(['primary_color', 'font']);
+
+        $this->save(['primary_color' => '#73232a', 'font' => 'malbo'])->assertSessionHasNoErrors();
+        $this->assertSame('#73232A', app(StoreAppearanceSettings::class)->primary_color);
     }
 
     public function test_staff_without_the_permission_is_refused(): void
@@ -155,8 +163,8 @@ class AppearancePageTest extends StorefrontTestCase
     private function save(array $fields)
     {
         return $this->actingAs($this->owner())->put($this->siteUrl(self::URL), [
-            'primary_color' => '#1F6F50',
-            'font' => 'tajawal',
+            'primary_color' => '#6D1C2F',
+            'font' => 'malbo',
             ...$fields,
         ]);
     }

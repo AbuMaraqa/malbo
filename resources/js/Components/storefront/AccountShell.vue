@@ -27,7 +27,7 @@ const links = computed(() => [
     <PageHero :title="title" :parents="parents" />
     <div class="mx-auto w-full max-w-310 px-4 pt-12 sm:px-6">
         <div class="grid items-start gap-8 lg:grid-cols-[16rem_1fr]">
-            <nav :aria-label="t('My account')" class="flex gap-1 overflow-x-auto rounded-lg border border-line bg-white p-2 lg:sticky lg:top-36 lg:flex-col">
+            <nav :aria-label="t('My account')" class="flex gap-1 overflow-x-auto rounded-lg border border-line bg-(--shell) p-2 lg:sticky lg:top-36 lg:flex-col">
                 <Link
                     v-for="link in links"
                     :key="link.href"

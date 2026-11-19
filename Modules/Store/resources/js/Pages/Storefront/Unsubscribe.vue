@@ -24,7 +24,7 @@ function confirm(): void {
     <PageHero :title="t('Stop these messages')" />
     <div class="mx-auto max-w-xl px-4 pt-12 pb-20">
         <StoreFlash />
-        <section class="rounded-lg border border-line bg-white p-8 text-center">
+        <section class="rounded-lg border border-line bg-(--shell) p-8 text-center">
             <p class="text-lg font-bold" dir="ltr">{{ contact }}</p>
             <p v-if="done" class="mt-4 leading-7 text-(--ink-soft)">{{ t('This contact gets no more reminders or offers from us.') }}</p>
             <template v-else>

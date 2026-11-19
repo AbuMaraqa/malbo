@@ -28,7 +28,7 @@ const list = computed<(number | string)[]>({
                 <template v-if="addon.multiple && addon.max > 1"> — {{ t('up to :max', { max: addon.max }) }}</template>
             </span>
         </legend>
-        <div class="divide-y divide-line rounded-lg border border-line bg-white">
+        <div class="divide-y divide-line rounded-lg border border-line bg-(--shell)">
             <label v-for="option in addon.options" :key="option.id" class="flex min-h-12 cursor-pointer items-center gap-3 px-4 py-2">
                 <input v-if="addon.multiple" v-model="list" type="checkbox" :value="option.id" class="size-5 accent-store" />
                 <input v-else v-model="model" type="radio" :name="groupName" :value="option.id" class="size-5 accent-store" />

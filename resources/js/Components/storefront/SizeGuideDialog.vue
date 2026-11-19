@@ -34,7 +34,7 @@ function onClick(event: MouseEvent): void {
 
     <dialog
         ref="dialog"
-        class="m-auto max-h-[85vh] w-[min(42rem,calc(100%-2rem))] overflow-hidden rounded-lg bg-white p-0 text-ink shadow-xl backdrop:bg-black/50"
+        class="m-auto max-h-[85vh] w-[min(42rem,calc(100%-2rem))] overflow-hidden rounded-lg bg-(--shell) p-0 text-ink shadow-xl backdrop:bg-black/50"
         aria-labelledby="size-guide-title"
         @click="onClick"
     >

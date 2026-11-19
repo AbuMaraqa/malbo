@@ -25,13 +25,13 @@ function find(): void {
     <PageHero :title="t('Track your order')" :lead="t('Enter your order number and the phone number you ordered with.')" />
     <div class="mx-auto max-w-3xl px-4 pt-12">
 
-        <form class="grid gap-5 rounded-lg border border-line bg-white p-6 sm:grid-cols-[1fr_1fr_auto] sm:items-end" novalidate @submit.prevent="find">
+        <form class="grid gap-5 rounded-lg border border-line bg-(--shell) p-6 sm:grid-cols-[1fr_1fr_auto] sm:items-end" novalidate @submit.prevent="find">
             <StoreField v-model="form.number" :label="t('Order number')" dir="ltr" inputmode="text" required :maxlength="40" :error="form.errors.number" />
             <StoreField v-model="form.phone" :label="t('Phone')" type="tel" autocomplete="tel" inputmode="tel" dir="ltr" required :maxlength="40" :error="form.errors.phone" />
             <button type="submit" :class="btnBrand" :disabled="form.processing">{{ t('Track') }}</button>
         </form>
 
-        <section v-if="result" class="mt-8 rounded-lg border border-line bg-white p-6 sm:p-8" aria-labelledby="result-title" aria-live="polite">
+        <section v-if="result" class="mt-8 rounded-lg border border-line bg-(--shell) p-6 sm:p-8" aria-labelledby="result-title" aria-live="polite">
             <div class="flex flex-wrap items-baseline justify-between gap-3">
                 <h2 id="result-title" class="text-xl font-bold">
                     {{ t('Order') }} <span dir="ltr">{{ result.number }}</span>

@@ -65,11 +65,11 @@ function submit(): void {
 </script>
 
 <template>
-    <p v-if="done" role="status" class="flex items-center gap-2 rounded-lg border border-line bg-white p-5 font-semibold text-[#15803d]">
+    <p v-if="done" role="status" class="flex items-center gap-2 rounded-lg border border-line bg-(--shell) p-5 font-semibold text-[#15803d]">
         <Check class="size-5 shrink-0" aria-hidden="true" />
         {{ t('Thank you. Your review will appear once we check it.') }}
     </p>
-    <form v-else class="grid gap-5 rounded-lg border border-line bg-white p-6" novalidate @submit.prevent="submit">
+    <form v-else class="grid gap-5 rounded-lg border border-line bg-(--shell) p-6" novalidate @submit.prevent="submit">
         <h3 class="text-lg font-bold">{{ review ? t('Edit your review') : t('Write a review') }}</h3>
         <p v-if="review" class="-mt-3 text-sm text-(--ink-soft)">{{ t('Sending it again replaces your review, which waits for our approval again.') }}</p>
 
@@ -80,8 +80,8 @@ function submit(): void {
                     <input :id="`${id}-star-${star}`" v-model="form.rating" type="radio" name="rating" :value="star" class="peer sr-only" />
                     <label
                         :for="`${id}-star-${star}`"
-                        class="cursor-pointer text-3xl leading-none text-(--ink-18) peer-checked:text-[#d97706] peer-focus-visible:outline-2 peer-focus-visible:outline-store hover:text-[#d97706]"
-                        :class="{ 'text-[#d97706]': form.rating >= star }"
+                        class="cursor-pointer text-3xl leading-none text-(--ink-18) peer-checked:text-(--gold) peer-focus-visible:outline-2 peer-focus-visible:outline-store hover:text-(--gold)"
+                        :class="{ 'text-(--gold)': form.rating >= star }"
                     >
                         <span aria-hidden="true">★</span>
                         <span class="sr-only">{{ t(':count stars', { count: star }) }}</span>

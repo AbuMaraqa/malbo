@@ -54,7 +54,7 @@ function add(item: LookItem): void {
     <section class="mt-20" aria-labelledby="look-title">
         <SectionHeading id="look-title" :title="t('Complete the look')" />
         <ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <li v-for="item in items" :key="item.id" class="flex flex-col rounded-lg border border-line bg-white p-4">
+            <li v-for="item in items" :key="item.id" class="flex flex-col rounded-lg border border-line bg-(--shell) p-4">
                 <Link :href="item.url" class="block aspect-[4/5] overflow-hidden rounded-md bg-(--sand)">
                     <img v-if="item.image" :src="item.image" :alt="item.name" class="size-full object-cover" loading="lazy" />
                 </Link>
@@ -64,7 +64,7 @@ function add(item: LookItem): void {
                     <select
                         v-if="item.variants.length"
                         v-model="picked[item.id]"
-                        class="w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
+                        class="w-full rounded-md border border-line bg-(--shell) px-3 py-2 text-sm"
                         :aria-label="t('Choose a size for :name', { name: item.name })"
                         @change="added = null"
                     >

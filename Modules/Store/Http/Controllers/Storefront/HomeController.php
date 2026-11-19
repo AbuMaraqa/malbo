@@ -61,8 +61,8 @@ class HomeController extends Controller
             'signature' => $signature?->toArray(),
             'featured' => $picks->map(fn (ProductCard $card) => $card->toArray())->all(),
             'arrivals' => $this->catalog->newArrivals(self::NEW_ARRIVALS)->map(fn (ProductCard $card) => $card->toArray())->all(),
-            // Desktop: another pick floats beside the hero card (the first has its own section).
-            'heroPiece' => $picks->first(fn (ProductCard $card) => $card->image !== null)?->toArray(),
+            // The home's product tabs: what sells most (the newest while nothing has sold).
+            'bestSellers' => $this->catalog->bestSellers(self::NEW_ARRIVALS)->map(fn (ProductCard $card) => $card->toArray())->all(),
             'story' => $story ? [...$story, 'about' => $story['about'] ? route('store.page', ['slug' => $story['about']]) : null] : null,
             'values' => $this->home->values()->all(),
             'membership' => $this->home->membership(),

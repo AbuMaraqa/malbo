@@ -6,7 +6,7 @@
         "build": "vite build && vite build --ssr",
         "dev": "vite",
         "typecheck": "vue-tsc --noEmit",
-        "test:js": "vitest run"
+        "test:js": "node scripts/vitest.mjs"
     },
     "devDependencies": {
         "@iconify-json/solar": "^1.2.13",

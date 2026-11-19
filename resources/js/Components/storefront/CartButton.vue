@@ -17,7 +17,7 @@ const label = computed(() => (props.count > 0 ? t('Cart, :count items', { count:
         <span
             v-if="count > 0"
             aria-hidden="true"
-            class="absolute -end-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-store px-1 text-[0.6875rem] leading-none font-bold text-store-contrast"
+            class="absolute -end-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-(--gold) px-1 text-[0.6875rem] leading-none font-bold text-(--night)"
         >
             {{ count > 99 ? '99+' : count }}
         </span>

@@ -9,7 +9,7 @@ defineProps<{ channels: StoreChannels }>();
 </script>
 
 <template>
-    <div data-contact="channels" class="rounded-lg border border-line bg-white p-6">
+    <div data-contact="channels" class="rounded-lg border border-line bg-(--shell) p-6">
         <h2 class="text-[17px] font-bold">{{ t('Reach us directly') }}</h2>
         <ul class="mt-4 divide-y divide-line">
             <li v-if="channels.whatsapp" data-contact="whatsapp" class="py-3 first:pt-0">

@@ -15,6 +15,6 @@ const sizes = { sm: 'text-sm', md: 'text-lg', lg: 'text-2xl' } as const;
 
 <template>
     <span class="inline-flex items-center leading-none tracking-tight" :class="sizes[size]" role="img" :aria-label="t(':rating out of 5 stars', { rating: rating.toFixed(1) })">
-        <span v-for="star in 5" :key="star" aria-hidden="true" :class="star <= filled ? 'text-[#d97706]' : 'text-(--ink-18)'">★</span>
+        <span v-for="star in 5" :key="star" aria-hidden="true" :class="star <= filled ? 'text-(--gold)' : 'text-(--ink-18)'">★</span>
     </span>
 </template>

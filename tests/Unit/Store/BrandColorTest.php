@@ -57,4 +57,13 @@ class BrandColorTest extends TestCase
             $this->assertSame('#000000', $shades[$shade]);
         }
     }
+
+    public function test_storefront_tints_are_the_color_in_the_malbo_cream_not_pink(): void
+    {
+        $shades = BrandColor::fromHex('#6D1C2F')->shadesOn();
+
+        $this->assertSame(['#F8EAD9', '#EDDBCD', '#DCC1B7', '#C29A97', '#9C6168'], [$shades[50], $shades[100], $shades[200], $shades[300], $shades[400]]);
+        $this->assertSame('#6D1C2F', $shades[500]);
+        $this->assertSame(array_slice(BrandColor::fromHex('#6D1C2F')->shades(), 5, null, true), array_slice($shades, 5, null, true));
+    }
 }

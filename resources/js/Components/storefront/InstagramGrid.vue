@@ -3,31 +3,36 @@ import { Link } from '@inertiajs/vue3';
 
 import { t } from '@/lib/i18n';
 
-import { linkArrow, sectionTitle } from './styles';
+import SectionHeading from './SectionHeading.vue';
 import type { InstagramPostCard } from './types';
 
 /**
- * Instagram posts: each picture opens the post on Instagram; the products it shows ("shop the
- * look") link to their pages. On the home page and as a campaign block.
+ * Instagram posts as a strip of square pictures from edge to edge, under a centered title. Each
+ * picture opens the post on Instagram; the products it shows ("shop the look") appear over it on
+ * hover and keyboard focus, linking to their pages. On the home page and as a campaign block.
  */
 defineProps<{ title: string; profileUrl?: string | null; posts: InstagramPostCard[] }>();
 </script>
 
 <template>
     <div>
-        <div class="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
-            <h2 :class="sectionTitle">{{ title }}</h2>
-            <a v-if="profileUrl" :href="profileUrl" target="_blank" rel="noopener" :class="linkArrow">{{ t('Follow us') }}</a>
+        <div class="px-4">
+            <SectionHeading :title="title" />
+            <p v-if="profileUrl" class="mt-4 text-center">
+                <a :href="profileUrl" target="_blank" rel="noopener" class="text-[0.8125rem] font-semibold ltr:tracking-[0.1em] text-(--gold-ink) ltr:uppercase hover:text-store-600">{{ t('Follow us') }}</a>
+            </p>
         </div>
-        <ul class="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-            <li v-for="post in posts" :key="post.id" class="flex flex-col">
-                <a :href="post.url" target="_blank" rel="noopener" class="block aspect-square overflow-hidden rounded-md bg-(--sand)" :aria-label="post.caption ?? t('Open on Instagram')">
-                    <img v-if="post.image" :src="post.image" :alt="post.caption ?? ''" class="size-full object-cover transition-transform hover:scale-105" loading="lazy" />
+        <ul class="mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+            <li v-for="post in posts.slice(0, 10)" :key="post.id" class="group relative aspect-square overflow-hidden bg-(--sand)">
+                <a :href="post.url" target="_blank" rel="noopener" class="block size-full" :aria-label="post.caption ?? t('Open on Instagram')">
+                    <img v-if="post.image" :src="post.image" :alt="post.caption ?? ''" class="size-full object-cover transition duration-500 group-hover:scale-105 motion-reduce:transition-none" loading="lazy" />
                 </a>
-                <p v-if="post.caption" class="mt-2 line-clamp-2 text-sm text-(--ink-soft)">{{ post.caption }}</p>
-                <div v-if="post.products.length" class="mt-2 flex flex-wrap gap-1.5">
+                <div
+                    v-if="post.products.length"
+                    class="absolute inset-x-0 bottom-0 flex flex-wrap gap-1.5 bg-linear-to-t from-(--night)/80 to-transparent p-3 pt-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+                >
                     <span class="sr-only">{{ t('Shop the look') }}</span>
-                    <Link v-for="product in post.products" :key="product.url" :href="product.url" class="rounded-full border border-line px-2.5 py-1 text-xs font-medium hover:border-store hover:text-store-700">
+                    <Link v-for="product in post.products" :key="product.url" :href="product.url" class="bg-(--shell) px-2.5 py-1 text-xs font-semibold text-ink hover:bg-(--gold)">
                         {{ product.name }}
                     </Link>
                 </div>

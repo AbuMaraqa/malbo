@@ -38,7 +38,7 @@ function toggle(): void {
         :title="label"
         :aria-pressed="saved"
         :disabled="busy"
-        class="z-10 grid cursor-pointer place-items-center rounded-full bg-white text-ink shadow-sm transition hover:bg-store hover:text-store-contrast disabled:opacity-60 motion-reduce:transition-none"
+        class="z-10 grid cursor-pointer place-items-center rounded-full bg-(--shell) text-ink shadow-sm transition hover:bg-store hover:text-store-contrast disabled:opacity-60 motion-reduce:transition-none"
         :class="box"
         @click.prevent="toggle"
     >
@@ -50,7 +50,7 @@ function toggle(): void {
         :href="loginUrl"
         :aria-label="t('Sign in to save this product')"
         :title="t('Add to wishlist')"
-        class="z-10 grid place-items-center rounded-full bg-white text-ink shadow-sm transition hover:bg-store hover:text-store-contrast motion-reduce:transition-none"
+        class="z-10 grid place-items-center rounded-full bg-(--shell) text-ink shadow-sm transition hover:bg-store hover:text-store-contrast motion-reduce:transition-none"
         :class="box"
     >
         <Heart class="size-5" aria-hidden="true" />

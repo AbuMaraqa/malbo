@@ -8,7 +8,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class GeneralSettings extends Settings
 {
-    public string $site_name = 'Be Found Online';
+    public string $site_name = 'MALBO';
     public string $email_address_for_contact = 'contact@bfo.com';
     public string $site_description = 'Be Found Online Description';
     public ?string $site_logo_url = null;

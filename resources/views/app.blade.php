@@ -9,6 +9,10 @@
         @if ($faviconUrl)
             <link rel="icon" href="{{ $faviconUrl }}">
         @endif
+        {{-- The MALBO app icon (brand guidelines): home screens and installed apps. --}}
+        <link rel="apple-touch-icon" href="{{ asset('brand/apple-touch-icon.png') }}">
+        <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+        <meta name="theme-color" content="#6D1C2F">
         @vite(['resources/js/app.ts'])
         @if ($themeCss)
             <style id="app-theme">{!! $themeCss !!}</style>

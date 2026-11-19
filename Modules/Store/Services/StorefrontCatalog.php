@@ -56,6 +56,17 @@ class StorefrontCatalog
     }
 
     /**
+     * The best-selling published products (by sales, then newest): the start of the shop's first
+     * page sorted that way, which the store's cache already holds.
+     *
+     * @return Collection<int, ProductCard>
+     */
+    public function bestSellers(int $limit = 8): Collection
+    {
+        return collect($this->firstPage(['sort' => 'best_selling'])->items())->take($limit)->values();
+    }
+
+    /**
      * The shop grid page; its items are ProductCards. The first page without search or filters is
      * cached (per category and sort): what most visitors open.
      *

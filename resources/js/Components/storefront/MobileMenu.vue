@@ -24,7 +24,7 @@ const emit = defineEmits<{ close: [] }>();
 <template>
     <div v-if="open" class="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" :aria-label="t('Menu')">
         <button type="button" class="absolute inset-0 cursor-default bg-(--night)/50" :aria-label="t('Close menu')" @click="emit('close')"></button>
-        <nav class="absolute inset-y-0 start-0 flex w-[min(22rem,88vw)] flex-col overflow-y-auto bg-white shadow-2xl" :aria-label="t('Main')">
+        <nav class="absolute inset-y-0 start-0 flex w-[min(22rem,88vw)] flex-col overflow-y-auto bg-(--shell) shadow-2xl" :aria-label="t('Main')">
             <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
                 <StoreBrand :name="store.name" :logo="store.logo" class="text-xl" />
                 <button type="button" class="grid size-11 cursor-pointer place-items-center rounded-md hover:bg-(--sand)" :aria-label="t('Close menu')" @click="emit('close')">
@@ -60,7 +60,7 @@ const emit = defineEmits<{ close: [] }>();
             </a>
 
             <template v-if="store.categories.length">
-                <p class="px-5 pt-4 pb-1 text-xs font-semibold tracking-[0.12em] text-muted uppercase">{{ t('Categories') }}</p>
+                <p class="px-5 pt-4 pb-1 text-xs font-semibold ltr:tracking-[0.12em] text-muted ltr:uppercase">{{ t('Categories') }}</p>
                 <ul class="pb-4">
                     <li v-for="category in store.categories" :key="category.id">
                         <Link :href="category.url" class="block px-5 py-2.5 text-(--ink-soft) hover:bg-(--sand-light) hover:text-store-600">{{ category.name }}</Link>

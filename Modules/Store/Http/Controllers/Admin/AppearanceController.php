@@ -55,7 +55,7 @@ class AppearanceController extends Controller
             'settings' => $settings,
             'images' => array_map(fn (string $property) => Storefront::image($appearance->{$property}), self::IMAGE_PATHS),
             'presets' => array_values(config('store.color_presets')),
-            'fonts' => collect(FontCatalog::all())->map(fn (array $font, string $key) => ['value' => $key, 'label' => $font['name']])->values(),
+            'fonts' => collect(config('store.storefront_fonts'))->map(fn (string $key) => ['value' => $key, 'label' => FontCatalog::all()[$key]['name']])->values(),
             'maxValues' => StoreAppearanceService::MAX_VALUES,
             'storeUrl' => route('home'),
         ]);

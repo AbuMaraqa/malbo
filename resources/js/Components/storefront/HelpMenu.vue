@@ -12,7 +12,7 @@ defineProps<{ help: { about: PageLink[]; policies: PageLink[] }; whatsapp: strin
 </script>
 
 <template>
-    <nav data-help-menu aria-labelledby="help-menu-title" class="rounded-lg border border-line bg-white p-5">
+    <nav data-help-menu aria-labelledby="help-menu-title" class="rounded-lg border border-line bg-(--shell) p-5">
         <h2 id="help-menu-title" class="text-[15px] font-bold">{{ t('Help center') }}</h2>
         <ul v-if="help.about.length" class="mt-3 space-y-0.5 text-[15px]">
             <li v-for="item in help.about" :key="item.slug"><Link :href="item.url" :class="helpLink">{{ item.title }}</Link></li>
@@ -30,7 +30,7 @@ defineProps<{ help: { about: PageLink[]; policies: PageLink[] }; whatsapp: strin
         <p class="mt-1.5 text-sm leading-6 text-(--ink-soft)">{{ t('Our team is happy to help with your order or anything else.') }}</p>
         <div class="mt-4 flex flex-col gap-2">
             <a v-if="whatsapp" :href="`https://wa.me/${whatsapp}`" target="_blank" rel="noopener" class="w-full" :class="btnBrand">{{ t('Chat on WhatsApp') }}</a>
-            <Link :href="route('store.contact')" class="w-full" :class="whatsapp ? [btnOutline, 'bg-white'] : btnBrand">{{ t('Contact us') }}</Link>
+            <Link :href="route('store.contact')" class="w-full" :class="whatsapp ? [btnOutline, 'bg-(--shell)'] : btnBrand">{{ t('Contact us') }}</Link>
         </div>
     </div>
 </template>

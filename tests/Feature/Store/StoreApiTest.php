@@ -51,7 +51,7 @@ class StoreApiTest extends DatabaseTestCase
             ->assertJsonPath('data.rtl', false)
             ->assertJsonPath('data.logo', null);
 
-        $this->assertSame(BrandColor::fromHex('#6B2D5C')->shades(), array_combine(
+        $this->assertSame(BrandColor::fromHex('#6B2D5C')->shadesOn(), array_combine(
             array_map('intval', array_keys($response->json('data.shades'))),
             array_values($response->json('data.shades')),
         ));

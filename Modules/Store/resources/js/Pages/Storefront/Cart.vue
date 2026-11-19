@@ -46,14 +46,14 @@ function remove(line: CartLine): void {
         </div>
 
         <div v-else class="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_22rem]">
-            <section :aria-label="t('Items in your cart')" class="rounded-lg border border-line bg-white px-5">
+            <section :aria-label="t('Items in your cart')" class="rounded-lg border border-line bg-(--shell) px-5">
                 <p v-if="error" role="alert" class="pt-4 text-sm font-bold text-(--danger)">{{ error }}</p>
                 <ul class="divide-y divide-line">
                     <CartLineRow v-for="line in lines" :key="line.id" :line="line" :busy="busy" @quantity="setQuantity(line, $event)" @remove="remove(line)" />
                 </ul>
             </section>
 
-            <aside class="rounded-lg border border-line bg-white p-6 lg:sticky lg:top-36" aria-labelledby="cart-summary">
+            <aside class="rounded-lg border border-line bg-(--shell) p-6 lg:sticky lg:top-36" aria-labelledby="cart-summary">
                 <h2 id="cart-summary" class="text-xl font-bold">{{ t('Order summary') }}</h2>
                 <dl class="mt-5 flex items-center justify-between text-lg">
                     <dt>{{ t('Subtotal') }}</dt>

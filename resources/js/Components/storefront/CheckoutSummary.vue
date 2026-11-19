@@ -9,7 +9,7 @@ defineProps<{ lines: CheckoutLine[]; quote: CheckoutQuote; updating: boolean }>(
 </script>
 
 <template>
-    <aside class="rounded-lg border border-line bg-white p-6" aria-labelledby="checkout-summary">
+    <aside class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="checkout-summary">
         <h2 id="checkout-summary" class="text-xl font-bold">{{ t('Order summary') }}</h2>
 
         <ul class="mt-4 divide-y divide-line">

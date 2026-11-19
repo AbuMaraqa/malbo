@@ -1,38 +1,41 @@
 /**
- * The storefront's look as Tailwind classes, after the MALBO guidelines: white panels on warm cream,
- * the store's color (maroon) for actions, gold (`--gold`) for small accents. They live in utilities,
- * in the CSS the first paint already has (SSR), so nothing flashes unstyled. The store's color is
- * `store-*`; the neutrals are CSS variables set by StorefrontLayout.
+ * The storefront's look as Tailwind classes, after the MALBO brand guidelines: cream paper (60%),
+ * the store's maroon for actions and dark bands (30%), gold for accents (10%; `--gold-ink` is gold
+ * dark enough for small text on cream). Soft, curved shapes like the mark's petals: pill buttons and
+ * chips, rounded cards. Arabic is never spaced out or set in capitals; Latin labels keep their small
+ * spaced capitals (`ltr:`). They live in utilities, in the CSS the first paint already has (SSR), so
+ * nothing flashes unstyled. The store's color is `store-*`; the neutrals are CSS variables (app.css).
  */
 
 const panelBase = 'border border-line shadow-[0_10px_30px_-18px_rgb(42_21_26/0.25)]';
 
-/** White panels: menus, labels over photos, badges. */
-export const panel = `${panelBase} bg-white`;
+/** Light cream panels: menus, labels over photos. */
+export const panel = `${panelBase} rounded-xl bg-(--shell)`;
 
 /** The header's bar once the page scrolls under it. */
 export const panelFirm = 'bg-(--paper) shadow-[0_6px_24px_-16px_rgb(42_21_26/0.35)]';
 
 /** Carries text over busy photos: signature, story and members cards. */
-export const panelStrong = `${panelBase} bg-white/95`;
+export const panelStrong = `${panelBase} bg-(--shell)/95`;
 
 const buttonBase =
-    'inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md px-6 py-2.5 font-semibold tracking-wide transition duration-300 disabled:cursor-not-allowed disabled:opacity-50';
+    'inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-7 py-2.5 text-[0.875rem] font-semibold ltr:text-[0.8125rem] ltr:tracking-[0.08em] ltr:uppercase transition duration-300 disabled:cursor-not-allowed disabled:opacity-50';
 
 export const btnBrand = `${buttonBase} border border-store bg-store text-store-contrast hover:border-store-700 hover:bg-store-700`;
 
-export const btnDark = `${buttonBase} border border-ink bg-ink text-white hover:bg-store hover:border-store hover:text-store-contrast`;
+/** The deep maroon button for light surfaces; gold on hover. */
+export const btnDark = `${buttonBase} border border-(--night) bg-(--night) text-white hover:border-(--gold) hover:bg-(--gold) hover:text-(--night)`;
 
 /** The gold call to action on maroon surfaces (the footer, the members band). */
-export const btnGold = `${buttonBase} border border-(--gold) bg-(--gold) text-(--night) hover:border-white hover:bg-white`;
+export const btnGold = `${buttonBase} border border-(--gold) bg-(--gold) text-(--night) hover:border-(--shell) hover:bg-(--shell)`;
 
-export const btnOutline =`${buttonBase} border border-line bg-white text-ink hover:border-store hover:bg-store hover:text-store-contrast`;
+export const btnOutline = `${buttonBase} border border-line bg-(--shell) text-ink hover:border-store hover:bg-store hover:text-store-contrast`;
 
-export const btnLg = 'min-h-12 px-8 text-[1rem]';
+export const btnLg = 'min-h-12 px-9 text-[0.875rem]';
 
-export const eyebrow = 'inline-block text-[0.8125rem] font-semibold tracking-[0.12em] text-store-600 uppercase';
+export const eyebrow = 'inline-block text-[0.8125rem] font-semibold ltr:tracking-[0.12em] text-(--gold-ink) ltr:uppercase';
 
-export const sectionTitle = 'text-[1.625rem] leading-[1.3] font-bold sm:text-[1.875rem]';
+export const sectionTitle = 'text-[1.75rem] leading-[1.35] font-bold sm:text-[2.25rem]';
 
 /** The muted line under a centered section title. */
 export const sectionLead = 'mx-auto mt-3 max-w-xl text-[0.9375rem] leading-7 text-muted';
@@ -42,29 +45,29 @@ export const linkArrow = 'inline-flex items-center gap-2 text-[0.9375rem] font-s
 /** The page width every storefront section shares. */
 export const container = 'mx-auto w-full max-w-310 px-4 sm:px-6';
 
-const chipBase = 'inline-flex min-h-10 items-center rounded-md border px-4 text-[0.9375rem] whitespace-nowrap transition-colors';
+const chipBase = 'inline-flex min-h-10 items-center rounded-full border px-4 text-[0.9375rem] whitespace-nowrap transition-colors';
 
-export const chip = `${chipBase} border-line bg-white hover:border-store hover:text-store-600`;
+export const chip = `${chipBase} border-line bg-(--shell) hover:border-store hover:text-store-600`;
 
 export const chipActive = `${chipBase} border-store bg-store font-semibold text-store-contrast`;
 
-const pageLinkBase = 'inline-grid h-10 min-w-10 cursor-pointer place-items-center rounded-md border px-3 transition-colors';
+const pageLinkBase = 'inline-grid h-10 min-w-10 cursor-pointer place-items-center rounded-full border px-3 transition-colors';
 
-export const pageLink = `${pageLinkBase} border-line bg-white hover:border-store hover:bg-store hover:text-store-contrast`;
+export const pageLink = `${pageLinkBase} border-line bg-(--shell) hover:border-store hover:bg-store hover:text-store-contrast`;
 
 export const pageLinkActive = `${pageLinkBase} border-store bg-store font-semibold text-store-contrast`;
 
 export const fieldLabel = 'mb-1.5 block text-[0.9375rem] font-semibold';
 
 export const field =
-    'block min-h-11 w-full rounded-md border border-line bg-white px-3.5 text-base transition-colors focus:border-store focus:shadow-[0_0_0_3px_var(--color-store-100)] focus:outline-none aria-invalid:border-(--danger)';
+    'block min-h-11 w-full rounded-xl border border-line bg-(--shell) px-3.5 text-base transition-colors focus:border-store focus:shadow-[0_0_0_3px_var(--color-store-200)] focus:outline-none aria-invalid:border-(--danger)';
 
 export const fieldError = 'mt-1.5 text-sm text-(--danger)';
 
 export const helpLink = '-mx-2.5 block rounded-md px-2.5 py-1.5 text-(--ink-soft) hover:bg-(--sand-light) hover:text-store-600';
 
-/** A white card on the grey canvas: cart, checkout, account. */
-export const card = 'rounded-lg border border-line bg-white';
+/** A light cream card on the cream paper: cart, checkout, account. */
+export const card = 'rounded-2xl border border-line bg-(--shell)';
 
 /** The owner's rich text, sanitized on the server (RichText). */
 export const prose =

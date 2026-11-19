@@ -20,14 +20,14 @@ const open = ref(false);
 
 <template>
     <DialogRoot v-model:open="open">
-        <DialogTrigger class="flex h-10 cursor-pointer items-center gap-2 rounded-md border border-line bg-white px-3 text-sm font-semibold" v-bind="$attrs">
+        <DialogTrigger class="flex h-10 cursor-pointer items-center gap-2 rounded-md border border-line bg-(--shell) px-3 text-sm font-semibold" v-bind="$attrs">
             <ListFilter class="size-4.5" aria-hidden="true" />
             {{ t('Filters') }}
             <span v-if="count" class="grid h-5 min-w-5 place-items-center rounded-full bg-store px-1 text-[0.6875rem] leading-none text-store-contrast">{{ count }}</span>
         </DialogTrigger>
         <DialogPortal>
             <DialogOverlay class="fixed inset-0 z-50 bg-(--night)/50" />
-            <DialogContent class="fixed inset-y-0 end-0 z-50 flex w-[min(24rem,90vw)] flex-col bg-white shadow-2xl outline-none" :aria-describedby="undefined">
+            <DialogContent class="fixed inset-y-0 end-0 z-50 flex w-[min(24rem,90vw)] flex-col bg-(--shell) shadow-2xl outline-none" :aria-describedby="undefined">
                 <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
                     <DialogTitle class="text-lg font-bold">{{ t('Filters') }}</DialogTitle>
                     <DialogClose class="grid size-11 cursor-pointer place-items-center rounded-md hover:bg-(--sand)" :aria-label="t('Close filters')">

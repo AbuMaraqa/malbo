@@ -46,7 +46,7 @@ function answer(choice: 'granted' | 'denied'): void {
         v-if="open"
         role="region"
         :aria-label="t('Marketing cookies')"
-        class="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white p-4 shadow-[0_-10px_30px_-18px_rgb(42_21_26/0.35)] sm:inset-x-auto sm:start-4 sm:bottom-4 sm:max-w-md sm:rounded-lg sm:border"
+        class="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-(--shell) p-4 shadow-[0_-10px_30px_-18px_rgb(42_21_26/0.35)] sm:inset-x-auto sm:start-4 sm:bottom-4 sm:max-w-md sm:rounded-lg sm:border"
     >
         <p class="font-bold">{{ t('Marketing cookies') }}</p>
         <p class="mt-1 text-sm leading-6 text-(--ink-soft)">

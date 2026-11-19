@@ -8,20 +8,37 @@
     /* The store's own identity for the storefront (MALBO maroon by default); ThemeService overrides these per store. */
     --brand: #6d1c2f;
     --brand-contrast: #ffffff;
-    --brand-50: #fbeff2;
-    --brand-100: #f6dae1;
-    --brand-200: #ecb6c3;
-    --brand-300: #e0859a;
-    --brand-400: #ac2c4a;
+    /* The light shades are the color mixed into the cream (BrandColor::shadesOn), never pink. */
+    --brand-50: #f8ead9;
+    --brand-100: #eddbcd;
+    --brand-200: #dcc1b7;
+    --brand-300: #c29a97;
+    --brand-400: #9c6168;
     --brand-500: #6d1c2f;
     --brand-600: #5a1727;
     --brand-700: #48121f;
     --brand-800: #350e17;
     --brand-900: #23090f;
-    --font-sans: 'Readex Pro', system-ui, sans-serif;
+    /* KO Sans draws the Arabic (FontCatalog::fontFaces), Readex Pro the Latin. */
+    --font-sans: 'KO Sans', 'Readex Pro', system-ui, sans-serif;
     /* MALBO's accent and cream (brand guidelines: 60% cream, 30% maroon, 10% gold). */
     --gold: #e8ac5d;
     --cream: #fff5e2;
+
+    /*
+     * The storefront's surfaces, here rather than on its layout so dialogs and sheets that render
+     * outside it get them too. The paper is the brand cream (the 60%); shell is the lighter cream of
+     * cards, fields and menus on it; sand is the Pantone cream of bands and tiles. Night is the
+     * store's maroon (the 30%), so dark bands follow the brand color.
+     */
+    --paper: #fff5e2;
+    --shell: #fffaf1;
+    --sand-light: #fcefd8;
+    --sand: #f6e9cc;
+    --sand-deep: #efdcb7;
+    --gold-ink: #9a5b1c;
+    --night: var(--brand);
+    --night-soft: var(--brand-600);
 
     --ink: #1d2939;
     --muted: #667085;
@@ -112,11 +129,11 @@
 }
 
 /* The MALBO pattern: the mark's petal repeated, at low opacity as the brand book asks. */
-@utility bg-brand-pattern {
+@utility bg-malbo-pattern {
     background-image: url('/brand/pattern-on-dark.svg');
 }
 
-@utility bg-brand-pattern-soft {
+@utility bg-malbo-pattern-soft {
     background-image: url('/brand/pattern-on-light.svg');
 }
 

@@ -128,7 +128,7 @@ function place(): void {
     <div :class="container" class="pt-12">
         <form class="grid items-start gap-8 lg:grid-cols-[1fr_24rem]" novalidate @submit.prevent="place">
             <div class="grid gap-6">
-                <div v-if="lineErrors.length || flashError" role="alert" class="rounded-lg border border-(--danger) bg-white p-5 text-(--danger)">
+                <div v-if="lineErrors.length || flashError" role="alert" class="rounded-lg border border-(--danger) bg-(--shell) p-5 text-(--danger)">
                     <p class="font-bold">{{ t('Some items cannot be ordered as they are:') }}</p>
                     <ul class="mt-2 list-disc ps-5 text-sm">
                         <li v-for="message in lineErrors" :key="message">{{ message }}</li>
@@ -137,7 +137,7 @@ function place(): void {
                     <Link :href="route('store.cart')" class="mt-3 inline-block text-sm font-bold underline underline-offset-4">{{ t('Back to your cart') }}</Link>
                 </div>
 
-                <section class="rounded-lg border border-line bg-white p-6" aria-labelledby="contact-title" @focusout="reminder?.save()">
+                <section class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="contact-title" @focusout="reminder?.save()">
                     <h2 id="contact-title" class="text-xl font-bold">{{ t('Your details') }}</h2>
                     <p v-if="!account" class="mt-2 text-sm text-(--ink-soft)">
                         {{ t('Have an account?') }}
@@ -152,7 +152,7 @@ function place(): void {
                     </div>
                 </section>
 
-                <section class="rounded-lg border border-line bg-white p-6" aria-labelledby="delivery-title">
+                <section class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="delivery-title">
                     <h2 id="delivery-title" class="text-xl font-bold">{{ t('Delivery') }}</h2>
                     <p v-if="!cities.length" class="mt-3 text-(--danger)">{{ t('Delivery is not available yet. Contact the store to order.') }}</p>
                     <div v-if="savedAddresses.length" class="mt-5 grid gap-3" role="radiogroup" :aria-label="t('My addresses')">
@@ -202,7 +202,7 @@ function place(): void {
                     </div>
                 </section>
 
-                <section class="rounded-lg border border-line bg-white p-6" aria-labelledby="coupon-title">
+                <section class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="coupon-title">
                     <h2 id="coupon-title" class="text-xl font-bold">{{ t('Coupon') }}</h2>
                     <label for="coupon" :class="fieldLabel" class="sr-only">{{ t('Coupon code') }}</label>
                     <div class="mt-4 flex gap-3">
@@ -232,7 +232,7 @@ function place(): void {
                     </div>
                 </section>
 
-                <section class="rounded-lg border border-line bg-white p-6" aria-labelledby="payment-title">
+                <section class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="payment-title">
                     <h2 id="payment-title" class="text-xl font-bold">{{ t('Payment') }}</h2>
                     <div class="mt-4 grid gap-3" role="radiogroup" :aria-label="t('Payment method')">
                         <label v-for="method in paymentMethods" :key="method.value" class="flex cursor-pointer items-center gap-3 rounded-md border border-line p-4 has-checked:border-store">

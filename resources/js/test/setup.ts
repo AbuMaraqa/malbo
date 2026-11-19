@@ -16,6 +16,7 @@ export const page = {
             port: null,
             defaults: { locale: 'ar' },
             routes: {
+                home: { uri: '{locale}', methods: ['GET', 'HEAD'], parameters: ['locale'] },
                 'store.shop': { uri: '{locale}/shop', methods: ['GET', 'HEAD'], parameters: ['locale'] },
                 'store.category': { uri: '{locale}/category/{slug}', methods: ['GET', 'HEAD'], parameters: ['locale', 'slug'] },
                 'store.search.suggest': { uri: '{locale}/search/suggest', methods: ['GET', 'HEAD'], parameters: ['locale'] },

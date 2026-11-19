@@ -19,7 +19,7 @@ const name = computed(() => store.value?.name ?? '');
             </div>
         </div>
         <!-- The brand side: the panel color under the MALBO pattern, the logo from the system settings (or the MALBO mark), the store's name. -->
-        <div class="relative m-3 hidden items-center justify-center overflow-hidden rounded-2xl bg-brand-500 bg-brand-pattern lg:flex">
+        <div class="relative m-3 hidden items-center justify-center overflow-hidden rounded-2xl bg-brand-500 bg-malbo-pattern lg:flex">
             <div class="relative flex flex-col items-center gap-5 text-center">
                 <!-- A white tile: any logo stays readable on the panel color. -->
                 <span v-if="store?.logo" class="flex h-28 min-w-28 items-center justify-center rounded-2xl bg-white p-4 shadow-theme-lg">

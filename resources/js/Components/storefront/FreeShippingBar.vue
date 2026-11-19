@@ -13,7 +13,7 @@ defineProps<{ quote: CheckoutQuote }>();
         <template v-else>
             <p>{{ t('Add :amount more for free delivery.', { amount: quote.free_shipping_remaining_label ?? '' }) }}</p>
             <div
-                class="mt-2 h-2 overflow-hidden rounded-full bg-white"
+                class="mt-2 h-2 overflow-hidden rounded-full bg-(--shell)"
                 role="progressbar"
                 :aria-valuenow="quote.free_shipping_progress ?? 0"
                 aria-valuemin="0"

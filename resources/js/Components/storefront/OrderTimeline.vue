@@ -10,7 +10,7 @@ defineProps<{ stages: TrackingStage[]; final: boolean }>();
 /** A failed end (cancelled, rejected, returned) is red; an exchange is a plain, neutral end. */
 const dotClass: Record<TrackingStage['tone'], string> = {
     done: 'border-store bg-store text-store-contrast',
-    pending: 'border-line bg-white',
+    pending: 'border-line bg-(--shell)',
     danger: 'border-(--danger) bg-(--danger) text-white',
     info: 'border-(--ink-soft) bg-(--ink-soft) text-white',
 };

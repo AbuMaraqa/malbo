@@ -92,7 +92,7 @@ class HomePageTest extends StorefrontTestCase
         $this->assertSame([], $props['categories']);
         $this->assertNull($props['signature']);
         $this->assertSame([], $props['featured']);
-        $this->assertNull($props['heroPiece']);
+        $this->assertArrayNotHasKey('heroPiece', $props);
         $this->assertNull($props['story']);
         $this->assertSame([], $props['values']);
         $this->assertNull($props['store']['contact']);
@@ -109,6 +109,18 @@ class HomePageTest extends StorefrontTestCase
         $arrivals = $this->props('/ar', self::HOME)['arrivals'];
 
         $this->assertSame([$newer->id, $older->id], array_column($arrivals, 'id'));
+    }
+
+    public function test_best_sellers_list_what_sold_most_first(): void
+    {
+        $sold = Product::factory()->create(['name' => 'حذاء رياضي']);
+        $newer = Product::factory()->create(['name' => 'جاكيت']);
+        // SalesCounter writes the column in the app; a test sets it directly.
+        $sold->forceFill(['sales_count' => 12, 'created_at' => now()->subWeek()])->save();
+
+        $best = $this->props('/ar', self::HOME)['bestSellers'];
+
+        $this->assertSame([$sold->id, $newer->id], array_column($best, 'id'));
     }
 
     public function test_every_page_gets_the_header_categories_and_the_members_link(): void
@@ -147,7 +159,7 @@ class HomePageTest extends StorefrontTestCase
     {
         $page = file_get_contents(module_path('Store', 'resources/js/Pages/Storefront/Home.vue'));
 
-        foreach (['promises.length', 'categories.length', '"signature"', 'featured.length', '"story"', 'values.length', '"membership"'] as $condition) {
+        foreach (['promises.length', 'categories.length', '"signature"', 'arrivals.length', '"story"', 'values.length', '"membership"'] as $condition) {
             $this->assertStringContainsString('v-if='.(str_starts_with($condition, '"') ? $condition : '"'.$condition.'"'), $page);
         }
     }

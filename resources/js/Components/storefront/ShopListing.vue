@@ -165,14 +165,14 @@ const sideLink = 'flex items-center justify-between rounded-md px-3 py-2.5 trans
 
     <div class="mt-12 grid gap-x-10 gap-y-6" :class="[container, { 'lg:grid-cols-[16rem_minmax(0,1fr)]': withSidebar }]">
         <aside class="space-y-8 max-lg:contents" :class="{ 'lg:hidden': !withSidebar }">
-            <label class="flex h-11 items-center gap-2 rounded-md border border-line bg-white px-3 transition-colors focus-within:border-store max-lg:order-first" :class="{ 'lg:hidden': !withSidebar }">
+            <label class="flex h-11 items-center gap-2 border border-line bg-(--shell) px-3 transition-colors focus-within:border-store max-lg:order-first" :class="{ 'lg:hidden': !withSidebar }">
                 <Search class="size-4.5 shrink-0 text-muted" aria-hidden="true" />
                 <span class="sr-only">{{ t('Search') }}</span>
                 <input v-model="q" type="search" :placeholder="t('Search products')" class="w-full bg-transparent outline-none placeholder:text-muted" />
             </label>
 
             <nav v-if="categories.length" :aria-label="t('Categories')" class="max-lg:order-first max-lg:-mx-4 max-lg:overflow-x-auto max-lg:px-4">
-                <h2 class="mb-3 border-b border-line pb-3 text-lg font-bold max-lg:hidden">{{ t('Categories') }}</h2>
+                <h2 class="mb-3 border-b-2 border-ink pb-3 text-[0.9375rem] font-bold ltr:tracking-[0.08em] ltr:uppercase max-lg:hidden">{{ t('Categories') }}</h2>
                 <ul class="flex gap-2 pb-1 lg:hidden">
                     <li>
                         <Link :href="route('store.shop')" :class="!category ? chipActive : chip" :aria-current="!category ? 'page' : undefined">{{ t('All') }}</Link>
@@ -192,26 +192,26 @@ const sideLink = 'flex items-center justify-between rounded-md px-3 py-2.5 trans
             </nav>
 
             <section v-if="hasFacets && facets" :aria-label="t('Filters')" class="max-lg:hidden">
-                <h2 class="mb-4 border-b border-line pb-3 text-lg font-bold">{{ t('Filters') }}</h2>
+                <h2 class="mb-4 border-b-2 border-ink pb-3 text-[0.9375rem] font-bold ltr:tracking-[0.08em] ltr:uppercase">{{ t('Filters') }}</h2>
                 <ShopFilters :facets="facets" :filters="state" @toggle="toggle" @price="setPrice" />
             </section>
         </aside>
 
         <div class="min-w-0">
-            <div class="flex flex-wrap items-center justify-between gap-3 rounded-md bg-(--sand-light) px-4 py-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-y border-line py-3">
                 <p class="text-sm text-muted" aria-live="polite">{{ products.total_label }}</p>
                 <div class="flex flex-wrap items-center gap-3">
                     <FilterDrawer v-if="hasFacets && facets" :total-label="products.total_label" :count="chosenCount" class="lg:hidden">
                         <ShopFilters :facets="facets" :filters="state" @toggle="toggle" @price="setPrice" />
                     </FilterDrawer>
-                    <label v-if="!withSidebar" class="flex h-10 items-center gap-2 rounded-md border border-line bg-white px-3 max-lg:hidden">
+                    <label v-if="!withSidebar" class="flex h-10 items-center gap-2 border border-line bg-(--shell) px-3 max-lg:hidden">
                         <Search class="size-4 shrink-0 text-muted" aria-hidden="true" />
                         <span class="sr-only">{{ t('Search') }}</span>
                         <input v-model="q" type="search" :placeholder="t('Search products')" class="w-44 bg-transparent text-sm outline-none placeholder:text-muted" />
                     </label>
                     <label class="flex items-center gap-2 text-sm">
-                        <span class="text-muted">{{ t('Sort by') }}</span>
-                        <select v-model="sort" class="h-10 rounded-md border border-line bg-white px-3 text-sm">
+                        <span class="font-semibold ltr:tracking-[0.08em] ltr:uppercase">{{ t('Sort by') }}:</span>
+                        <select v-model="sort" class="h-10 rounded-full border border-ink/20 bg-(--shell) px-3 text-sm">
                             <option v-if="q.trim() || sort === 'relevance'" value="relevance">{{ t('Most relevant') }}</option>
                             <option value="newest">{{ t('Newest') }}</option>
                             <option value="best_selling">{{ t('Best selling') }}</option>
@@ -226,7 +226,7 @@ const sideLink = 'flex items-center justify-between rounded-md px-3 py-2.5 trans
             <ActiveFilters v-if="facets" :facets="facets" :filters="state" @toggle="toggle" @price="setPrice" @clear="clearAll" />
 
             <div class="transition-opacity" :class="{ 'opacity-60': loading }">
-                <div v-if="products.data.length === 0" class="mt-8 rounded-lg border border-dashed border-line px-6 py-16 text-center">
+                <div v-if="products.data.length === 0" class="mt-8 border border-dashed border-line px-6 py-16 text-center">
                     <Search class="mx-auto size-10 text-(--ink-30)" aria-hidden="true" />
                     <p class="mt-4 text-lg font-bold">
                         <template v-if="products.total > 0">{{ t('No products on this page.') }}</template>

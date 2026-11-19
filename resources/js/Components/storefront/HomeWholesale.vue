@@ -35,7 +35,7 @@ const target = computed(() =>
                     <a :href="target.href" class="mt-8" :class="[btnBrand, btnLg]">{{ target.label }} <ArrowMark /></a>
                 </div>
                 <ul class="grid gap-3">
-                    <li v-for="perk in perks" :key="perk" class="flex items-center gap-4 rounded-lg border border-line bg-white p-4 font-semibold">
+                    <li v-for="perk in perks" :key="perk" class="flex items-center gap-4 rounded-lg border border-line bg-(--shell) p-4 font-semibold">
                         <span aria-hidden="true" class="grid size-10 shrink-0 place-items-center rounded-full bg-store text-store-contrast"><Check class="size-5" /></span>
                         {{ perk }}
                     </li>

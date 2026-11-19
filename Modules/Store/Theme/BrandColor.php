@@ -12,6 +12,9 @@ final class BrandColor
 {
     public const DARK_TEXT = '#111827';
 
+    /** The MALBO cream (brand guidelines), the storefront's paper. */
+    public const CREAM = '#FFF5E2';
+
     private function __construct(private string $hex) {}
 
     public static function isValid(string $hex): bool
@@ -68,6 +71,35 @@ final class BrandColor
         }
 
         return $shades;
+    }
+
+    /**
+     * The storefront's scale: the light shades (50–400) are the color mixed into $paper (the MALBO
+     * cream), so tints stay in the brand's warm family instead of turning pink; 500–900 as in shades().
+     *
+     * @return array<int, string>
+     */
+    public function shadesOn(string $paper = self::CREAM): array
+    {
+        $paper = self::fromHex($paper)->hex;
+        $shades = $this->shades();
+
+        foreach ([50 => 0.05, 100 => 0.12, 200 => 0.24, 300 => 0.42, 400 => 0.68] as $key => $share) {
+            $shades[$key] = self::mix($this->hex, $paper, $share);
+        }
+
+        return $shades;
+    }
+
+    /** $share of $color over $base, channel by channel. */
+    private static function mix(string $color, string $base, float $share): string
+    {
+        $channels = array_map(
+            fn (int $i) => (int) round(hexdec(substr($color, $i, 2)) * $share + hexdec(substr($base, $i, 2)) * (1 - $share)),
+            [1, 3, 5],
+        );
+
+        return sprintf('#%02X%02X%02X', ...$channels);
     }
 
     private static function luminance(string $hex): float

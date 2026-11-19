@@ -31,9 +31,9 @@ function remove(address: SavedAddress): void {
 
 <template>
     <AccountShell :title="t('My addresses')" :parents="[{ name: t('My account'), url: route('store.account') }]">
-        <p v-if="!cities.length" class="rounded-lg border border-line bg-white p-5 text-(--ink-soft)">{{ t('Delivery is not available yet. Contact the store to order.') }}</p>
+        <p v-if="!cities.length" class="rounded-lg border border-line bg-(--shell) p-5 text-(--ink-soft)">{{ t('Delivery is not available yet. Contact the store to order.') }}</p>
 
-        <section v-if="editing === 'new'" class="rounded-lg border border-line bg-white p-6" aria-labelledby="new-address">
+        <section v-if="editing === 'new'" class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="new-address">
             <h2 id="new-address" class="mb-5 text-xl font-bold">{{ t('New address') }}</h2>
             <AddressForm :cities="cities" @done="editing = null" @cancel="editing = null" />
         </section>
@@ -42,7 +42,7 @@ function remove(address: SavedAddress): void {
         </div>
 
         <ul class="grid gap-4 md:grid-cols-2">
-            <li v-for="address in addresses" :key="address.id" class="rounded-lg border bg-white p-5" :class="address.is_default ? 'border-store' : 'border-line'">
+            <li v-for="address in addresses" :key="address.id" class="rounded-lg border bg-(--shell) p-5" :class="address.is_default ? 'border-store' : 'border-line'">
                 <AddressForm v-if="editing === address.id" :cities="cities" :address="address" @done="editing = null" @cancel="editing = null" />
                 <template v-else>
                     <div class="flex flex-wrap items-center justify-between gap-2">

@@ -31,7 +31,7 @@ const parts = computed(() => [
 </script>
 
 <template>
-    <section class="rounded-lg bg-ink px-6 py-8 text-center text-white">
+    <section class="rounded-3xl bg-(--night) bg-malbo-pattern px-6 py-8 text-center text-white">
         <h2 v-if="block.heading" class="text-xl font-bold">{{ block.heading }}</h2>
         <p v-if="block.text" class="mt-1 text-white/80">{{ block.text }}</p>
         <p v-if="left === 0" class="mt-4 text-lg font-semibold">{{ t('This offer has ended') }}</p>

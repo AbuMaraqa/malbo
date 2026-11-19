@@ -29,7 +29,7 @@ class ThemeService
             return [
                 'color' => $color->hex(),
                 'on_color' => $color->onBrand(),
-                'shades' => $color->shades(),
+                'shades' => $color->shadesOn(),
                 'font' => ['key' => $font, 'name' => FontCatalog::all()[$font]['name'], 'stack' => FontCatalog::stack($font)],
             ];
         });
@@ -45,7 +45,7 @@ class ThemeService
         }
         $vars['--font-sans'] = $tokens['font']['stack'];
 
-        return ':root{'.implode(';', array_map(fn ($name, $value) => "{$name}:{$value}", array_keys($vars), $vars)).'}';
+        return FontCatalog::fontFaces().':root{'.implode(';', array_map(fn ($name, $value) => "{$name}:{$value}", array_keys($vars), $vars)).'}';
     }
 
     public function fontsUrl(): ?string

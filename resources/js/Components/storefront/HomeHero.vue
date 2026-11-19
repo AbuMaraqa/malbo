@@ -1,68 +1,168 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { t } from '@/lib/i18n';
+import { ChevronLeft, ChevronRight } from '@/lib/icons';
 import { route } from '@/lib/route';
 
 import ArrowMark from './ArrowMark.vue';
 import BrandMark from './BrandMark.vue';
+import BrandPetal from './BrandPetal.vue';
 import BrandSparkle from './BrandSparkle.vue';
-import { btnBrand, btnLg, btnOutline, container, eyebrow } from './styles';
 import type { StoreCard } from './types';
+import { prefersLessMotion } from './useReveal';
 
 /**
- * The home's banner on MALBO cream. With the store's photo it fills the band behind the text;
- * without one, a pick of the store stands beside the text, or the MALBO mark does.
+ * The home's banner: a slider on a maroon band with the MALBO pattern, the photo in an arch (a
+ * rounded picture above the words on phones). The first slide is the store's own (its texts and
+ * photo, or the white MALBO mark without one); then a slide for each store pick
+ * that has a photo. Slides fade every few seconds, stop while the pointer or the focus is in the
+ * banner, and never move by themselves for visitors who ask for less motion.
  */
-defineProps<{
+const props = defineProps<{
     hero: { eyebrow: string | null; title: string; subtitle: string | null; image: string | null };
-    piece: StoreCard | null;
-    hasSignature: boolean;
-    hasStory: boolean;
+    pieces: StoreCard[];
 }>();
+
+interface Slide {
+    key: string;
+    lead: string | null;
+    title: string;
+    note: string | null;
+    image: string | null;
+    url: string;
+    action: string;
+}
+
+const slides = computed<Slide[]>(() => [
+    { key: 'store', lead: props.hero.eyebrow, title: props.hero.title, note: props.hero.subtitle, image: props.hero.image, url: route('store.shop'), action: t('Shop now') },
+    ...props.pieces
+        .filter((piece) => piece.image)
+        .slice(0, 2)
+        .map((piece) => ({
+            key: `piece-${piece.id}`,
+            lead: t('New collection'),
+            title: piece.name,
+            note: piece.price.discounted && piece.price.percent_off ? t('Save :percent% today', { percent: piece.price.percent_off }) : piece.price.label,
+            image: piece.image,
+            url: piece.url,
+            action: t('Shop now'),
+        })),
+]);
+
+// Phones stack the photo above the words: the banner grows only when a slide has one.
+const hasPhoto = computed(() => slides.value.some((slide) => slide.image !== null));
+
+const current = ref(0);
+const paused = ref(false);
+let timer: ReturnType<typeof setInterval> | undefined;
+
+function go(step: number): void {
+    current.value = (current.value + step + slides.value.length) % slides.value.length;
+}
+
+onMounted(() => {
+    if (slides.value.length < 2 || prefersLessMotion()) return;
+    timer = setInterval(() => {
+        if (!paused.value) go(1);
+    }, 6500);
+});
+
+onBeforeUnmount(() => clearInterval(timer));
 </script>
 
 <template>
-    <section data-section="hero" class="relative overflow-hidden bg-(--sand) bg-brand-pattern-soft">
-        <template v-if="hero.image">
-            <img :src="hero.image" alt="" fetchpriority="high" class="absolute inset-0 size-full object-cover" />
-            <!-- Keeps the text readable on any photo, darker on the text's side. -->
-            <div aria-hidden="true" class="absolute inset-0 bg-linear-to-l from-(--sand)/0 via-(--sand)/60 to-(--sand)/95 rtl:bg-linear-to-r"></div>
-        </template>
+    <section
+        data-section="hero"
+        class="relative overflow-hidden bg-(--night) bg-malbo-pattern text-white"
+        :aria-roledescription="slides.length > 1 ? t('Carousel') : undefined"
+        :aria-label="t('Highlights')"
+        @mouseenter="paused = true"
+        @mouseleave="paused = false"
+        @focusin="paused = true"
+        @focusout="paused = false"
+    >
+        <div class="relative lg:min-h-[min(82svh,44rem)]" :class="hasPhoto ? 'min-h-[46rem]' : 'min-h-[30rem]'">
+            <div
+                v-for="(slide, index) in slides"
+                :key="slide.key"
+                class="absolute inset-0 transition-opacity duration-700 motion-reduce:transition-none"
+                :class="index === current ? 'z-10 opacity-100' : 'pointer-events-none opacity-0'"
+                :aria-hidden="index !== current"
+                :inert="index !== current"
+                role="group"
+                :aria-roledescription="slides.length > 1 ? t('Slide') : undefined"
+                :aria-label="slides.length > 1 ? t(':current of :total', { current: index + 1, total: slides.length }) : undefined"
+            >
+                <!-- A big petal echoes the logo behind the text; the photo stands in an arch at the end (the brand's arched forms). -->
+                <BrandPetal aria-hidden="true" class="absolute -start-24 top-1/2 w-[46rem] -translate-y-1/2 text-white opacity-[0.06]" />
+                <div class="absolute inset-y-10 end-6 hidden w-[min(calc(50%-3rem),34rem)] overflow-hidden rounded-t-[17rem] rounded-b-[2rem] lg:block">
+                    <img v-if="slide.image" :src="slide.image" alt="" :fetchpriority="index === 0 ? 'high' : undefined" class="size-full object-cover" />
+                    <div v-else class="grid size-full place-items-center bg-(--night-soft)">
+                        <BrandMark tone="white" class="h-[46%]" />
+                    </div>
+                </div>
+                <BrandSparkle aria-hidden="true" class="absolute end-[47%] top-[12%] hidden h-10 w-8 text-(--gold) lg:block" />
 
-        <div :class="container" class="relative grid min-h-[min(78svh,40rem)] items-center gap-10 py-16 lg:grid-cols-2">
-            <div class="reveal max-w-xl">
-                <p v-if="hero.eyebrow" :class="eyebrow"><BrandSparkle class="me-2 inline-block h-4 w-3 align-[-3px] text-(--gold)" />{{ hero.eyebrow }}</p>
-                <h1 class="mt-4 text-[2.5rem] leading-[1.15] font-bold text-balance sm:text-6xl">{{ hero.title }}</h1>
-                <p v-if="hero.subtitle" class="mt-5 text-lg leading-8 text-(--ink-soft)">{{ hero.subtitle }}</p>
-                <div class="mt-9 flex flex-wrap gap-3">
-                    <Link :href="route('store.shop')" :class="[btnBrand, btnLg]">{{ t('Shop now') }} <ArrowMark /></Link>
-                    <a v-if="hasSignature" href="#signature" :class="[btnOutline, btnLg]">{{ t('Discover the collection') }}</a>
-                    <a v-else-if="hasStory" href="#story" :class="[btnOutline, btnLg]">{{ t('About us') }}</a>
+                <div class="relative mx-auto flex h-full w-full max-w-310 flex-col justify-center gap-7 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-start lg:py-0">
+                    <!-- Phones see the photo too, rounded above the words. -->
+                    <img
+                        v-if="slide.image"
+                        :src="slide.image"
+                        alt=""
+                        :fetchpriority="index === 0 ? 'high' : undefined"
+                        class="aspect-[16/10] w-full rounded-[1.75rem] object-cover lg:hidden"
+                    />
+                    <div class="max-w-2xl border-s-2 border-(--gold) ps-6 sm:ps-10 lg:w-1/2">
+                        <p v-if="slide.lead" class="text-3xl leading-snug font-light text-white/90 sm:text-6xl sm:leading-tight">{{ slide.lead }}</p>
+                        <component
+                            :is="index === 0 ? 'h1' : 'h2'"
+                            class="mt-2 text-[2.5rem] leading-[1.3] font-bold text-balance sm:text-7xl ltr:leading-[1.05] ltr:uppercase"
+                        >
+                            {{ slide.title }}
+                        </component>
+                        <p v-if="slide.note" class="mt-6 text-base font-semibold text-(--gold) ltr:tracking-[0.12em] ltr:uppercase sm:text-lg">{{ slide.note }}</p>
+                        <Link
+                            :href="slide.url"
+                            class="mt-9 inline-flex min-h-12 items-center gap-2 rounded-full bg-(--cream) px-9 text-[0.875rem] font-semibold ltr:tracking-[0.1em] text-(--night) ltr:uppercase transition-colors hover:bg-(--gold)"
+                        >
+                            {{ slide.action }} <ArrowMark />
+                        </Link>
+                    </div>
                 </div>
             </div>
-
-            <Link v-if="!hero.image && piece" :href="piece.url" data-hero-piece class="reveal reveal-late group relative hidden justify-self-center lg:block">
-                <span aria-hidden="true" class="absolute inset-6 -z-0 rounded-full bg-(--sand-deep)"></span>
-                <BrandSparkle class="absolute end-4 top-6 z-10 h-12 w-9 text-(--gold)" />
-                <BrandSparkle class="absolute -start-2 top-1/3 z-10 h-6 w-4.5 text-store" />
-                <span class="relative block size-[26rem] overflow-hidden rounded-full border-8 border-white shadow-xl">
-                    <img :src="piece.image ?? undefined" alt="" class="size-full object-cover transition duration-700 group-hover:scale-105 motion-reduce:transition-none" />
-                </span>
-                <span class="absolute start-0 bottom-8 rounded-lg bg-white px-5 py-3.5 shadow-lg">
-                    <span class="block text-[13px] font-semibold text-store-600">{{ t('From the collection') }}</span>
-                    <span class="mt-0.5 block max-w-52 truncate font-bold">{{ piece.name }}</span>
-                    <span class="mt-0.5 block text-sm font-semibold text-(--ink-soft)">{{ piece.price.label }}</span>
-                </span>
-            </Link>
-
-            <!-- No photo and no pick yet: the MALBO mark, as on the brand book's cover, fills the other half. -->
-            <div v-else-if="!hero.image" aria-hidden="true" class="relative hidden h-96 place-items-center lg:grid">
-                <span class="absolute aspect-square h-full rounded-full bg-(--sand-deep)"></span>
-                <BrandMark class="relative h-72 text-store" />
-                <BrandSparkle class="absolute end-[16%] top-4 h-10 w-7.5 text-(--gold)" />
-                <BrandSparkle class="absolute start-[14%] bottom-10 h-6 w-4.5 text-store" />
-            </div>
         </div>
+
+        <template v-if="slides.length > 1">
+            <div class="absolute inset-x-0 bottom-6 z-20 flex justify-center gap-2.5">
+                <button
+                    v-for="(slide, index) in slides"
+                    :key="slide.key"
+                    type="button"
+                    class="h-2.5 cursor-pointer rounded-full transition-all"
+                    :class="index === current ? 'w-8 bg-(--gold)' : 'w-2.5 bg-white/40 hover:bg-white/70'"
+                    :aria-label="t('Go to slide :number', { number: index + 1 })"
+                    :aria-current="index === current"
+                    @click="current = index"
+                ></button>
+            </div>
+            <button
+                type="button"
+                class="absolute start-4 top-1/2 z-20 hidden size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-(--gold) hover:text-(--night) lg:grid"
+                :aria-label="t('Previous slide')"
+                @click="go(-1)"
+            >
+                <ChevronRight class="size-5 ltr:rotate-180" aria-hidden="true" />
+            </button>
+            <button
+                type="button"
+                class="absolute end-4 top-1/2 z-20 hidden size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-(--gold) hover:text-(--night) lg:grid"
+                :aria-label="t('Next slide')"
+                @click="go(1)"
+            >
+                <ChevronLeft class="size-5 ltr:rotate-180" aria-hidden="true" />
+            </button>
+        </template>
     </section>
 </template>

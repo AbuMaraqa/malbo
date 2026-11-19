@@ -28,8 +28,8 @@ const active = computed<Tab | undefined>(() => (tabs.value.some((tab) => tab.key
 </script>
 
 <template>
-    <section v-if="tabs.length" class="mt-16 overflow-hidden rounded-lg border border-line" :aria-label="t('Product information')">
-        <div role="tablist" class="flex gap-1 border-b border-line bg-(--sand-light) px-2">
+    <section v-if="tabs.length" class="mt-16" :aria-label="t('Product information')">
+        <div role="tablist" class="flex gap-8 border-b border-line">
             <button
                 v-for="tab in tabs"
                 :id="`tab-${tab.key}`"
@@ -38,20 +38,20 @@ const active = computed<Tab | undefined>(() => (tabs.value.some((tab) => tab.key
                 role="tab"
                 :aria-selected="active === tab.key"
                 :aria-controls="`panel-${tab.key}`"
-                class="relative cursor-pointer px-5 py-4 font-semibold transition-colors after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-store after:transition-transform"
-                :class="active === tab.key ? 'text-store-600 after:scale-x-100' : 'text-muted after:scale-x-0 hover:text-ink'"
+                class="relative -mb-px cursor-pointer py-4 text-[0.8125rem] font-semibold ltr:tracking-[0.1em] ltr:uppercase transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-(--gold) after:transition-transform"
+                :class="active === tab.key ? 'text-(--gold-ink) after:scale-x-100' : 'text-muted after:scale-x-0 hover:text-ink'"
                 @click="chosen = tab.key"
             >
                 {{ tab.label }}
             </button>
         </div>
 
-        <div v-if="description" v-show="active === 'description'" id="panel-description" role="tabpanel" aria-labelledby="tab-description" class="p-6 sm:p-8" :class="prose">
+        <div v-if="description" v-show="active === 'description'" id="panel-description" role="tabpanel" aria-labelledby="tab-description" class="py-8" :class="prose">
             <!-- Sanitized on the server (RichText). -->
             <div v-html="description"></div>
         </div>
 
-        <div v-if="details.length" v-show="active === 'details'" id="panel-details" role="tabpanel" aria-labelledby="tab-details" class="p-6 sm:p-8">
+        <div v-if="details.length" v-show="active === 'details'" id="panel-details" role="tabpanel" aria-labelledby="tab-details" class="py-8">
             <dl class="divide-y divide-line">
                 <div v-for="detail in details" :key="detail.key" class="grid gap-1 py-3.5 first:pt-0 last:pb-0 sm:grid-cols-[12rem_1fr] sm:gap-4">
                     <dt class="font-semibold">{{ detail.label }}</dt>

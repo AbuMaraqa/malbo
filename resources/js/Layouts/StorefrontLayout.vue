@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 import ConsentBanner from '@/Components/storefront/ConsentBanner.vue';
+import MobileTabBar from '@/Components/storefront/MobileTabBar.vue';
 import StorefrontAnnouncement from '@/Components/storefront/StorefrontAnnouncement.vue';
 import StorefrontFooter from '@/Components/storefront/StorefrontFooter.vue';
 import StorefrontHeader from '@/Components/storefront/StorefrontHeader.vue';
@@ -17,8 +18,9 @@ import { useMetaPixel } from '@/lib/useMetaPixel';
 /**
  * The storefront's frame. It reads the shared `store` and `seo` props, so it stays mounted while
  * the visitor moves between pages. Light only, whatever the visitor's system or the admin chose.
- * The neutrals follow the MALBO guidelines: warm cream paper, maroon for the dark surfaces, ink with
- * a touch of maroon.
+ * The neutrals follow the MALBO guidelines: cream paper (app.css), maroon for the dark surfaces, ink
+ * with a touch of maroon for text. Phones get the tab bar at the bottom, except on the product page,
+ * where the order bar sits.
  */
 const page = usePage();
 const store = computed(() => page.props.store as StoreLayoutProps);
@@ -35,27 +37,22 @@ useReveal();
 
 <template>
     <div
+        :class="{ 'max-sm:pb-16': !onProductPage }"
         class="flex min-h-screen flex-col bg-(--paper) font-sans text-ink antialiased [font-variant-numeric:tabular-nums] [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-store"
         style="
-            --paper: #fffcf6;
             --ink-soft: #57454a;
             --ink-30: rgb(42 21 26 / 0.3);
             --ink-18: rgb(42 21 26 / 0.16);
-            --sand: #fff5e2;
-            --sand-light: #fff9ee;
-            --sand-deep: #f6e9cc;
-            --night: #6d1c2f;
-            --night-soft: #5a1727;
             --danger: #c81e1e;
             --color-ink: #2a151a;
-            --color-muted: #806d6a;
-            --color-line: #eee2cf;
+            --color-muted: #7a6560;
+            --color-line: #ead9bb;
             color-scheme: light;
         "
     >
         <StorefrontSeo />
 
-        <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-2">
+        <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-(--shell) focus:px-4 focus:py-2">
             {{ t('Skip to content') }}
         </a>
 
@@ -67,6 +64,7 @@ useReveal();
         </main>
 
         <StorefrontFooter :store="store" />
+        <MobileTabBar v-if="!onProductPage" :store="store" />
         <WhatsAppFloat v-if="store.whatsapp" :number="store.whatsapp" :hide-on-phones="onProductPage" />
         <ConsentBanner :marketing="marketing" />
     </div>

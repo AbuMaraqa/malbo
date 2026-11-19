@@ -30,7 +30,7 @@ function savePassword(): void {
 
 <template>
     <AccountShell :title="t('My account')">
-        <section class="rounded-lg border border-line bg-white p-6" aria-labelledby="details-title">
+        <section class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="details-title">
             <h2 id="details-title" class="text-xl font-bold">{{ t('My details') }}</h2>
             <form class="mt-5 grid gap-5 sm:grid-cols-2" novalidate @submit.prevent="saveDetails">
                 <StoreField v-model="details.name" class="sm:col-span-2" :label="t('Full name')" autocomplete="name" required :maxlength="120" :error="details.errors.name" />
@@ -54,7 +54,7 @@ function savePassword(): void {
             </form>
         </section>
 
-        <section class="rounded-lg border border-line bg-white p-6" aria-labelledby="password-title">
+        <section class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="password-title">
             <h2 id="password-title" class="text-xl font-bold">{{ t('Change password') }}</h2>
             <form class="mt-5 grid gap-5 sm:grid-cols-2" novalidate @submit.prevent="savePassword">
                 <StoreField

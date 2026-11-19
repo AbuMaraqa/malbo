@@ -31,7 +31,7 @@ defineProps<{
             <aside class="space-y-5">
                 <ContactChannels v-if="channels" :channels="channels" />
 
-                <div v-if="socials.length" class="rounded-lg border border-line bg-white p-6">
+                <div v-if="socials.length" class="rounded-lg border border-line bg-(--shell) p-6">
                     <h2 id="socials-title" class="text-[17px] font-bold">{{ t('Follow us') }}</h2>
                     <ul class="mt-4 flex flex-wrap gap-2" aria-labelledby="socials-title">
                         <li v-for="social in socials" :key="social.url"><a :href="social.url" target="_blank" rel="noopener" :class="chip">{{ social.label }}</a></li>
@@ -41,7 +41,7 @@ defineProps<{
                 <div v-if="faqUrl" class="rounded-lg bg-(--sand) p-6">
                     <h2 class="text-[17px] font-bold">{{ t('Quick answers') }}</h2>
                     <p class="mt-1.5 text-sm leading-6 text-(--ink-soft)">{{ t('Ordering, payment, delivery and returns: most answers are already in our FAQ.') }}</p>
-                    <Link :href="faqUrl" class="mt-4 w-full bg-white" :class="btnOutline">{{ t('Read the FAQ') }}</Link>
+                    <Link :href="faqUrl" class="mt-4 w-full bg-(--shell)" :class="btnOutline">{{ t('Read the FAQ') }}</Link>
                 </div>
             </aside>
         </div>

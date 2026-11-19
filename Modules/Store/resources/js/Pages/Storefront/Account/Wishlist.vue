@@ -16,7 +16,7 @@ defineProps<{ cards: StoreCard[] }>();
 
 <template>
     <AccountShell :title="t('My wishlist')" :parents="[{ name: t('My account'), url: route('store.account') }]">
-        <div v-if="!cards.length" class="rounded-lg border border-line bg-white p-8 text-center">
+        <div v-if="!cards.length" class="rounded-lg border border-line bg-(--shell) p-8 text-center">
             <p class="text-lg font-bold">{{ t('Your wishlist is empty') }}</p>
             <p class="mt-2 text-(--ink-soft)">{{ t('Tap the heart on a product to keep it here.') }}</p>
             <Link :href="route('store.shop')" class="mt-5" :class="btnBrand">{{ t('Shop now') }}</Link>

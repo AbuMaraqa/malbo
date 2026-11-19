@@ -8,12 +8,12 @@ import type { StoreBadge } from './types';
 defineProps<{ badges: StoreBadge[]; percentOff?: number | null; size?: 'card' | 'page' }>();
 
 const tones: Record<StoreBadge['tone'], string> = {
-    label: 'bg-ink text-white',
+    label: 'bg-(--night) text-white',
     accent: 'bg-store text-store-contrast',
-    ink: 'bg-ink text-white',
-    sale: 'bg-(--danger) text-white',
-    warning: 'bg-[#FEF3C7] text-[#92400E]',
-    muted: 'bg-white text-(--ink-soft) shadow-sm',
+    ink: 'bg-(--night) text-white',
+    sale: 'bg-(--gold) text-(--night)',
+    warning: 'bg-(--shell) text-(--gold-ink) ring-1 ring-(--gold)',
+    muted: 'bg-(--shell) text-(--ink-soft) shadow-sm',
 };
 
 function style(badge: StoreBadge): Record<string, string> | undefined {
@@ -31,7 +31,7 @@ function style(badge: StoreBadge): Record<string, string> | undefined {
         <li
             v-for="badge in badges"
             :key="badge.key"
-            class="rounded-sm font-semibold whitespace-nowrap"
+            class="font-semibold ltr:tracking-[0.04em] whitespace-nowrap ltr:uppercase"
             :class="[tones[badge.tone], size === 'page' ? 'px-3 py-1 text-[13px]' : 'px-2 py-0.5 text-xs']"
             :style="style(badge)"
             :data-badge="badge.key"

@@ -16,7 +16,7 @@ defineProps<{
 
 <template>
     <div class="mx-auto max-w-2xl px-4 pt-12 pb-20">
-        <section role="status" class="rounded-lg border border-line bg-white p-8 text-center sm:p-12">
+        <section role="status" class="rounded-lg border border-line bg-(--shell) p-8 text-center sm:p-12">
             <span aria-hidden="true" class="mx-auto grid size-16 place-items-center rounded-full bg-store-50 text-store-700"><Check class="size-8" /></span>
             <h1 class="mt-5 text-2xl font-bold sm:text-3xl">{{ t('Thank you for your order') }}</h1>
             <p class="mt-3 text-(--ink-soft)">{{ t('Your order number') }}</p>

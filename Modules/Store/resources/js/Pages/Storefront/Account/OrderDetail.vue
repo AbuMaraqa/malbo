@@ -21,7 +21,7 @@ defineProps<{ order: AccountOrderDetail }>();
             { name: t('My orders'), url: route('store.account.orders') },
         ]"
     >
-        <section class="rounded-lg border border-line bg-white p-6 sm:p-8" aria-labelledby="order-title">
+        <section class="rounded-lg border border-line bg-(--shell) p-6 sm:p-8" aria-labelledby="order-title">
             <div class="flex flex-wrap items-baseline justify-between gap-3">
                 <h2 id="order-title" class="text-xl font-bold">
                     {{ t('Order') }} <span dir="ltr">{{ order.number }}</span>
@@ -78,15 +78,15 @@ defineProps<{ order: AccountOrderDetail }>();
             </div>
         </section>
 
-        <section v-if="order.returns.length" class="rounded-lg border border-line bg-white p-6" aria-labelledby="returns-title">
+        <section v-if="order.returns.length" class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="returns-title">
             <h2 id="returns-title" class="text-xl font-bold">{{ t('Return and exchange requests') }}</h2>
             <ReturnRequestList :requests="order.returns" :order-number="order.number" class="mt-5" />
         </section>
 
-        <section v-if="order.return_form" class="rounded-lg border border-line bg-white p-6" aria-labelledby="return-form-title">
+        <section v-if="order.return_form" class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="return-form-title">
             <h2 id="return-form-title" class="text-xl font-bold">{{ t('Return or exchange items') }}</h2>
             <ReturnRequestForm :order-number="order.number" :form="order.return_form" class="mt-5" />
         </section>
-        <p v-else-if="order.return_blocked" class="rounded-lg border border-line bg-white p-5 text-(--ink-soft)">{{ order.return_blocked }}</p>
+        <p v-else-if="order.return_blocked" class="rounded-lg border border-line bg-(--shell) p-5 text-(--ink-soft)">{{ order.return_blocked }}</p>
     </AccountShell>
 </template>

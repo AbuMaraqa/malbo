@@ -3,11 +3,13 @@
 return [
 
     /*
-    | Storefront fonts: Arabic + Latin Google Fonts. family = the css2 `family=` value.
+    | Storefront fonts: Arabic + Latin Google Fonts. family = the css2 `family=` value. `malbo` is the
+    | brand guidelines' pair: KO Sans for Arabic (self-hosted, `local_fonts`) and Readex Pro for Latin.
     */
-    'default_font' => 'readex-pro',
+    'default_font' => 'malbo',
 
     'fonts' => [
+        'malbo' => ['name' => 'KO Sans + Readex Pro (MALBO)', 'family' => 'Readex+Pro:wght@300;400;500;600;700', 'stack' => "'KO Sans', 'Readex Pro', system-ui, sans-serif"],
         'tajawal' => ['name' => 'Tajawal', 'family' => 'Tajawal:wght@400;500;700', 'stack' => "'Tajawal', system-ui, sans-serif"],
         'cairo' => ['name' => 'Cairo', 'family' => 'Cairo:wght@400;600;700', 'stack' => "'Cairo', system-ui, sans-serif"],
         'almarai' => ['name' => 'Almarai', 'family' => 'Almarai:wght@400;700', 'stack' => "'Almarai', system-ui, sans-serif"],
@@ -21,21 +23,41 @@ return [
     ],
 
     /*
-    | Brand color presets offered in the store appearance settings (all readable with white text).
+    | Fonts served from public/ (FontCatalog::fontFaces), weight => file name without its extension:
+    | the first of .woff2, .woff, .otf or .ttf that is there is used, and a weight with none is
+    | skipped. KO Sans (Kotype, ko-type.com; a commercial font, licensed per store) draws the Arabic
+    | letters only: Latin falls to Readex Pro.
+    */
+    'local_fonts' => [
+        'KO Sans' => [
+            'unicode_range' => 'U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F',
+            'files' => [
+                300 => 'fonts/ko-sans/ko-sans-light',
+                400 => 'fonts/ko-sans/ko-sans-regular',
+                500 => 'fonts/ko-sans/ko-sans-medium',
+                600 => 'fonts/ko-sans/ko-sans-semibold',
+                700 => 'fonts/ko-sans/ko-sans-bold',
+            ],
+        ],
+    ],
+
+    /*
+    | The store's color, from the MALBO brand guidelines only: the surfaces its white logo may sit on
+    | (maroon, the Pantone maroon, the near-black). All readable with white text.
     */
     'default_color' => '#6D1C2F',
 
     'color_presets' => [
         'malbo' => '#6D1C2F',
-        'deep-green' => '#1F6F50',
-        'teal' => '#0F766E',
-        'navy' => '#1E3A5F',
-        'indigo' => '#4338CA',
-        'plum' => '#6B2D5C',
-        'crimson' => '#B42335',
-        'burnt-orange' => '#C2410C',
-        'charcoal' => '#2F3437',
+        'malbo-spot' => '#73232A',
+        'malbo-black' => '#231F20',
     ],
+
+    /*
+    | The fonts the storefront may use (keys of `fonts`): the brand guidelines' pair, or Readex Pro
+    | alone. The admin panel chooses from the whole list.
+    */
+    'storefront_fonts' => ['malbo', 'readex-pro'],
 
     /*
     | The MALBO identity (public/brand, drawn from the brand guidelines): shown while the owner has not

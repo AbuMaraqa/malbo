@@ -35,7 +35,7 @@ function apply(): void {
     emit('apply', number(from.value), number(to.value));
 }
 
-const input = 'h-10 w-full min-w-0 rounded-md border border-line bg-white px-3 text-sm outline-none focus:border-store';
+const input = 'h-10 w-full min-w-0 rounded-md border border-line bg-(--shell) px-3 text-sm outline-none focus:border-store';
 </script>
 
 <template>

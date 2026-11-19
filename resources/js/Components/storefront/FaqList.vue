@@ -13,7 +13,7 @@ defineProps<{ faq: { intro: string; items: { question: string; answer: string }[
             :key="index"
             name="faq"
             :open="index === 0"
-            class="group rounded-lg border border-line bg-white open:border-store-200 open:shadow-sm"
+            class="group rounded-lg border border-line bg-(--shell) open:border-store-200 open:shadow-sm"
         >
             <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 text-[17px] font-bold [&::-webkit-details-marker]:hidden">
                 <span>{{ item.question }}</span>

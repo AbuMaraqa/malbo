@@ -23,13 +23,13 @@ function claim(): void {
 
 <template>
     <AccountShell :title="t('My orders')" :parents="[{ name: t('My account'), url: route('store.account') }]">
-        <div v-if="!orders.data.length" class="rounded-lg border border-line bg-white p-8 text-center">
+        <div v-if="!orders.data.length" class="rounded-lg border border-line bg-(--shell) p-8 text-center">
             <p class="text-lg font-bold">{{ t('No orders yet') }}</p>
             <p class="mt-2 text-(--ink-soft)">{{ t('Your orders will show here once you order while signed in.') }}</p>
             <Link :href="route('store.shop')" class="mt-5" :class="btnBrand">{{ t('Shop now') }}</Link>
         </div>
 
-        <ul v-else class="divide-y divide-line rounded-lg border border-line bg-white">
+        <ul v-else class="divide-y divide-line rounded-lg border border-line bg-(--shell)">
             <li v-for="order in orders.data" :key="order.number">
                 <Link :href="order.url" class="flex flex-wrap items-center justify-between gap-3 p-5 hover:bg-(--sand-light)">
                     <div>
@@ -54,7 +54,7 @@ function claim(): void {
             <Link v-if="orders.next_url" :href="orders.next_url" :class="btnOutline">{{ t('Next') }}</Link>
         </nav>
 
-        <section class="rounded-lg border border-line bg-white p-6" aria-labelledby="claim-title">
+        <section class="rounded-lg border border-line bg-(--shell) p-6" aria-labelledby="claim-title">
             <h2 id="claim-title" class="text-xl font-bold">{{ t('Add a past order to my account') }}</h2>
             <p class="mt-2 text-(--ink-soft)">{{ t('Ordered before you had an account? Enter its number and the phone you ordered with.') }}</p>
             <form class="mt-5 grid gap-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end" novalidate @submit.prevent="claim">

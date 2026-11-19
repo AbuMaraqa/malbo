@@ -49,7 +49,7 @@ class HomeShowcaseTest extends StorefrontTestCase
 
         $this->assertSame('ساعة ذهبية', $props['signature']['name']);
         $this->assertSame([], $props['featured']);
-        $this->assertNull($props['heroPiece']);
+        $this->assertArrayNotHasKey('heroPiece', $props);
     }
 
     public function test_promises_follow_the_published_pages_and_whatsapp(): void

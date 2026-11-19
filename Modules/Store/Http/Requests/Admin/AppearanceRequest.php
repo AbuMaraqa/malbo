@@ -5,7 +5,6 @@ namespace Modules\Store\Http\Requests\Admin;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Modules\Store\Services\StoreAppearanceService;
-use Modules\Store\Theme\FontCatalog;
 
 class AppearanceRequest extends FormRequest
 {
@@ -24,14 +23,23 @@ class AppearanceRequest extends FormRequest
         return true; // the route's `can` middleware decides
     }
 
+    /** A preset written in lower case is the same color. */
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('primary_color'))) {
+            $this->merge(['primary_color' => strtoupper($this->input('primary_color'))]);
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         $rules = [
-            'primary_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'font' => ['required', Rule::in(array_keys(FontCatalog::all()))],
+            // The MALBO brand colors and fonts only (config/store.php).
+            'primary_color' => ['required', Rule::in(array_values(config('store.color_presets')))],
+            'font' => ['required', Rule::in(config('store.storefront_fonts'))],
             'values' => ['nullable', 'array', 'max:'.StoreAppearanceService::MAX_VALUES],
             'values.*.title.ar' => ['nullable', 'string', 'max:80'],
             'values.*.title.en' => ['nullable', 'string', 'max:80'],

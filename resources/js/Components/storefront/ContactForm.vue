@@ -28,7 +28,7 @@ function send(): void {
 </script>
 
 <template>
-    <section data-contact="form" aria-labelledby="form-title" class="min-w-0 rounded-lg border border-line bg-white p-6 sm:p-10">
+    <section data-contact="form" aria-labelledby="form-title" class="min-w-0 rounded-lg border border-line bg-(--shell) p-6 sm:p-10">
         <div v-if="sent" role="status" class="py-10 text-center">
             <span aria-hidden="true" class="mx-auto grid size-16 place-items-center rounded-full bg-store-50 text-store-700"><Check class="size-8" /></span>
             <h2 id="form-title" class="mt-5 text-2xl font-bold">{{ t('Thank you, your message has been sent.') }}</h2>

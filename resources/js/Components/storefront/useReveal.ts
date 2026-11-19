@@ -14,7 +14,7 @@ export function useReveal(): void {
     function watchSections(): void {
         observer?.disconnect();
 
-        if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (!('IntersectionObserver' in window) || prefersLessMotion()) {
             return;
         }
 
@@ -50,4 +50,9 @@ export function useReveal(): void {
         observer?.disconnect();
         stopListening?.();
     });
+}
+
+/** The visitor asked for less motion. Browser only: call it from onMounted or an event handler. */
+export function prefersLessMotion(): boolean {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }

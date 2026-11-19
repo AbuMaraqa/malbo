@@ -219,7 +219,7 @@ function addToCart(): void {
 
             <div class="min-w-0">
                 <ProductBadges :badges="shownBadges" :percent-off="price.percent_off" size="page" class="mb-4" />
-                <p v-if="product.category" class="text-sm font-medium text-store-600">{{ product.category.name }}</p>
+                <p v-if="product.category" class="text-[0.8125rem] font-semibold ltr:tracking-[0.12em] text-(--gold-ink) ltr:uppercase">{{ product.category.name }}</p>
                 <div class="mt-1 flex items-start justify-between gap-4">
                     <h1 class="text-3xl leading-tight font-bold sm:text-[2.25rem]">{{ product.name }}</h1>
                     <WishlistButton :product-id="product.id" size="md" class="shrink-0 border border-line" />

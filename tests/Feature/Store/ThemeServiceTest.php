@@ -15,9 +15,9 @@ class ThemeServiceTest extends DatabaseTestCase
         $css = app(ThemeService::class)->css();
 
         $this->assertStringContainsString('--brand:#6D1C2F', $css);
-        $this->assertStringContainsString('--brand-50:'.BrandColor::fromHex('#6D1C2F')->shades()[50], $css);
+        $this->assertStringContainsString('--brand-50:'.BrandColor::fromHex('#6D1C2F')->shadesOn()[50], $css);
         $this->assertStringContainsString('--brand-contrast:#FFFFFF', $css);
-        $this->assertStringContainsString("--font-sans:'Readex Pro'", $css);
+        $this->assertStringContainsString("--font-sans:'KO Sans', 'Readex Pro'", $css);
         $this->assertStringContainsString('family=Readex+Pro', app(ThemeService::class)->fontsUrl());
     }
 

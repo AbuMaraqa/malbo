@@ -26,7 +26,7 @@ const tones: Record<string, string> = {
     approved: 'bg-store-50 text-store-800',
     received: 'bg-store-50 text-store-800',
     completed: 'bg-store-50 text-store-800',
-    rejected: 'bg-white text-(--danger) border border-(--danger)',
+    rejected: 'bg-(--shell) text-(--danger) border border-(--danger)',
 };
 </script>
 

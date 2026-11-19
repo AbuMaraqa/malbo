@@ -14,7 +14,7 @@ function typed(event: Event): void {
 </script>
 
 <template>
-    <div class="inline-flex items-center rounded-md border border-(--ink-30) bg-white" role="group" :aria-label="t('Quantity of :name', { name })">
+    <div class="inline-flex items-center rounded-md border border-(--ink-30) bg-(--shell)" role="group" :aria-label="t('Quantity of :name', { name })">
         <button
             type="button"
             class="grid size-10 cursor-pointer place-items-center text-lg disabled:cursor-not-allowed disabled:opacity-40"

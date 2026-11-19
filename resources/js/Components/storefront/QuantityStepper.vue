@@ -16,7 +16,7 @@ function set(event: Event): void {
 <template>
     <div>
         <span id="quantity-label" class="mb-3 block font-semibold">{{ t('Quantity') }}</span>
-        <div class="inline-flex items-center rounded-md border border-line bg-white" role="group" aria-labelledby="quantity-label">
+        <div class="inline-flex items-center rounded-md border border-line bg-(--shell)" role="group" aria-labelledby="quantity-label">
             <button type="button" class="grid size-11 cursor-pointer place-items-center text-xl transition-colors hover:bg-(--sand) disabled:cursor-not-allowed disabled:opacity-40" :aria-label="t('Decrease quantity')" :disabled="model <= 1" @click="model -= 1">−</button>
             <input
                 :value="model"

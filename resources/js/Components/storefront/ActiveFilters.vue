@@ -28,7 +28,7 @@ const price = computed(() => {
     return null;
 });
 
-const chip = 'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-line bg-white ps-3 pe-2 text-sm transition-colors hover:border-store hover:text-store-600';
+const chip = 'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-line bg-(--shell) ps-3 pe-2 text-sm transition-colors hover:border-store hover:text-store-600';
 </script>
 
 <template>

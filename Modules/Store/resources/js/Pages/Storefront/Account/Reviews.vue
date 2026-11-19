@@ -23,12 +23,12 @@ const tones: Record<string, string> = {
 
 <template>
     <AccountShell :title="t('My reviews')" :parents="[{ name: t('My account'), url: route('store.account') }]">
-        <div v-if="!reviews.length" class="rounded-lg border border-line bg-white p-8 text-center">
+        <div v-if="!reviews.length" class="rounded-lg border border-line bg-(--shell) p-8 text-center">
             <p class="text-lg font-bold">{{ t('You have not reviewed anything yet') }}</p>
             <p class="mt-2 text-(--ink-soft)">{{ t('Once an order is delivered, you can review its products on their page.') }}</p>
         </div>
         <ul v-else class="grid gap-4">
-            <li v-for="review in reviews" :key="review.id" class="rounded-lg border border-line bg-white p-5">
+            <li v-for="review in reviews" :key="review.id" class="rounded-lg border border-line bg-(--shell) p-5">
                 <div class="flex items-start gap-4">
                     <img v-if="review.product.image" :src="review.product.image" alt="" class="size-16 shrink-0 rounded-md border border-line object-cover" />
                     <div class="min-w-0 flex-1">
