@@ -77,7 +77,7 @@ class ProductPriceController extends Controller
     public function edit(int $product): Response
     {
         $model = $this->products->forPriceEdit($product);
-        $items = $model->variations->isEmpty() ? collect([$model]) : $model->variations->sortBy('id')->values();
+        $items = $model->variations->isEmpty() ? $model->newCollection([$model]) : $model->variations->sortBy('id')->values();
         $saved = $this->prices->allTierPrices($items->modelKeys());
 
         return Inertia::render('Wholesale/ProductPrice/Edit', [

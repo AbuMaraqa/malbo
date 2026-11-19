@@ -45,7 +45,7 @@ class HeroSlidesTest extends StorefrontTestCase
         $this->assertNotNull($slide->getFirstMedia('image'));
         $this->assertNotNull($slide->getFirstMedia('mobile_image'));
 
-        $hidden = $this->slide(['is_active' => false]);
+        $hidden = $this->slide(['is_active' => false, 'sort_order' => 5]);
 
         $this->actingAs($this->staff)->get($this->admin('/slider'))->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Store/HeroSlide/Index')

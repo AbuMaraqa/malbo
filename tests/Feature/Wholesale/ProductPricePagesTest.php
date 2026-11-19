@@ -60,6 +60,19 @@ class ProductPricePagesTest extends WholesaleTestCase
             ->etc());
     }
 
+    public function test_a_product_without_variations_is_its_own_item(): void
+    {
+        $belt = $this->single();
+        $gold = $this->tier('ذهبي', 10);
+        TierPrice::query()->create(['product_id' => $belt->id, 'tier_id' => $gold->id, 'price' => 12]);
+
+        $this->page('/prices/'.$belt->id.'/edit')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->has('items', 1)
+            ->where('items.0.id', $belt->id)
+            ->where('prices.'.$belt->id.'.'.$gold->id, 12)
+            ->etc());
+    }
+
     public function test_saving_overrides_breaks_and_by_piece(): void
     {
         [$shirt, $variants] = $this->shirt();
